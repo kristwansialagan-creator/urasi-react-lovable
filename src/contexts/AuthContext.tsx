@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import type { Tables } from '@/types/database'
+import { usePermissions } from '@/hooks/usePermissions'
 
 type Profile = Tables<'profiles'>
 
@@ -16,6 +17,11 @@ interface AuthContextType {
     isAdmin: boolean
     isCashier: boolean
     isCustomer: boolean
+    hasPermission: (permission: string) => boolean
+    hasRole: (role: string) => boolean
+    can: (action: string, resource: string) => boolean
+    permissions: string[]
+    roles: string[]
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -26,16 +32,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
 
+    const {
+        permissions: userPermissions,
+        roles: userRoles,
+        fetchUserPermissions,
+        hasPermission,
+        hasRole,
+        can
+    } = usePermissions()
+
     // Fetch user profile
     const fetchProfile = async (userId: string) => {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single()
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single()
 
-        if (!error && data) {
-            setProfile(data)
+            if (!error && data) {
+                setProfile(data)
+                // Fetch permissions after profile is loaded
+                await fetchUserPermissions(userId)
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error)
         }
     }
 
@@ -78,6 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const signUp = async (email: string, password: string, username: string) => {
+        console.log('Attempting signUp with:', { email, username })
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -88,25 +111,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
         })
 
-        // Create profile after signup
-        if (!error && data.user) {
-            await supabase.from('profiles').insert([{
-                id: data.user.id,
-                email,
-                username,
-                role: 'cashier',
-                active: true,
-            }] as any)
+        if (error) {
+            console.error('SignUp error:', error)
+            return { error }
+        }
+
+        console.log('SignUp success, user created:', data.user?.id)
+
+        // Profile will be created by trigger, just wait a moment
+        if (data.user) {
+            console.log('Waiting for trigger to create profile...')
+            await new Promise(resolve => setTimeout(resolve, 1000))
+
+            // Verify profile was created
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', data.user.id)
+                .single()
+
+            if (profileError) {
+                console.error('Profile fetch error:', profileError)
+            } else {
+                console.log('Profile created successfully:', profile)
+            }
         }
 
         return { error }
     }
 
     const signOut = async () => {
-        await supabase.auth.signOut()
-        setUser(null)
-        setProfile(null)
-        setSession(null)
+        try {
+            await supabase.auth.signOut()
+            setUser(null)
+            setProfile(null)
+            setSession(null)
+            // Force redirect to login page
+            window.location.href = '/login'
+        } catch (error) {
+            console.error('Sign out error:', error)
+        }
     }
 
     const value = {
@@ -117,9 +161,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
-        isAdmin: profile?.role === 'admin',
-        isCashier: profile?.role === 'cashier',
-        isCustomer: profile?.role === 'customer',
+        isAdmin: profile?.role === 'admin' || hasRole('admin'),
+        isCashier: profile?.role === 'cashier' || hasRole('cashier'),
+        isCustomer: profile?.role === 'customer' || hasRole('customer'),
+        hasPermission,
+        hasRole,
+        can,
+        permissions: userPermissions.map(p => p.name),
+        roles: userRoles.map(r => r.name)
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

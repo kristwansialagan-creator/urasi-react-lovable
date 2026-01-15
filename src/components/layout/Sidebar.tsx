@@ -11,7 +11,6 @@ import {
     BarChart3,
     Wallet,
     Truck,
-    CreditCard,
     Tag,
     Gift,
     Store,
@@ -108,7 +107,7 @@ export function Sidebar() {
                 { to: '/products', label: 'All Products' },
                 { to: '/products/create', label: 'Add Product' },
                 { to: '/products/categories', label: 'Categories' },
-                { to: '/products/units', label: 'Units' },
+                { to: '/products/stock-adjustment', label: 'Stock Adjustment' },
             ],
         },
         {
@@ -117,6 +116,7 @@ export function Sidebar() {
             label: 'Orders',
             children: [
                 { to: '/orders', label: 'All Orders' },
+                { to: '/orders/instalments', label: 'Instalments' },
                 { to: '/orders/refunds', label: 'Refunds' },
             ],
         },
@@ -127,7 +127,6 @@ export function Sidebar() {
             children: [
                 { to: '/customers', label: 'All Customers' },
                 { to: '/customers/groups', label: 'Customer Groups' },
-                { to: '/customers/rewards', label: 'Rewards' },
             ],
         },
         {
@@ -136,43 +135,45 @@ export function Sidebar() {
             label: 'Procurements',
             children: [
                 { to: '/procurements', label: 'All Procurements' },
-                { to: '/procurements/create', label: 'New Procurement' },
-                { to: '/procurements/suppliers', label: 'Suppliers' },
             ],
         },
         {
             to: '/registers',
             icon: <Calculator className="h-5 w-5" />,
             label: 'Registers',
-            children: [
-                { to: '/registers', label: 'All Registers' },
-                { to: '/registers/history', label: 'History' },
-            ],
         },
         {
             to: '/transactions',
             icon: <Wallet className="h-5 w-5" />,
             label: 'Transactions',
-            children: [
-                { to: '/transactions', label: 'All Transactions' },
-                { to: '/transactions/accounts', label: 'Accounts' },
-            ],
         },
         {
             to: '/reports',
             icon: <BarChart3 className="h-5 w-5" />,
             label: 'Reports',
             children: [
-                { to: '/reports/sales', label: 'Sales Report' },
-                { to: '/reports/products', label: 'Product Report' },
-                { to: '/reports/customers', label: 'Customer Report' },
+                { to: '/reports/sales', label: 'Sales' },
+                { to: '/reports/inventory', label: 'Inventory' },
+                { to: '/reports/customers', label: 'Customers' },
                 { to: '/reports/cashflow', label: 'Cash Flow' },
+                { to: '/reports/profit', label: 'Profit' },
+                { to: '/reports/payment-types', label: 'Payment Types' },
+                { to: '/reports/low-stock', label: 'Low Stock' },
+                { to: '/reports/best-products', label: 'Best Products' },
+                { to: '/reports/yearly', label: 'Yearly' },
             ],
         },
         { to: '/coupons', icon: <Tag className="h-5 w-5" />, label: 'Coupons' },
-        { to: '/payments', icon: <CreditCard className="h-5 w-5" />, label: 'Payment Types' },
-        { to: '/taxes', icon: <FileText className="h-5 w-5" />, label: 'Taxes' },
-        { to: '/rewards', icon: <Gift className="h-5 w-5" />, label: 'Reward System' },
+        { to: '/rewards', icon: <Gift className="h-5 w-5" />, label: 'Rewards' },
+        { to: '/media', icon: <FileText className="h-5 w-5" />, label: 'Media Library' },
+        {
+            to: '/tools',
+            icon: <Settings className="h-5 w-5" />,
+            label: 'Tools',
+            children: [
+                { to: '/tools/data-management', label: 'Data Management' },
+            ],
+        },
         { to: '/settings', icon: <Settings className="h-5 w-5" />, label: 'Settings' },
     ]
 

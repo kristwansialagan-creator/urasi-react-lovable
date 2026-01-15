@@ -1,13 +1,7 @@
-// Database Types for Supabase
+// Database Types for Supabase - Auto-generated from schema
 // This file defines TypeScript types for the database schema
 
-export type Json =
-    | string
-    | number
-    | boolean
-    | null
-    | { [key: string]: Json | undefined }
-    | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
     public: {
@@ -17,25 +11,70 @@ export interface Database {
                     id: string
                     username: string | null
                     email: string | null
+                    first_name: string | null
+                    second_name: string | null
+                    phone: string | null
                     role: string
                     active: boolean
+                    total_sales_count: number
+                    total_sales: number
+                    avatar_url: string | null
                     created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id: string
                     username?: string | null
                     email?: string | null
+                    first_name?: string | null
+                    second_name?: string | null
+                    phone?: string | null
                     role?: string
                     active?: boolean
+                    total_sales_count?: number
+                    total_sales?: number
+                    avatar_url?: string | null
                     created_at?: string
+                    updated_at?: string
                 }
                 Update: {
                     id?: string
                     username?: string | null
                     email?: string | null
+                    first_name?: string | null
+                    second_name?: string | null
+                    phone?: string | null
                     role?: string
                     active?: boolean
+                    total_sales_count?: number
+                    total_sales?: number
+                    avatar_url?: string | null
                     created_at?: string
+                    updated_at?: string
+                }
+            }
+            roles: {
+                Row: {
+                    id: string
+                    name: string
+                    namespace: string
+                    description: string | null
+                    locked: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    name: string
+                    namespace: string
+                    description?: string | null
+                    locked?: boolean
+                }
+                Update: {
+                    name?: string
+                    namespace?: string
+                    description?: string | null
+                    locked?: boolean
                 }
             }
             products: {
@@ -45,15 +84,26 @@ export interface Database {
                     sku: string | null
                     barcode: string | null
                     type: string
+                    accurate_tracking: boolean
+                    status: string
+                    stock_management: boolean
                     description: string | null
                     category_id: string | null
+                    parent_id: string | null
                     unit_group_id: string | null
                     tax_group_id: string | null
-                    stock_management: boolean
+                    tax_type: string
+                    thumbnail_id: string | null
                     selling_price: number
                     purchase_price: number
-                    image_url: string | null
-                    status: string
+                    gross_sale_price: number
+                    net_sale_price: number
+                    wholesale_price: number
+                    sale_price_edit: boolean
+                    on_expiration: string
+                    expires: boolean
+                    searchable: boolean
+                    author: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -63,35 +113,52 @@ export interface Database {
                     sku?: string | null
                     barcode?: string | null
                     type?: string
+                    accurate_tracking?: boolean
+                    status?: string
+                    stock_management?: boolean
                     description?: string | null
                     category_id?: string | null
+                    parent_id?: string | null
                     unit_group_id?: string | null
                     tax_group_id?: string | null
-                    stock_management?: boolean
+                    tax_type?: string
+                    thumbnail_id?: string | null
                     selling_price?: number
                     purchase_price?: number
-                    image_url?: string | null
-                    status?: string
-                    created_at?: string
-                    updated_at?: string
+                    gross_sale_price?: number
+                    net_sale_price?: number
+                    wholesale_price?: number
+                    sale_price_edit?: boolean
+                    on_expiration?: string
+                    expires?: boolean
+                    searchable?: boolean
+                    author?: string | null
                 }
                 Update: {
-                    id?: string
                     name?: string
                     sku?: string | null
                     barcode?: string | null
                     type?: string
+                    accurate_tracking?: boolean
+                    status?: string
+                    stock_management?: boolean
                     description?: string | null
                     category_id?: string | null
+                    parent_id?: string | null
                     unit_group_id?: string | null
                     tax_group_id?: string | null
-                    stock_management?: boolean
+                    tax_type?: string
+                    thumbnail_id?: string | null
                     selling_price?: number
                     purchase_price?: number
-                    image_url?: string | null
-                    status?: string
-                    created_at?: string
-                    updated_at?: string
+                    gross_sale_price?: number
+                    net_sale_price?: number
+                    wholesale_price?: number
+                    sale_price_edit?: boolean
+                    on_expiration?: string
+                    expires?: boolean
+                    searchable?: boolean
+                    author?: string | null
                 }
             }
             product_categories: {
@@ -99,153 +166,86 @@ export interface Database {
                     id: string
                     name: string
                     parent_id: string | null
+                    media_id: string | null
                     description: string | null
                     total_items: number
+                    displays_on_pos: boolean
+                    author: string | null
                     created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
                     name: string
                     parent_id?: string | null
+                    media_id?: string | null
                     description?: string | null
                     total_items?: number
-                    created_at?: string
+                    displays_on_pos?: boolean
+                    author?: string | null
                 }
                 Update: {
-                    id?: string
                     name?: string
                     parent_id?: string | null
+                    media_id?: string | null
                     description?: string | null
                     total_items?: number
-                    created_at?: string
+                    displays_on_pos?: boolean
+                    author?: string | null
                 }
             }
             product_unit_quantities: {
                 Row: {
                     id: string
-                    product_id: string
+                    product_id: string | null
                     unit_id: string | null
                     quantity: number
-                    sale_price: number
-                    wholesale_price: number
                     low_quantity: number
                     stock_alert_enabled: boolean
+                    sale_price: number
+                    sale_price_edit: boolean
+                    excl_tax_sale_price: number
+                    incl_tax_sale_price: number
+                    wholesale_price: number
+                    excl_tax_wholesale_price: number
+                    incl_tax_wholesale_price: number
+                    purchase_price: number
+                    visible: boolean
                     created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
-                    product_id: string
+                    product_id?: string | null
                     unit_id?: string | null
                     quantity?: number
-                    sale_price?: number
-                    wholesale_price?: number
                     low_quantity?: number
                     stock_alert_enabled?: boolean
-                    created_at?: string
+                    sale_price?: number
+                    sale_price_edit?: boolean
+                    excl_tax_sale_price?: number
+                    incl_tax_sale_price?: number
+                    wholesale_price?: number
+                    excl_tax_wholesale_price?: number
+                    incl_tax_wholesale_price?: number
+                    purchase_price?: number
+                    visible?: boolean
                 }
                 Update: {
-                    id?: string
-                    product_id?: string
+                    product_id?: string | null
                     unit_id?: string | null
                     quantity?: number
-                    sale_price?: number
-                    wholesale_price?: number
                     low_quantity?: number
                     stock_alert_enabled?: boolean
-                    created_at?: string
-                }
-            }
-            units: {
-                Row: {
-                    id: string
-                    name: string
-                    identifier: string
-                    description: string | null
-                    group_id: string | null
-                    value: number
-                    base_unit: boolean
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    name: string
-                    identifier: string
-                    description?: string | null
-                    group_id?: string | null
-                    value?: number
-                    base_unit?: boolean
-                }
-                Update: {
-                    id?: string
-                    name?: string
-                    identifier?: string
-                    description?: string | null
-                    group_id?: string | null
-                    value?: number
-                    base_unit?: boolean
-                }
-            }
-            unit_groups: {
-                Row: {
-                    id: string
-                    name: string
-                    description: string | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    name: string
-                    description?: string | null
-                }
-                Update: {
-                    id?: string
-                    name?: string
-                    description?: string | null
-                }
-            }
-            taxes: {
-                Row: {
-                    id: string
-                    name: string
-                    rate: number
-                    type: string
-                    description: string | null
-                    tax_group_id: string | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    name: string
-                    rate: number
-                    type?: string
-                    description?: string | null
-                    tax_group_id?: string | null
-                }
-                Update: {
-                    id?: string
-                    name?: string
-                    rate?: number
-                    type?: string
-                    description?: string | null
-                    tax_group_id?: string | null
-                }
-            }
-            tax_groups: {
-                Row: {
-                    id: string
-                    name: string
-                    description: string | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    name: string
-                    description?: string | null
-                }
-                Update: {
-                    id?: string
-                    name?: string
-                    description?: string | null
+                    sale_price?: number
+                    sale_price_edit?: boolean
+                    excl_tax_sale_price?: number
+                    incl_tax_sale_price?: number
+                    wholesale_price?: number
+                    excl_tax_wholesale_price?: number
+                    incl_tax_wholesale_price?: number
+                    purchase_price?: number
+                    visible?: boolean
                 }
             }
             customers: {
@@ -255,12 +255,17 @@ export interface Database {
                     last_name: string | null
                     email: string | null
                     phone: string | null
+                    pobox: string | null
+                    gender: string | null
+                    birthdate: string | null
                     group_id: string | null
                     account_amount: number
-                    credit_limit: number
+                    credit_limit_amount: number
                     purchases_amount: number
                     owed_amount: number
-                    reward_points: number
+                    reward_system_points: number
+                    description: string | null
+                    author: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -270,35 +275,46 @@ export interface Database {
                     last_name?: string | null
                     email?: string | null
                     phone?: string | null
+                    pobox?: string | null
+                    gender?: string | null
+                    birthdate?: string | null
                     group_id?: string | null
                     account_amount?: number
-                    credit_limit?: number
+                    credit_limit_amount?: number
                     purchases_amount?: number
                     owed_amount?: number
-                    reward_points?: number
+                    reward_system_points?: number
+                    description?: string | null
+                    author?: string | null
                 }
                 Update: {
-                    id?: string
                     first_name?: string | null
                     last_name?: string | null
                     email?: string | null
                     phone?: string | null
+                    pobox?: string | null
+                    gender?: string | null
+                    birthdate?: string | null
                     group_id?: string | null
                     account_amount?: number
-                    credit_limit?: number
+                    credit_limit_amount?: number
                     purchases_amount?: number
                     owed_amount?: number
-                    reward_points?: number
+                    reward_system_points?: number
+                    description?: string | null
+                    author?: string | null
                 }
             }
-            customer_groups: {
+            customers_groups: {
                 Row: {
                     id: string
                     name: string
                     description: string | null
                     reward_system_id: string | null
                     minimal_credit_payment: number
+                    author: string | null
                     created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
@@ -306,43 +322,14 @@ export interface Database {
                     description?: string | null
                     reward_system_id?: string | null
                     minimal_credit_payment?: number
+                    author?: string | null
                 }
                 Update: {
-                    id?: string
                     name?: string
                     description?: string | null
                     reward_system_id?: string | null
                     minimal_credit_payment?: number
-                }
-            }
-            customer_addresses: {
-                Row: {
-                    id: string
-                    customer_id: string
-                    type: string
-                    name: string | null
-                    address: string | null
-                    city: string | null
-                    phone: string | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    customer_id: string
-                    type: string
-                    name?: string | null
-                    address?: string | null
-                    city?: string | null
-                    phone?: string | null
-                }
-                Update: {
-                    id?: string
-                    customer_id?: string
-                    type?: string
-                    name?: string | null
-                    address?: string | null
-                    city?: string | null
-                    phone?: string | null
+                    author?: string | null
                 }
             }
             orders: {
@@ -350,225 +337,232 @@ export interface Database {
                     id: string
                     code: string
                     type: string
-                    customer_id: string | null
+                    title: string | null
                     payment_status: string
                     process_status: string
                     delivery_status: string
+                    customer_id: string | null
                     subtotal: number
+                    products_total: number
+                    products_total_cost_price: number
+                    shipping: number
+                    shipping_rate: number
+                    shipping_type: string
                     discount: number
+                    discount_rate: number
+                    discount_type: string
+                    discount_percentage: number
+                    products_discount: number
+                    total_without_discount: number
+                    tax_value: number
+                    total_coupons: number
+                    total_instalments: number
+                    total: number
+                    gross_total: number
+                    net_total: number
+                    tendered: number
+                    change: number
+                    voidance_reason: string | null
+                    note: string | null
+                    register_id: string | null
+                    author: string | null
+                    expected_payment_date: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    code?: string
+                    type?: string
+                    title?: string | null
+                    payment_status?: string
+                    process_status?: string
+                    delivery_status?: string
+                    customer_id?: string | null
+                    subtotal?: number
+                    products_total?: number
+                    products_total_cost_price?: number
+                    shipping?: number
+                    shipping_rate?: number
+                    shipping_type?: string
+                    discount?: number
+                    discount_rate?: number
+                    discount_type?: string
+                    discount_percentage?: number
+                    products_discount?: number
+                    total_without_discount?: number
+                    tax_value?: number
+                    total_coupons?: number
+                    total_instalments?: number
+                    total?: number
+                    gross_total?: number
+                    net_total?: number
+                    tendered?: number
+                    change?: number
+                    voidance_reason?: string | null
+                    note?: string | null
+                    register_id?: string | null
+                    author?: string | null
+                    expected_payment_date?: string | null
+                }
+                Update: {
+                    code?: string
+                    type?: string
+                    title?: string | null
+                    payment_status?: string
+                    process_status?: string
+                    delivery_status?: string
+                    customer_id?: string | null
+                    subtotal?: number
+                    products_total?: number
+                    products_total_cost_price?: number
+                    shipping?: number
+                    shipping_rate?: number
+                    shipping_type?: string
+                    discount?: number
+                    discount_rate?: number
+                    discount_type?: string
+                    discount_percentage?: number
+                    products_discount?: number
+                    total_without_discount?: number
+                    tax_value?: number
+                    total_coupons?: number
+                    total_instalments?: number
+                    total?: number
+                    gross_total?: number
+                    net_total?: number
+                    tendered?: number
+                    change?: number
+                    voidance_reason?: string | null
+                    note?: string | null
+                    register_id?: string | null
+                    author?: string | null
+                    expected_payment_date?: string | null
+                }
+            }
+            orders_products: {
+                Row: {
+                    id: string
+                    order_id: string | null
+                    product_id: string | null
+                    product_category_id: string | null
+                    procurement_product_id: string | null
+                    unit_id: string | null
+                    unit_quantity_id: string | null
+                    name: string | null
+                    mode: string
+                    quantity: number
+                    return_observations: string | null
+                    return_condition: string | null
+                    unit_price: number
+                    net_price: number
+                    gross_price: number
+                    discount: number
+                    discount_rate: number
                     discount_type: string
                     discount_percentage: number
                     tax_value: number
-                    shipping: number
-                    shipping_type: string
-                    total: number
-                    tendered: number
-                    change: number
-                    note: string | null
-                    register_id: string | null
+                    rate: number
+                    tax_group_id: string | null
+                    total_price: number
+                    total_price_without_discount: number
+                    total_price_with_discount: number
+                    total_gross_price: number
+                    total_net_price: number
+                    total_purchase_price: number
+                    status: string
                     author: string | null
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id?: string
-                    code: string
-                    type?: string
-                    customer_id?: string | null
-                    payment_status?: string
-                    process_status?: string
-                    delivery_status?: string
-                    subtotal?: number
+                    order_id?: string | null
+                    product_id?: string | null
+                    product_category_id?: string | null
+                    procurement_product_id?: string | null
+                    unit_id?: string | null
+                    unit_quantity_id?: string | null
+                    name?: string | null
+                    mode?: string
+                    quantity?: number
+                    return_observations?: string | null
+                    return_condition?: string | null
+                    unit_price?: number
+                    net_price?: number
+                    gross_price?: number
                     discount?: number
+                    discount_rate?: number
                     discount_type?: string
                     discount_percentage?: number
                     tax_value?: number
-                    shipping?: number
-                    shipping_type?: string
-                    total?: number
-                    tendered?: number
-                    change?: number
-                    note?: string | null
-                    register_id?: string | null
+                    rate?: number
+                    tax_group_id?: string | null
+                    total_price?: number
+                    total_price_without_discount?: number
+                    total_price_with_discount?: number
+                    total_gross_price?: number
+                    total_net_price?: number
+                    total_purchase_price?: number
+                    status?: string
                     author?: string | null
                 }
                 Update: {
-                    id?: string
-                    code?: string
-                    type?: string
-                    customer_id?: string | null
-                    payment_status?: string
-                    process_status?: string
-                    delivery_status?: string
-                    subtotal?: number
+                    order_id?: string | null
+                    product_id?: string | null
+                    product_category_id?: string | null
+                    procurement_product_id?: string | null
+                    unit_id?: string | null
+                    unit_quantity_id?: string | null
+                    name?: string | null
+                    mode?: string
+                    quantity?: number
+                    return_observations?: string | null
+                    return_condition?: string | null
+                    unit_price?: number
+                    net_price?: number
+                    gross_price?: number
                     discount?: number
+                    discount_rate?: number
                     discount_type?: string
                     discount_percentage?: number
                     tax_value?: number
-                    shipping?: number
-                    shipping_type?: string
-                    total?: number
-                    tendered?: number
-                    change?: number
-                    note?: string | null
-                    register_id?: string | null
+                    rate?: number
+                    tax_group_id?: string | null
+                    total_price?: number
+                    total_price_without_discount?: number
+                    total_price_with_discount?: number
+                    total_gross_price?: number
+                    total_net_price?: number
+                    total_purchase_price?: number
+                    status?: string
                     author?: string | null
                 }
             }
-            order_products: {
+            orders_payments: {
                 Row: {
                     id: string
-                    order_id: string
-                    product_id: string | null
-                    unit_id: string | null
-                    name: string
-                    quantity: number
-                    unit_price: number
-                    discount: number
-                    discount_type: string
-                    tax_value: number
-                    total_price: number
-                    status: string
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    order_id: string
-                    product_id?: string | null
-                    unit_id?: string | null
-                    name: string
-                    quantity?: number
-                    unit_price?: number
-                    discount?: number
-                    discount_type?: string
-                    tax_value?: number
-                    total_price?: number
-                    status?: string
-                }
-                Update: {
-                    id?: string
-                    order_id?: string
-                    product_id?: string | null
-                    unit_id?: string | null
-                    name?: string
-                    quantity?: number
-                    unit_price?: number
-                    discount?: number
-                    discount_type?: string
-                    tax_value?: number
-                    total_price?: number
-                    status?: string
-                }
-            }
-            order_payments: {
-                Row: {
-                    id: string
-                    order_id: string
+                    order_id: string | null
                     payment_type_id: string | null
-                    identifier: string
-                    amount: number
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    order_id: string
-                    payment_type_id?: string | null
-                    identifier: string
-                    amount?: number
-                }
-                Update: {
-                    id?: string
-                    order_id?: string
-                    payment_type_id?: string | null
-                    identifier?: string
-                    amount?: number
-                }
-            }
-            order_taxes: {
-                Row: {
-                    id: string
-                    order_id: string
-                    tax_id: string | null
-                    tax_name: string
-                    rate: number
-                    tax_value: number
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    order_id: string
-                    tax_id?: string | null
-                    tax_name: string
-                    rate?: number
-                    tax_value?: number
-                }
-                Update: {
-                    id?: string
-                    order_id?: string
-                    tax_id?: string | null
-                    tax_name?: string
-                    rate?: number
-                    tax_value?: number
-                }
-            }
-            order_refunds: {
-                Row: {
-                    id: string
-                    order_id: string
-                    total: number
-                    shipping: number
+                    identifier: string | null
+                    value: number
                     author: string | null
-                    description: string | null
                     created_at: string
                 }
                 Insert: {
                     id?: string
-                    order_id: string
-                    total?: number
-                    shipping?: number
+                    order_id?: string | null
+                    payment_type_id?: string | null
+                    identifier?: string | null
+                    value?: number
                     author?: string | null
-                    description?: string | null
                 }
                 Update: {
-                    id?: string
-                    order_id?: string
-                    total?: number
-                    shipping?: number
+                    order_id?: string | null
+                    payment_type_id?: string | null
+                    identifier?: string | null
+                    value?: number
                     author?: string | null
-                    description?: string | null
-                }
-            }
-            order_product_refunds: {
-                Row: {
-                    id: string
-                    order_refund_id: string
-                    order_product_id: string
-                    unit_price: number
-                    quantity: number
-                    total_price: number
-                    condition: string
-                    description: string | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    order_refund_id: string
-                    order_product_id: string
-                    unit_price?: number
-                    quantity?: number
-                    total_price?: number
-                    condition?: string
-                    description?: string | null
-                }
-                Update: {
-                    id?: string
-                    order_refund_id?: string
-                    order_product_id?: string
-                    unit_price?: number
-                    quantity?: number
-                    total_price?: number
-                    condition?: string
-                    description?: string | null
                 }
             }
             payment_types: {
@@ -576,134 +570,104 @@ export interface Database {
                     id: string
                     label: string
                     identifier: string
-                    description: string | null
-                    active: boolean
-                    readonly: boolean
                     priority: number
+                    description: string | null
+                    readonly: boolean
+                    active: boolean
+                    author: string | null
                     created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
                     label: string
                     identifier: string
-                    description?: string | null
-                    active?: boolean
-                    readonly?: boolean
                     priority?: number
+                    description?: string | null
+                    readonly?: boolean
+                    active?: boolean
+                    author?: string | null
                 }
                 Update: {
-                    id?: string
                     label?: string
                     identifier?: string
-                    description?: string | null
-                    active?: boolean
-                    readonly?: boolean
                     priority?: number
+                    description?: string | null
+                    readonly?: boolean
+                    active?: boolean
+                    author?: string | null
                 }
             }
             registers: {
                 Row: {
                     id: string
                     name: string
+                    description: string | null
                     status: string
                     balance: number
-                    description: string | null
                     used_by: string | null
+                    author: string | null
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id?: string
                     name: string
+                    description?: string | null
                     status?: string
                     balance?: number
-                    description?: string | null
                     used_by?: string | null
+                    author?: string | null
                 }
                 Update: {
-                    id?: string
                     name?: string
+                    description?: string | null
                     status?: string
                     balance?: number
-                    description?: string | null
                     used_by?: string | null
+                    author?: string | null
                 }
             }
-            register_history: {
+            units: {
                 Row: {
                     id: string
-                    register_id: string
-                    action: string
-                    value: number
-                    balance_before: number
-                    balance_after: number
+                    name: string
+                    identifier: string
                     description: string | null
-                    order_id: string | null
+                    value: number
+                    base_unit: boolean
+                    group_id: string | null
                     author: string | null
                     created_at: string
-                }
-                Insert: {
-                    id?: string
-                    register_id: string
-                    action: string
-                    value?: number
-                    balance_before?: number
-                    balance_after?: number
-                    description?: string | null
-                    order_id?: string | null
-                    author?: string | null
-                }
-                Update: {
-                    id?: string
-                    register_id?: string
-                    action?: string
-                    value?: number
-                    balance_before?: number
-                    balance_after?: number
-                    description?: string | null
-                    order_id?: string | null
-                    author?: string | null
-                }
-            }
-            providers: {
-                Row: {
-                    id: string
-                    name: string
-                    email: string | null
-                    phone: string | null
-                    address: string | null
-                    description: string | null
-                    created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
                     name: string
-                    email?: string | null
-                    phone?: string | null
-                    address?: string | null
+                    identifier: string
                     description?: string | null
+                    value?: number
+                    base_unit?: boolean
+                    group_id?: string | null
+                    author?: string | null
                 }
                 Update: {
-                    id?: string
                     name?: string
-                    email?: string | null
-                    phone?: string | null
-                    address?: string | null
+                    identifier?: string
                     description?: string | null
+                    value?: number
+                    base_unit?: boolean
+                    group_id?: string | null
+                    author?: string | null
                 }
             }
-            procurements: {
+            taxes: {
                 Row: {
                     id: string
-                    code: string
-                    provider_id: string | null
-                    status: string
-                    delivery_status: string
-                    payment_status: string
-                    total_items: number
-                    value: number
-                    tax_value: number
-                    cost: number
+                    name: string
+                    rate: number
+                    tax_group_id: string | null
+                    type: string
                     description: string | null
                     author: string | null
                     created_at: string
@@ -711,214 +675,20 @@ export interface Database {
                 }
                 Insert: {
                     id?: string
-                    code: string
-                    provider_id?: string | null
-                    status?: string
-                    delivery_status?: string
-                    payment_status?: string
-                    total_items?: number
-                    value?: number
-                    tax_value?: number
-                    cost?: number
-                    description?: string | null
-                    author?: string | null
-                }
-                Update: {
-                    id?: string
-                    code?: string
-                    provider_id?: string | null
-                    status?: string
-                    delivery_status?: string
-                    payment_status?: string
-                    total_items?: number
-                    value?: number
-                    tax_value?: number
-                    cost?: number
-                    description?: string | null
-                    author?: string | null
-                }
-            }
-            procurement_products: {
-                Row: {
-                    id: string
-                    procurement_id: string
-                    product_id: string | null
-                    unit_id: string | null
                     name: string
-                    quantity: number
-                    purchase_price: number
-                    tax_value: number
-                    total_price: number
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    procurement_id: string
-                    product_id?: string | null
-                    unit_id?: string | null
-                    name: string
-                    quantity?: number
-                    purchase_price?: number
-                    tax_value?: number
-                    total_price?: number
-                }
-                Update: {
-                    id?: string
-                    procurement_id?: string
-                    product_id?: string | null
-                    unit_id?: string | null
-                    name?: string
-                    quantity?: number
-                    purchase_price?: number
-                    tax_value?: number
-                    total_price?: number
-                }
-            }
-            transactions: {
-                Row: {
-                    id: string
-                    name: string
-                    type: string
-                    status: string
-                    account_id: string | null
-                    value: number
-                    description: string | null
-                    recurring: boolean
-                    occurrence: string | null
-                    scheduled: boolean
-                    scheduled_date: string | null
-                    order_id: string | null
-                    procurement_id: string | null
-                    author: string | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    name: string
-                    type: string
-                    status?: string
-                    account_id?: string | null
-                    value?: number
-                    description?: string | null
-                    recurring?: boolean
-                    occurrence?: string | null
-                    scheduled?: boolean
-                    scheduled_date?: string | null
-                    order_id?: string | null
-                    procurement_id?: string | null
-                    author?: string | null
-                }
-                Update: {
-                    id?: string
-                    name?: string
+                    rate?: number
+                    tax_group_id?: string | null
                     type?: string
-                    status?: string
-                    account_id?: string | null
-                    value?: number
                     description?: string | null
-                    recurring?: boolean
-                    occurrence?: string | null
-                    scheduled?: boolean
-                    scheduled_date?: string | null
-                    order_id?: string | null
-                    procurement_id?: string | null
                     author?: string | null
                 }
-            }
-            transaction_accounts: {
-                Row: {
-                    id: string
-                    name: string
-                    operation: string
-                    account: string
-                    description: string | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    name: string
-                    operation: string
-                    account: string
-                    description?: string | null
-                }
                 Update: {
-                    id?: string
                     name?: string
-                    operation?: string
-                    account?: string
-                    description?: string | null
-                }
-            }
-            coupons: {
-                Row: {
-                    id: string
-                    name: string
-                    code: string
-                    type: string
-                    discount_value: number
-                    discount_type: string
-                    valid_from: string | null
-                    valid_until: string | null
-                    minimum_cart_value: number
-                    maximum_usage: number
-                    usage_count: number
-                    active: boolean
-                    limit_usage: boolean
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    name: string
-                    code: string
+                    rate?: number
+                    tax_group_id?: string | null
                     type?: string
-                    discount_value?: number
-                    discount_type?: string
-                    valid_from?: string | null
-                    valid_until?: string | null
-                    minimum_cart_value?: number
-                    maximum_usage?: number
-                    usage_count?: number
-                    active?: boolean
-                    limit_usage?: boolean
-                }
-                Update: {
-                    id?: string
-                    name?: string
-                    code?: string
-                    type?: string
-                    discount_value?: number
-                    discount_type?: string
-                    valid_from?: string | null
-                    valid_until?: string | null
-                    minimum_cart_value?: number
-                    maximum_usage?: number
-                    usage_count?: number
-                    active?: boolean
-                    limit_usage?: boolean
-                }
-            }
-            reward_systems: {
-                Row: {
-                    id: string
-                    name: string
-                    description: string | null
-                    target: number
-                    coupon_id: string | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    name: string
                     description?: string | null
-                    target?: number
-                    coupon_id?: string | null
-                }
-                Update: {
-                    id?: string
-                    name?: string
-                    description?: string | null
-                    target?: number
-                    coupon_id?: string | null
+                    author?: string | null
                 }
             }
             dashboard_days: {
@@ -928,12 +698,18 @@ export interface Database {
                     date: string
                     total_income: number
                     total_orders: number
+                    total_paid_orders_count: number
                     total_paid_orders: number
+                    total_unpaid_orders_count: number
                     total_unpaid_orders: number
+                    total_partially_paid_orders_count: number
                     total_partially_paid_orders: number
+                    wasted_products_count: number
+                    total_wasted_products: number
                     total_discount: number
                     total_taxes: number
                     created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
@@ -941,73 +717,34 @@ export interface Database {
                     date: string
                     total_income?: number
                     total_orders?: number
+                    total_paid_orders_count?: number
                     total_paid_orders?: number
+                    total_unpaid_orders_count?: number
                     total_unpaid_orders?: number
+                    total_partially_paid_orders_count?: number
                     total_partially_paid_orders?: number
+                    wasted_products_count?: number
+                    total_wasted_products?: number
                     total_discount?: number
                     total_taxes?: number
                 }
                 Update: {
-                    id?: string
                     day_of_year?: number
                     date?: string
                     total_income?: number
                     total_orders?: number
+                    total_paid_orders_count?: number
                     total_paid_orders?: number
+                    total_unpaid_orders_count?: number
                     total_unpaid_orders?: number
+                    total_partially_paid_orders_count?: number
                     total_partially_paid_orders?: number
+                    wasted_products_count?: number
+                    total_wasted_products?: number
                     total_discount?: number
                     total_taxes?: number
                 }
             }
-            dashboard_months: {
-                Row: {
-                    id: string
-                    month: number
-                    year: number
-                    total_income: number
-                    total_orders: number
-                    total_paid_orders: number
-                    total_unpaid_orders: number
-                    total_partially_paid_orders: number
-                    total_discount: number
-                    total_taxes: number
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    month: number
-                    year: number
-                    total_income?: number
-                    total_orders?: number
-                    total_paid_orders?: number
-                    total_unpaid_orders?: number
-                    total_partially_paid_orders?: number
-                    total_discount?: number
-                    total_taxes?: number
-                }
-                Update: {
-                    id?: string
-                    month?: number
-                    year?: number
-                    total_income?: number
-                    total_orders?: number
-                    total_paid_orders?: number
-                    total_unpaid_orders?: number
-                    total_partially_paid_orders?: number
-                    total_discount?: number
-                    total_taxes?: number
-                }
-            }
-        }
-        Views: {
-            [_ in never]: never
-        }
-        Functions: {
-            [_ in never]: never
-        }
-        Enums: {
-            [_ in never]: never
         }
     }
 }
@@ -1016,3 +753,20 @@ export interface Database {
 export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
 export type Insertable<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert']
 export type Updatable<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update']
+
+// Convenience exports
+export type Profile = Tables<'profiles'>
+export type Role = Tables<'roles'>
+export type Product = Tables<'products'>
+export type ProductCategory = Tables<'product_categories'>
+export type ProductUnitQuantity = Tables<'product_unit_quantities'>
+export type Customer = Tables<'customers'>
+export type CustomerGroup = Tables<'customers_groups'>
+export type Order = Tables<'orders'>
+export type OrderProduct = Tables<'orders_products'>
+export type OrderPayment = Tables<'orders_payments'>
+export type PaymentType = Tables<'payment_types'>
+export type Register = Tables<'registers'>
+export type Unit = Tables<'units'>
+export type Tax = Tables<'taxes'>
+export type DashboardDay = Tables<'dashboard_days'>

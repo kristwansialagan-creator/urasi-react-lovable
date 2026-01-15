@@ -1,99 +1,84 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Store, Receipt, DollarSign, Bell, Users, Lock, Save } from 'lucide-react'
-
-const settingsSections = [
-    { icon: Store, title: 'General', description: 'Store name, address, and basic information' },
-    { icon: Receipt, title: 'POS', description: 'Point of sale settings and preferences' },
-    { icon: DollarSign, title: 'Orders', description: 'Order management and defaults' },
-    { icon: Bell, title: 'Notifications', description: 'Email and push notification settings' },
-    { icon: Users, title: 'Users', description: 'User management and permissions' },
-    { icon: Lock, title: 'Security', description: 'Password and authentication settings' },
-]
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { Card, CardContent } from '@/components/ui/card'
+import { Settings as SettingsIcon, DollarSign, Ruler, Globe, Monitor, FileText, Receipt, Users, Wallet, Tag, Info } from 'lucide-react'
+import GeneralSettingsPage from './GeneralSettingsPage'
+import TaxesPage from './TaxesPage'
+import UnitsPage from './UnitsPage'
+import PosSettingsPage from './PosSettingsPage'
+import InvoiceSettingsPage from './InvoiceSettingsPage'
+import OrdersSettingsPage from './OrdersSettingsPage'
+import CustomersSettingsPage from './CustomersSettingsPage'
+import AccountingSettingsPage from './AccountingSettingsPage'
+import ReceiptTemplatePage from './ReceiptTemplatePage'
+import LabelTemplatesPage from './LabelTemplatesPage'
+import SystemInfoPage from './SystemInfoPage'
 
 export default function SettingsPage() {
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">Settings</h1>
-                <p className="text-[hsl(var(--muted-foreground))]">Configure your POS system</p>
-            </div>
+    const navigate = useNavigate()
+    const location = useLocation()
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" />Store Information</CardTitle>
-                            <CardDescription>Basic information about your store</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2"><Label htmlFor="storeName">Store Name</Label><Input id="storeName" defaultValue="URASI Store" /></div>
-                                <div className="space-y-2"><Label htmlFor="storeEmail">Email</Label><Input id="storeEmail" type="email" defaultValue="store@urasi.com" /></div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2"><Label htmlFor="storePhone">Phone</Label><Input id="storePhone" defaultValue="+62 812 3456 7890" /></div>
-                                <div className="space-y-2"><Label htmlFor="storeCurrency">Currency</Label><Input id="storeCurrency" defaultValue="IDR - Indonesian Rupiah" /></div>
-                            </div>
-                            <div className="space-y-2"><Label htmlFor="storeAddress">Address</Label><textarea id="storeAddress" rows={3} className="w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm" defaultValue="Jl. Contoh No. 123, Jakarta" /></div>
-                        </CardContent>
-                    </Card>
+    const settingsItems = [
+        { path: '/settings/general', name: 'General Settings', icon: <Globe className="h-5 w-5" />, desc: 'Store info, currency, timezone' },
+        { path: '/settings/pos', name: 'POS Settings', icon: <Monitor className="h-5 w-5" />, desc: 'POS configuration' },
+        { path: '/settings/taxes', name: 'Tax Configuration', icon: <DollarSign className="h-5 w-5" />, desc: 'Manage taxes and tax groups' },
+        { path: '/settings/units', name: 'Units Management', icon: <Ruler className="h-5 w-5" />, desc: 'Product units and conversions' },
+        { path: '/settings/invoice', name: 'Invoice Settings', icon: <FileText className="h-5 w-5" />, desc: 'Invoice templates and branding' },
+        { path: '/settings/receipt', name: 'Receipt Template', icon: <Receipt className="h-5 w-5" />, desc: 'Customize receipt printing' },
+        { path: '/settings/orders', name: 'Orders Settings', icon: <Receipt className="h-5 w-5" />, desc: 'Order configuration' },
+        { path: '/settings/customers', name: 'Customer Settings', icon: <Users className="h-5 w-5" />, desc: 'Customer preferences' },
+        { path: '/settings/accounting', name: 'Accounting Settings', icon: <Wallet className="h-5 w-5" />, desc: 'Chart of accounts & accounting' },
+        { path: '/settings/labels', name: 'Label Templates', icon: <Tag className="h-5 w-5" />, desc: 'Manage label templates' },
+        { path: '/settings/system', name: 'System Information', icon: <Info className="h-5 w-5" />, desc: 'Version, database, requirements' }
+    ]
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5" />POS Settings</CardTitle>
-                            <CardDescription>Configure point of sale behavior</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--muted))]/50">
-                                <div><p className="font-medium">Quick Product Creation</p><p className="text-sm text-[hsl(var(--muted-foreground))]">Allow creating products during checkout</p></div>
-                                <input type="checkbox" defaultChecked className="rounded" />
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--muted))]/50">
-                                <div><p className="font-medium">Auto Print Receipt</p><p className="text-sm text-[hsl(var(--muted-foreground))]">Automatically print receipt after payment</p></div>
-                                <input type="checkbox" className="rounded" />
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--muted))]/50">
-                                <div><p className="font-medium">Enable Sound Effects</p><p className="text-sm text-[hsl(var(--muted-foreground))]">Play sounds on product scan and payment</p></div>
-                                <input type="checkbox" defaultChecked className="rounded" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><DollarSign className="h-5 w-5" />Tax Settings</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2"><Label htmlFor="taxRate">Default Tax Rate (%)</Label><Input id="taxRate" type="number" defaultValue="10" /></div>
-                                <div className="space-y-2"><Label htmlFor="taxType">Tax Type</Label><select id="taxType" className="w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm"><option>Inclusive</option><option>Exclusive</option></select></div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Button size="lg" className="gap-2"><Save className="h-4 w-4" />Save Settings</Button>
+    // If at root /settings, show navigation
+    if (location.pathname === '/settings' || location.pathname === '/settings/') {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                    <SettingsIcon className="h-8 w-8" />
+                    <h1 className="text-3xl font-bold">Settings</h1>
                 </div>
 
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader><CardTitle>Quick Links</CardTitle></CardHeader>
-                        <CardContent className="space-y-2">
-                            {settingsSections.map((section, i) => (
-                                <button key={i} className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[hsl(var(--muted))] text-left transition-colors">
-                                    <section.icon className="h-5 w-5 text-[hsl(var(--muted-foreground))]" />
-                                    <div>
-                                        <p className="font-medium text-sm">{section.title}</p>
-                                        <p className="text-xs text-[hsl(var(--muted-foreground))]">{section.description}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {settingsItems.map(item => (
+                        <Card
+                            key={item.path}
+                            className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-[hsl(var(--primary))]"
+                            onClick={() => navigate(item.path)}
+                        >
+                            <CardContent className="p-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-3 bg-[hsl(var(--primary))] text-white rounded-lg">
+                                        {item.icon}
                                     </div>
-                                </button>
-                            ))}
-                        </CardContent>
-                    </Card>
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-lg mb-1">{item.name}</h3>
+                                        <p className="text-sm text-[hsl(var(--muted-foreground))]">{item.desc}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
             </div>
-        </div>
+        )
+    }
+
+    // Otherwise render the sub-routes
+    return (
+        <Routes>
+            <Route path="/general" element={<GeneralSettingsPage />} />
+            <Route path="/pos" element={<PosSettingsPage />} />
+            <Route path="/taxes" element={<TaxesPage />} />
+            <Route path="/units" element={<UnitsPage />} />
+            <Route path="/invoice" element={<InvoiceSettingsPage />} />
+            <Route path="/receipt" element={<ReceiptTemplatePage />} />
+            <Route path="/orders" element={<OrdersSettingsPage />} />
+            <Route path="/customers" element={<CustomersSettingsPage />} />
+            <Route path="/accounting" element={<AccountingSettingsPage />} />
+            <Route path="/labels" element={<LabelTemplatesPage />} />
+            <Route path="/system" element={<SystemInfoPage />} />
+        </Routes>
     )
 }
