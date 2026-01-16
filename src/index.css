@@ -6,13 +6,13 @@
   --primary: 224 58% 24%;
   --primary-foreground: 210 40% 98%;
   
-  /* Secondary Colors - Lime Accent */
-  --secondary: 64 61% 62%;
-  --secondary-foreground: 224 58% 24%;
+  /* Secondary Colors - Golden Yellow Accent */
+  --secondary: 45 93% 58%;
+  --secondary-foreground: 224 58% 18%;
   
   /* Accent Colors */
-  --accent: 64 61% 62%;
-  --accent-foreground: 224 58% 24%;
+  --accent: 45 93% 58%;
+  --accent-foreground: 224 58% 18%;
   
   /* Background & Foreground */
   --background: 0 0% 98%;
@@ -46,12 +46,12 @@
   /* Radius */
   --radius: 0.5rem;
   
-  /* Sidebar - Navy Theme */
+  /* Sidebar - Navy Theme with Gold Accent */
   --sidebar-background: 224 58% 18%;
   --sidebar-foreground: 210 40% 98%;
   --sidebar-accent: 224 50% 25%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-lime: 64 61% 62%;
+  --sidebar-gold: 45 93% 58%;
 }
 
 /* Dark Mode */
@@ -65,7 +65,7 @@
   --popover: 224 58% 12%;
   --popover-foreground: 210 40% 98%;
   
-  --primary: 64 61% 62%;
+  --primary: 45 93% 58%;
   --primary-foreground: 224 58% 18%;
   
   --secondary: 224 50% 25%;
@@ -82,7 +82,7 @@
   
   --border: 224 50% 20%;
   --input: 224 50% 20%;
-  --ring: 64 61% 62%;
+  --ring: 45 93% 58%;
 }
 
 /* Base Styles */
@@ -161,14 +161,14 @@ body {
 }
 
 .gradient-urasi {
-  background: linear-gradient(135deg, hsl(224, 58%, 18%) 0%, hsl(224, 58%, 30%) 50%, hsl(64, 61%, 62%) 100%);
+  background: linear-gradient(135deg, hsl(224, 58%, 18%) 0%, hsl(224, 58%, 30%) 50%, hsl(45, 93%, 58%) 100%);
 }
 
-/* Brand lime accent utility */
-.text-lime-accent {
-  color: hsl(64, 61%, 62%);
+/* Brand gold accent utility */
+.text-gold-accent {
+  color: hsl(45, 93%, 58%);
 }
 
-.bg-lime-accent {
-  background-color: hsl(64, 61%, 62%);
+.bg-gold-accent {
+  background-color: hsl(45, 93%, 58%);
 }
