@@ -212,7 +212,7 @@ export default function ReceiptTemplatePage() {
                                 <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{order_code}}'}</code>
                                 <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{date}}'}</code>
                                 <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{total}}'}</code>
-                                <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{cashier}}'}< /code>
+                                <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{cashier}}'}</code>
                             </div>
                         </div>
                     </CardContent></Card>

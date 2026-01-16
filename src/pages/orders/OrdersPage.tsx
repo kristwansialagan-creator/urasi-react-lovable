@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,6 +8,7 @@ import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { useOrders } from '@/hooks'
 
 export default function OrdersPage() {
+    const navigate = useNavigate()
     const { orders, loading, error, fetchOrders, voidOrder } = useOrders()
     const [search, setSearch] = useState('')
 
@@ -126,8 +128,12 @@ export default function OrdersPage() {
                                             <td className="py-3 px-4">{getPaymentStatusBadge(order.payment_status)}</td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="ghost" size="icon" title="View"><Eye className="h-4 w-4" /></Button>
-                                                    <Button variant="ghost" size="icon" title="Print"><Printer className="h-4 w-4" /></Button>
+                                                    <Button variant="ghost" size="icon" title="View" onClick={() => navigate(`/app/orders/${order.id}`)}>
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" title="Print">
+                                                        <Printer className="h-4 w-4" />
+                                                    </Button>
                                                     {order.payment_status !== 'void' && (
                                                         <Button
                                                             variant="ghost"

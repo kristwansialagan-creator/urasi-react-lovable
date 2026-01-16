@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { DashboardDay } from '@/types/database'
 
 interface SalesStats {
     today: { orders: number; sales: number }
@@ -33,7 +32,7 @@ interface UseReportsReturn {
     loading: boolean
     error: string | null
     getSalesStats: () => Promise<SalesStats>
-    getDailySales: (days?: number) => Promise<DashboardDay[]>
+    getDailySales: (days?: number) => Promise<any[]>
     getTopProducts: (limit?: number) => Promise<TopProduct[]>
     getTopCustomers: (limit?: number) => Promise<TopCustomer[]>
     getPaymentBreakdown: () => Promise<PaymentBreakdown[]>
@@ -126,20 +125,44 @@ export function useReports(): UseReportsReturn {
         }
     }, [])
 
-    const getDailySales = useCallback(async (days = 30): Promise<DashboardDay[]> => {
+    const getDailySales = useCallback(async (days = 7): Promise<any[]> => {
         try {
             const fromDate = new Date()
             fromDate.setDate(fromDate.getDate() - days)
+            fromDate.setHours(0, 0, 0, 0)
 
-            const { data, error: fetchError } = await supabase
-                .from('dashboard_days')
-                .select('*')
-                .gte('date', fromDate.toISOString().split('T')[0])
-                .order('date', { ascending: true })
+            const { data: orders, error: fetchError } = await supabase
+                .from('orders')
+                .select('created_at, total')
+                .gte('created_at', fromDate.toISOString())
+                .neq('payment_status', 'void')
+                .order('created_at', { ascending: true })
 
             if (fetchError) throw fetchError
-            return (data as DashboardDay[]) || []
-        } catch {
+
+            // Aggregate by date
+            const salesMap = new Map<string, { date: string; sales: number; orders: number }>()
+
+            // Initialize last 7 days with 0
+            for (let i = 0; i <= days; i++) {
+                const d = new Date()
+                d.setDate(d.getDate() - (days - i))
+                const dateStr = d.toISOString().split('T')[0]
+                salesMap.set(dateStr, { date: dateStr, sales: 0, orders: 0 })
+            }
+
+            orders?.forEach((order: any) => {
+                const dateStr = new Date(order.created_at).toISOString().split('T')[0]
+                if (salesMap.has(dateStr)) {
+                    const current = salesMap.get(dateStr)!
+                    current.sales += order.total || 0
+                    current.orders += 1
+                }
+            })
+
+            return Array.from(salesMap.values())
+        } catch (err) {
+            console.error('Error fetching daily sales:', err)
             return []
         }
     }, [])

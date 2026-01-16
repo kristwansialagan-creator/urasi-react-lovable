@@ -39,7 +39,7 @@ export default function ProcurementPage() {
         address: ''
     })
 
-    const filteredProcurements = procurements.filter(p => {
+    const filteredProcurements = procurements.filter((p: any) => {
         const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) ||
             p.provider?.name?.toLowerCase().includes(search.toLowerCase())
         const matchesStatus = filterStatus === 'all' || p.status === filterStatus
@@ -48,9 +48,9 @@ export default function ProcurementPage() {
 
     const stats = {
         total: procurements.length,
-        pending: procurements.filter(p => p.status === 'pending').length,
-        completed: procurements.filter(p => p.status === 'completed').length,
-        totalValue: procurements.reduce((sum, p) => sum + p.total_price, 0)
+        pending: procurements.filter((p: any) => p.status === 'pending').length,
+        completed: procurements.filter((p: any) => p.status === 'completed').length,
+        totalValue: procurements.reduce((sum: any, p: any) => sum + p.total_price, 0)
     }
 
     const handleCreateProcurement = async () => {
@@ -230,7 +230,7 @@ export default function ProcurementPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredProcurements.map(p => (
+                                {filteredProcurements.map((p: any) => (
                                     <tr key={p.id} className="border-b hover:bg-[hsl(var(--muted))]">
                                         <td className="p-3 font-mono text-sm">{p.id.slice(0, 8)}</td>
                                         <td className="p-3 font-medium">{p.provider?.name || '-'}</td>
@@ -285,7 +285,7 @@ export default function ProcurementPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {providers.map(p => (
+                        {providers.map((p: any) => (
                             <Card key={p.id} className="p-4">
                                 <div className="font-bold">{p.name}</div>
                                 <div className="text-sm text-[hsl(var(--muted-foreground))]">{p.email || 'No email'}</div>
@@ -312,7 +312,7 @@ export default function ProcurementPage() {
                                     className="w-full px-3 py-2 border rounded mt-1"
                                 >
                                     <option value="">Select provider...</option>
-                                    {providers.map(p => (
+                                    {providers.map((p: any) => (
                                         <option key={p.id} value={p.id}>{p.name}</option>
                                     ))}
                                 </select>

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Printer } from 'lucide-react'
 import { useProducts } from '@/hooks'
 import { supabase } from '@/lib/supabase'
+import JsBarcode from 'jsbarcode'
 
 export default function PrintLabelsPage() {
     const { products } = useProducts()
@@ -79,13 +80,16 @@ export default function PrintLabelsPage() {
                         display: inline-block;
                         page-break-inside: avoid;
                         text-align: center;
+                        position: relative;
+                        box-sizing: border-box;
                     }
-                    .product-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+                    .product-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                     .product-sku { font-size: 12px; color: #666; margin-bottom: 5px; }
                     .product-price { font-size: 16px; font-weight: bold; color: #000; }
+                    img.barcode { max-width: 90%; height: auto; display: block; margin: 5px auto; }
                     @media print {
                         body { margin: 0; padding: 0; }
-                        .label { border: none; }
+                        .label { border: none; page-break-inside: avoid; }
                     }
                 </style>
             </head>
@@ -94,14 +98,48 @@ export default function PrintLabelsPage() {
 
         selectedProductsData.forEach((product: any) => {
             const qty = quantities[product.id] || 1
+
+            // Generate barcode
+            let barcodeDataUrl = ''
+            try {
+                const canvas = document.createElement('canvas')
+                JsBarcode(canvas, product.sku || product.code || '000000', {
+                    format: 'CODE128',
+                    displayValue: true,
+                    fontSize: 14,
+                    height: 40,
+                    width: 2,
+                    margin: 0
+                })
+                barcodeDataUrl = canvas.toDataURL('image/png')
+            } catch (e) {
+                console.error('Barcode error', e)
+            }
+
             for (let i = 0; i < qty; i++) {
-                printContent += `
-                    <div class="label">
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-sku">SKU: ${product.sku || 'N/A'}</div>
-                        <div class="product-price">$${product.sale_price?.toFixed(2) || '0.00'}</div>
-                    </div>
-                `
+                let html = selectedTemplate.template || ''
+                if (!html) {
+                    // Default HTML
+                    html = `
+                        <div class="product-name">{{product.name}}</div>
+                        <img src="{{product.barcode}}" class="barcode" />
+                        <div class="product-sku">{{product.sku}}</div>
+                        <div class="product-price">$ {{product.price}}</div>
+                    `
+                }
+
+                // Replace variables
+                html = html
+                    .replace(/{{product.name}}/g, product.name)
+                    .replace(/{{product.sku}}/g, product.sku || '-')
+                    .replace(/{{product.price}}/g, product.sale_price?.toFixed(2) || '0.00')
+                // .replace(/{{product.barcode}}/g, barcodeDataUrl) // Handle explicitly below if present, or just inject
+
+                // If the template has {{product.barcode}}, replace it with the image source
+                // Otherwise, if it's custom HTML, ensure they use <img src="{{product.barcode}}" />
+                html = html.replace(/{{product.barcode}}/g, barcodeDataUrl)
+
+                printContent += `<div class="label">${html}</div>`
             }
         })
 
@@ -109,9 +147,11 @@ export default function PrintLabelsPage() {
 
         printWindow.document.write(printContent)
         printWindow.document.close()
+
+        // Wait for images to load? Data URLs load instantly usually.
         setTimeout(() => {
             printWindow.print()
-        }, 250)
+        }, 500)
     }
 
     const filteredProducts = products.filter((p: any) =>

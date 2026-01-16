@@ -58,7 +58,7 @@ export default function ProfilePage() {
         if (!file) return
 
         setUploading(true)
-        const url = await uploadFile(file)
+        const { url } = await uploadFile(file)
         if (url) {
             setFormData({ ...formData, avatar_url: url })
         }

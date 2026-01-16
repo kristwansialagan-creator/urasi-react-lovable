@@ -135,6 +135,7 @@ export function Sidebar() {
             label: 'Procurements',
             children: [
                 { to: '/procurements', label: 'All Procurements' },
+                { to: '/procurements/providers', label: 'Providers' },
             ],
         },
         {
@@ -172,6 +173,7 @@ export function Sidebar() {
             label: 'Tools',
             children: [
                 { to: '/tools/data-management', label: 'Data Management' },
+                { to: '/tools/bulk-editor', label: 'Bulk Editor' },
             ],
         },
         { to: '/settings', icon: <Settings className="h-5 w-5" />, label: 'Settings' },

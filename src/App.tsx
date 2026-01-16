@@ -15,6 +15,9 @@ import CategoriesPage from '@/pages/products/CategoriesPage'
 import StockAdjustmentPage from '@/pages/products/StockAdjustmentPage'
 import PrintLabelsPage from '@/pages/products/PrintLabelsPage'
 import OrdersPage from '@/pages/orders/OrdersPage'
+import OrderDetailsPage from '@/pages/orders/OrderDetailsPage'
+import OrderRefundPage from '@/pages/orders/OrderRefundPage'
+import OrderPaymentPage from '@/pages/orders/OrderPaymentPage'
 import InstalmentsPage from '@/pages/orders/InstalmentsPage'
 import InvoicePage from '@/pages/orders/InvoicePage'
 import CustomersPage from '@/pages/customers/CustomersPage'
@@ -22,6 +25,8 @@ import RegistersPage from '@/pages/registers/RegistersPage'
 import ReportsPage from '@/pages/reports/ReportsPage'
 import SettingsPage from '@/pages/settings/SettingsPage'
 import ProcurementPage from '@/pages/procurement/ProcurementPage'
+import ProductGroupsPage from '@/pages/procurement/ProductGroupsPage'
+import ProcurementProductsPage from '@/pages/procurement/ProcurementProductsPage'
 import CouponsPage from '@/pages/marketing/CouponsPage'
 import TransactionsPage from '@/pages/transactions/TransactionsPage'
 import MediaLibraryPage from '@/pages/media/MediaLibraryPage'
@@ -29,6 +34,9 @@ import RewardsPage from '@/pages/rewards/RewardsPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
 import NotificationsPage from '@/pages/notifications/NotificationsPage'
 import DataManagementPage from '@/pages/tools/DataManagementPage'
+import CustomerGroupsPage from '@/pages/customers/CustomerGroupsPage'
+import ProvidersPage from '@/pages/procurement/ProvidersPage'
+import BulkEditorPage from '@/pages/tools/BulkEditorPage'
 import UnauthorizedPage from '@/pages/UnauthorizedPage'
 
 function App() {
@@ -61,11 +69,15 @@ function App() {
 
                     {/* Orders */}
                     <Route path="/orders" element={<OrdersPage />} />
+                    <Route path="/orders/:id" element={<OrderDetailsPage />} />
+                    <Route path="/orders/:id/refund" element={<OrderRefundPage />} />
+                    <Route path="/orders/:id/payment" element={<OrderPaymentPage />} />
                     <Route path="/orders/instalments" element={<InstalmentsPage />} />
                     <Route path="/orders/invoice/:id" element={<InvoicePage />} />
 
                     {/* Customers */}
                     <Route path="/customers" element={<CustomersPage />} />
+                    <Route path="/customers/groups" element={<CustomerGroupsPage />} />
 
                     {/* Registers */}
                     <Route path="/registers" element={<RegistersPage />} />
@@ -75,6 +87,9 @@ function App() {
 
                     {/* Procurement */}
                     <Route path="/procurements" element={<ProcurementPage />} />
+                    <Route path="/procurements/providers" element={<ProvidersPage />} />
+                    <Route path="/procurement/groups" element={<ProductGroupsPage />} />
+                    <Route path="/procurement/groups/:groupId/products" element={<ProcurementProductsPage />} />
 
                     {/* Marketing */}
                     <Route path="/coupons" element={<CouponsPage />} />
@@ -96,6 +111,7 @@ function App() {
 
                     {/* Tools */}
                     <Route path="/tools/data-management" element={<DataManagementPage />} />
+                    <Route path="/tools/bulk-editor" element={<BulkEditorPage />} />
 
                     {/* Settings */}
                     <Route path="/settings/*" element={<SettingsPage />} />

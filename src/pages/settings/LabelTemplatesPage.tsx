@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tag, Plus, Edit2, Trash2, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import BarcodeGenerator from '@/components/barcode/BarcodeGenerator'
 
 interface LabelTemplate {
     id: string
@@ -42,7 +41,7 @@ export default function LabelTemplatesPage() {
             .from('label_templates')
             .select('*')
             .order('is_default', { ascending: false })
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }) as any
 
         if (!error) setTemplates(data || [])
         setLoading(false)
@@ -74,15 +73,15 @@ export default function LabelTemplatesPage() {
         }
 
         if (editingTemplate) {
-            const { error } = await supabase
-                .from('label_templates')
+            const { error } = await (supabase
+                .from('label_templates') as any)
                 .update(templateData)
                 .eq('id', editingTemplate.id)
 
             if (error) return alert('Failed to update template')
         } else {
-            const { error } = await supabase
-                .from('label_templates')
+            const { error } = await (supabase
+                .from('label_templates') as any)
                 .insert([{ ...templateData, author: user.data.user?.id }])
 
             if (error) return alert('Failed to create template')
@@ -106,14 +105,14 @@ export default function LabelTemplatesPage() {
 
     const setAsDefault = async (id: string) => {
         // First, unset all defaults
-        await supabase
-            .from('label_templates')
+        await (supabase
+            .from('label_templates') as any)
             .update({ is_default: false })
             .neq('id', '00000000-0000-0000-0000-000000000000')
 
         // Then set the selected one as default
-        const { error } = await supabase
-            .from('label_templates')
+        const { error } = await (supabase
+            .from('label_templates') as any)
             .update({ is_default: true })
             .eq('id', id)
 

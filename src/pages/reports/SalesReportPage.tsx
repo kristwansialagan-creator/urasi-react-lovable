@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
 import { FileText, Table as TableIcon } from 'lucide-react'
 import { useReports, useOrders } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
+import { subDays } from 'date-fns'
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -34,6 +36,8 @@ export default function SalesReportPage() {
     const { getSalesStats, getTopProducts, getPaymentBreakdown } = useReports()
     const { orders } = useOrders()
 
+    const [dateFrom, setDateFrom] = useState<Date>(subDays(new Date(), 30))
+    const [dateTo, setDateTo] = useState<Date>(new Date())
     const [stats, setStats] = useState<{
         today: { orders: number; sales: number }
         week: { orders: number; sales: number }
@@ -49,11 +53,17 @@ export default function SalesReportPage() {
 
     useEffect(() => {
         loadData()
-    }, [])
+    }, [dateFrom, dateTo])
 
     const loadData = async () => {
         const salesStats = await getSalesStats()
         setStats(salesStats)
+
+        // Filter orders by date range
+        const filteredOrders = orders.filter(o => {
+            const orderDate = new Date(o.created_at)
+            return orderDate >= dateFrom && orderDate <= dateTo
+        })
 
         const products = await getTopProducts(10)
         setTopProducts(products)
@@ -61,15 +71,16 @@ export default function SalesReportPage() {
         const payments = await getPaymentBreakdown()
         setPaymentBreakdown(payments)
 
-        // Calculate daily sales for last 7 days
-        const last7Days = [...Array(7)].map((_, i) => {
-            const date = new Date()
-            date.setDate(date.getDate() - (6 - i))
+        // Calculate daily sales for date range
+        const daysDiff = Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24))
+        const dateRange = [...Array(daysDiff + 1)].map((_, i) => {
+            const date = new Date(dateFrom)
+            date.setDate(date.getDate() + i)
             return date.toISOString().split('T')[0]
         })
 
-        const dailySales = last7Days.map(date => {
-            const dayOrders = orders.filter(o => o.created_at.startsWith(date))
+        const dailySales = dateRange.map(date => {
+            const dayOrders = filteredOrders.filter(o => o.created_at.startsWith(date))
             const sales = dayOrders.reduce((sum, o) => sum + o.total, 0)
             return { date, sales }
         })
@@ -228,6 +239,23 @@ export default function SalesReportPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Date Range Filter */}
+            <Card>
+                <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                        <label className="text-sm font-medium">Date Range:</label>
+                        <DateRangePicker
+                            from={dateFrom}
+                            to={dateTo}
+                            onSelect={(from, to) => {
+                                setDateFrom(from)
+                                setDateTo(to)
+                            }}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>

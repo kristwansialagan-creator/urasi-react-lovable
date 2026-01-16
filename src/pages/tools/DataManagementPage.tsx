@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Download, Upload, Database, FileText, AlertCircle } from 'lucide-react'
@@ -78,7 +78,7 @@ export default function DataManagementPage() {
                 alert(`Ready to import ${products.length} products. Feature in development.`)
             } else if (file.name.endsWith('.csv')) {
                 const lines = text.split('\n')
-                const headers = lines[0].split(',')
+                // const headers = lines[0].split(',') // Reserved for future use
 
                 alert(`Ready to import ${lines.length - 1} products from CSV. Feature in development.`)
             }

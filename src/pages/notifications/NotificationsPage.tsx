@@ -8,7 +8,7 @@ export default function NotificationsPage() {
     const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications()
     const [filter, setFilter] = useState<'all' | 'unread' | 'info' | 'success' | 'warning' | 'error'>('all')
 
-    const filtered = notifications.filter(n => {
+    const filtered = notifications.filter((n: any) => {
         if (filter === 'unread') return !n.read
         if (filter === 'all') return true
         return n.type === filter
@@ -45,9 +45,9 @@ export default function NotificationsPage() {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{notifications.length}</div></CardContent></Card>
                 <Card className="border-red-500"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-red-500" />Unread</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-red-600">{unreadCount}</div></CardContent></Card>
-                <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Info className="h-4 w-4 text-blue-500" />Info</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-blue-600">{notifications.filter(n => n.type === 'info').length}</div></CardContent></Card>
-                <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" />Success</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{notifications.filter(n => n.type === 'success').length}</div></CardContent></Card>
-                <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-yellow-500" />Warnings</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-yellow-600">{notifications.filter(n => n.type === 'warning').length}</div></CardContent></Card>
+                <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Info className="h-4 w-4 text-blue-500" />Info</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-blue-600">{notifications.filter((n: any) => n.type === 'info').length}</div></CardContent></Card>
+                <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" />Success</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{notifications.filter((n: any) => n.type === 'success').length}</div></CardContent></Card>
+                <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-yellow-500" />Warnings</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-yellow-600">{notifications.filter((n: any) => n.type === 'warning').length}</div></CardContent></Card>
             </div>
 
             <Card><CardContent className="pt-6">
@@ -68,7 +68,7 @@ export default function NotificationsPage() {
                         <p className="text-[hsl(var(--muted-foreground))]">You're all caught up!</p>
                     </CardContent></Card>
                 ) : (
-                    filtered.map(notification => (
+                    filtered.map((notification: any) => (
                         <Card key={notification.id} className={`border-l-4 ${getColorClass(notification.type)} ${!notification.read ? 'shadow-md' : 'opacity-75'}`}>
                             <CardContent className="p-4">
                                 <div className="flex items-start gap-4">

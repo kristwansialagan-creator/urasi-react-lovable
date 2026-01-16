@@ -1,6 +1,6 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
-import { Settings as SettingsIcon, DollarSign, Ruler, Globe, Monitor, FileText, Receipt, Users, Wallet, Tag, Info } from 'lucide-react'
+import { Settings as SettingsIcon, DollarSign, Ruler, Globe, Monitor, FileText, Receipt, Users, Wallet, Tag, Info, Shield } from 'lucide-react'
 import GeneralSettingsPage from './GeneralSettingsPage'
 import TaxesPage from './TaxesPage'
 import UnitsPage from './UnitsPage'
@@ -12,6 +12,8 @@ import AccountingSettingsPage from './AccountingSettingsPage'
 import ReceiptTemplatePage from './ReceiptTemplatePage'
 import LabelTemplatesPage from './LabelTemplatesPage'
 import SystemInfoPage from './SystemInfoPage'
+import UsersPage from './UsersPage'
+import RolesPage from './RolesPage'
 
 export default function SettingsPage() {
     const navigate = useNavigate()
@@ -19,6 +21,8 @@ export default function SettingsPage() {
 
     const settingsItems = [
         { path: '/settings/general', name: 'General Settings', icon: <Globe className="h-5 w-5" />, desc: 'Store info, currency, timezone' },
+        { path: '/settings/users', name: 'Users Management', icon: <Users className="h-5 w-5" />, desc: 'Manage users and assignments' },
+        { path: '/settings/roles', name: 'Roles & Permissions', icon: <Shield className="h-5 w-5" />, desc: 'Configure access levels' },
         { path: '/settings/pos', name: 'POS Settings', icon: <Monitor className="h-5 w-5" />, desc: 'POS configuration' },
         { path: '/settings/taxes', name: 'Tax Configuration', icon: <DollarSign className="h-5 w-5" />, desc: 'Manage taxes and tax groups' },
         { path: '/settings/units', name: 'Units Management', icon: <Ruler className="h-5 w-5" />, desc: 'Product units and conversions' },
@@ -28,7 +32,10 @@ export default function SettingsPage() {
         { path: '/settings/customers', name: 'Customer Settings', icon: <Users className="h-5 w-5" />, desc: 'Customer preferences' },
         { path: '/settings/accounting', name: 'Accounting Settings', icon: <Wallet className="h-5 w-5" />, desc: 'Chart of accounts & accounting' },
         { path: '/settings/labels', name: 'Label Templates', icon: <Tag className="h-5 w-5" />, desc: 'Manage label templates' },
-        { path: '/settings/system', name: 'System Information', icon: <Info className="h-5 w-5" />, desc: 'Version, database, requirements' }
+        { path: '/settings/system', name: 'System Information', icon: <Info className="h-5 w-5" />, desc: 'Version, database, requirements' },
+        { path: '/settings/accounts', name: 'Chart of Accounts', icon: <Wallet className="h-5 w-5" />, desc: 'Manage transaction accounts' },
+        { path: '/settings/modules', name: 'Modules', icon: <Monitor className="h-5 w-5" />, desc: 'Manage system plugins' },
+        { path: '/settings/reset', name: 'System Reset', icon: <Shield className="h-5 w-5 text-red-500" />, desc: 'Danger zone operations' }
     ]
 
     // If at root /settings, show navigation
@@ -69,6 +76,8 @@ export default function SettingsPage() {
     return (
         <Routes>
             <Route path="/general" element={<GeneralSettingsPage />} />
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/roles" element={<RolesPage />} />
             <Route path="/pos" element={<PosSettingsPage />} />
             <Route path="/taxes" element={<TaxesPage />} />
             <Route path="/units" element={<UnitsPage />} />
@@ -79,6 +88,15 @@ export default function SettingsPage() {
             <Route path="/accounting" element={<AccountingSettingsPage />} />
             <Route path="/labels" element={<LabelTemplatesPage />} />
             <Route path="/system" element={<SystemInfoPage />} />
+            {/* New Routes */}
+            <Route path="/accounts" element={<TransactionAccountsPage />} />
+            <Route path="/modules" element={<ModulesPage />} />
+            <Route path="/reset" element={<SystemResetPage />} />
         </Routes>
     )
 }
+
+// Lazy import to avoid circular dependency issues if any, or just standard import at top
+import TransactionAccountsPage from '../accounting/TransactionAccountsPage'
+import ModulesPage from './ModulesPage'
+import SystemResetPage from './SystemResetPage'

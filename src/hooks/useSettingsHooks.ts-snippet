@@ -1,0 +1,40 @@
+// ==========================================
+// Rewards Hook
+// ==========================================
+export function useRewards() {
+    const [rewards, setRewards] = useState<any[]>([])
+    const [transactions, setTransactions] = useState<any[]>([])
+    const [loading, setLoading] = useState(false)
+    return { 
+        rewards, transactions, loading, 
+        fetchRewards: async () => {}, 
+        createReward: async (d:any) => {}, 
+        updateReward: async (id:any, d:any) => {},
+        deleteReward: async (id:any) => {} 
+    }
+}
+
+// ==========================================
+// Settings Hook (General)
+// ==========================================
+export function useSettings() {
+    const [settings, setSettings] = useState<any>({})
+    const [loading, setLoading] = useState(false)
+    return { settings, loading, fetchSettings: async () => {}, updateSettings: async (d:any) => true, bulkUpdate: async (d:any, section:string) => true }
+}
+
+// ==========================================
+// Media Hook
+// ==========================================
+export function useMedia() {
+    const [media, setMedia] = useState<any[]>([])
+    const [loading, setLoading] = useState(false)
+    const uploadFile = async (file:any) => ({ url: URL.createObjectURL(file) })
+    return { 
+        media, loading, 
+        fetchMedia: async () => {}, 
+        uploadMedia: uploadFile, 
+        uploadFile, // Alias for legacy support
+        deleteMedia: async (id:any) => {} 
+    }
+}
