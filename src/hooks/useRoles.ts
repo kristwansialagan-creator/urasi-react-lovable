@@ -65,9 +65,9 @@ export function useRoles() {
 
     const createRole = useCallback(async (role: Partial<Role>) => {
         try {
-            const { error } = await supabase
+            const { error } = await (supabase
                 .from('roles')
-                .insert(role)
+                .insert(role as any) as any)
             if (error) throw error
             await fetchRoles()
             return true

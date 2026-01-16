@@ -11,8 +11,13 @@ interface Coupon {
     minimum_cart_value: number | null
     valid_until: string | null
     usage_count: number | null
+    maximum_usage: number | null
+    limit_usage: boolean | null
     active: boolean | null
+    description: string | null
+    author: string | null
     created_at: string | null
+    updated_at: string | null
 }
 
 interface CouponValidation {

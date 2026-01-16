@@ -40,10 +40,14 @@ export default function TransactionAccountsPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        const dataToSubmit = {
+            ...formData,
+            type: formData.type || undefined
+        }
         if (currentAccount) {
-            await updateAccount(currentAccount.id, formData)
+            await updateAccount(currentAccount.id, dataToSubmit)
         } else {
-            await createAccount(formData)
+            await createAccount(dataToSubmit)
         }
         setIsDialogOpen(false)
     }
@@ -131,7 +135,7 @@ export default function TransactionAccountsPage() {
                             <div className="space-y-2">
                                 <Label>Type</Label>
                                 <Select
-                                    value={formData.type}
+                                    value={formData.type ?? undefined}
                                     onValueChange={(val: any) => setFormData({ ...formData, type: val })}
                                 >
                                     <SelectTrigger>

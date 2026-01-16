@@ -195,7 +195,7 @@ export default function ProcurementProductsPage() {
                                             <div>
                                                 <p className="font-medium">{product.name}</p>
                                                 <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                                                    {product.sku} • Stock: {product.stock_quantity} • {formatCurrency(product.sale_price)}
+                                                    {product.sku} • Stock: {product.stock_quantity ?? 0} • {formatCurrency(product.sale_price ?? 0)}
                                                 </p>
                                             </div>
                                             <Button size="sm" onClick={() => handleAddProduct(product)}>
@@ -221,7 +221,7 @@ export default function ProcurementProductsPage() {
                                     <div className="flex-1">
                                         <p className="font-medium">{product.name}</p>
                                         <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                                            {product.sku} • Stock: {product.stock_quantity} • {formatCurrency(product.sale_price)}
+                                            {product.sku} • Stock: {product.stock_quantity ?? 0} • {formatCurrency(product.sale_price ?? 0)}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-4">

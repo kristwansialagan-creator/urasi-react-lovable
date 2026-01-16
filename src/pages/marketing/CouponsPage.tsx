@@ -39,7 +39,7 @@ export default function CouponsPage() {
         total: coupons.length,
         active: coupons.filter(c => c.active).length,
         expired: coupons.filter(c => c.valid_until && new Date(c.valid_until) < new Date()).length,
-        totalUsage: coupons.reduce((sum, c) => sum + c.usage_count, 0)
+        totalUsage: coupons.reduce((sum, c) => sum + (c.usage_count ?? 0), 0)
     }
 
     const handleCreate = async () => {
@@ -49,10 +49,15 @@ export default function CouponsPage() {
         }
 
         await createCoupon({
-            ...formData,
-            valid_from: formData.valid_from || null,
+            name: formData.name,
+            code: formData.code,
+            type: formData.type,
+            discount_value: formData.discount_value,
+            discount_type: formData.discount_type,
+            minimum_cart_value: formData.minimum_cart_value,
             valid_until: formData.valid_until || null,
-            usage_limit: formData.usage_limit || null
+            maximum_usage: formData.usage_limit || null,
+            active: formData.active
         })
 
         resetForm()
@@ -229,15 +234,15 @@ export default function CouponsPage() {
                                                 )}
                                                 <span className="font-bold text-lg text-[hsl(var(--primary))]">
                                                     {coupon.discount_type === 'percentage'
-                                                        ? `${coupon.discount_value}% OFF`
-                                                        : formatCurrency(coupon.discount_value) + ' OFF'
+                                                        ? `${coupon.discount_value ?? 0}% OFF`
+                                                        : formatCurrency(coupon.discount_value ?? 0) + ' OFF'
                                                     }
                                                 </span>
                                             </div>
 
-                                            {coupon.minimum_cart_value > 0 && (
+                                            {(coupon.minimum_cart_value ?? 0) > 0 && (
                                                 <div className="text-[hsl(var(--muted-foreground))]">
-                                                    Min. order: {formatCurrency(coupon.minimum_cart_value)}
+                                                    Min. order: {formatCurrency(coupon.minimum_cart_value ?? 0)}
                                                 </div>
                                             )}
 
@@ -249,7 +254,7 @@ export default function CouponsPage() {
                                             )}
 
                                             <div className="text-[hsl(var(--muted-foreground))]">
-                                                Used: {coupon.usage_count} / {coupon.usage_limit || '∞'}
+                                                Used: {coupon.usage_count ?? 0} / {(coupon as any).maximum_usage || '∞'}
                                             </div>
                                         </div>
 
