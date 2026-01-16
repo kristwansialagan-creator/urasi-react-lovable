@@ -30,7 +30,7 @@ export function TransactionCard() {
                 .eq('payment_status', 'paid')
 
             if (todayError) throw todayError
-            const todayTotal = todayData?.reduce((sum, order) => sum + order.total, 0) || 0
+            const todayTotal = todayData?.reduce((sum, order) => sum + (order.total ?? 0), 0) || 0
 
             // Yesterday's transactions
             const { data: yesterdayData, error: yesterdayError } = await supabase
@@ -41,7 +41,7 @@ export function TransactionCard() {
                 .eq('payment_status', 'paid')
 
             if (yesterdayError) throw yesterdayError
-            const yesterdayTotal = yesterdayData?.reduce((sum, order) => sum + order.total, 0) || 0
+            const yesterdayTotal = yesterdayData?.reduce((sum, order) => sum + (order.total ?? 0), 0) || 0
 
             const percentageChange = yesterdayTotal > 0
                 ? ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100

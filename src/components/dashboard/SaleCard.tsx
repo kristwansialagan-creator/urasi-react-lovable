@@ -33,7 +33,7 @@ export function SaleCard() {
                 .eq('payment_status', 'paid')
 
             if (thisWeekError) throw thisWeekError
-            const thisWeekTotal = thisWeekData?.reduce((sum, order) => sum + order.total, 0) || 0
+            const thisWeekTotal = thisWeekData?.reduce((sum, order) => sum + (order.total ?? 0), 0) || 0
 
             // Last week's sales
             const { data: lastWeekData, error: lastWeekError } = await supabase
@@ -44,7 +44,7 @@ export function SaleCard() {
                 .eq('payment_status', 'paid')
 
             if (lastWeekError) throw lastWeekError
-            const lastWeekTotal = lastWeekData?.reduce((sum, order) => sum + order.total, 0) || 0
+            const lastWeekTotal = lastWeekData?.reduce((sum, order) => sum + (order.total ?? 0), 0) || 0
 
             const percentageChange = lastWeekTotal > 0
                 ? ((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100

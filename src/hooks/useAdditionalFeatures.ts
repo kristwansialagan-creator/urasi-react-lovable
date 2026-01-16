@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import type { Json } from '@/integrations/supabase/types'
 
 // ==========================================
 // Providers Hook
@@ -25,13 +26,13 @@ export function useProviders() {
         setLoading(false)
     }, [])
 
-    const createProvider = async (provider: Partial<Provider>) => {
+    const createProvider = async (provider: { name: string; email?: string | null; phone?: string | null }) => {
         const { data, error } = await supabase.from('providers').insert(provider).select().single()
         if (!error) fetchProviders()
         return { data, error }
     }
 
-    const updateProvider = async (id: string, provider: Partial<Provider>) => {
+    const updateProvider = async (id: string, provider: { name?: string; email?: string | null; phone?: string | null }) => {
         const { data, error } = await supabase.from('providers').update(provider).eq('id', id).select().single()
         if (!error) fetchProviders()
         return { data, error }
@@ -75,13 +76,13 @@ export function useTransactionAccounts() {
         setLoading(false)
     }, [])
 
-    const createAccount = async (account: Partial<TransactionAccount>) => {
+    const createAccount = async (account: { name: string; code?: string; type?: string; balance?: number; description?: string }) => {
         const { data, error } = await supabase.from('transaction_accounts').insert(account).select().single()
         if (!error) fetchAccounts()
         return { data, error }
     }
 
-    const updateAccount = async (id: string, account: Partial<TransactionAccount>) => {
+    const updateAccount = async (id: string, account: { name?: string; code?: string; type?: string; balance?: number; description?: string }) => {
         const { data, error } = await supabase.from('transaction_accounts').update(account).eq('id', id).select().single()
         if (!error) fetchAccounts()
         return { data, error }
@@ -109,7 +110,7 @@ export interface Module {
     label: string
     description: string | null
     status: string | null
-    settings: any
+    settings: Json | null
     created_at: string | null
     updated_at: string | null
 }
@@ -120,7 +121,7 @@ export function useModules() {
 
     const fetchModules = useCallback(async () => {
         setLoading(true)
-        const { data } = await (supabase.from('modules').select('*').order('label') as any)
+        const { data } = await supabase.from('modules').select('*').order('label')
         setModules(data || [])
         setLoading(false)
     }, [])
@@ -132,7 +133,7 @@ export function useModules() {
         return { data, error }
     }
 
-    const updateModuleSettings = async (id: string, settings: any) => {
+    const updateModuleSettings = async (id: string, settings: Json) => {
         const { data, error } = await supabase.from('modules').update({ settings }).eq('id', id).select().single()
         if (!error) fetchModules()
         return { data, error }

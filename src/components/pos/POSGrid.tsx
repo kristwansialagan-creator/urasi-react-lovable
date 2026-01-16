@@ -22,7 +22,7 @@ interface POSGridProps {
 export default function POSGrid({ onProductSelect }: POSGridProps) {
     const [products, setProducts] = useState<Product[]>([])
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-    const [categories, setCategories] = useState<any[]>([])
+    const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
     const [search, setSearch] = useState('')
     const [loading, setLoading] = useState(true)
@@ -39,7 +39,7 @@ export default function POSGrid({ onProductSelect }: POSGridProps) {
     const fetchCategories = async () => {
         try {
             const { data, error } = await supabase
-                .from('categories')
+                .from('product_categories')
                 .select('id, name')
                 .order('name')
 
@@ -55,12 +55,24 @@ export default function POSGrid({ onProductSelect }: POSGridProps) {
             setLoading(true)
             const { data, error } = await supabase
                 .from('products')
-                .select('id, name, sku, sale_price, stock_quantity, category_id, image_url')
+                .select('id, name, sku, sale_price, stock_quantity, category_id, thumbnail_id')
                 .eq('status', 'available')
                 .gt('stock_quantity', 0)
 
             if (error) throw error
-            setProducts(data || [])
+            
+            // Map products and handle null values
+            const mappedProducts: Product[] = (data || []).map(p => ({
+                id: p.id,
+                name: p.name,
+                sku: p.sku || '',
+                sale_price: p.sale_price ?? 0,
+                stock_quantity: p.stock_quantity ?? 0,
+                category_id: p.category_id || undefined,
+                image_url: undefined // We could fetch from medias table if needed
+            }))
+            
+            setProducts(mappedProducts)
         } catch (error) {
             console.error('Error fetching products:', error)
         } finally {
