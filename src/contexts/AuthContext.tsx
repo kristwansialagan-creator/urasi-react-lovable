@@ -112,28 +112,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
+            (_event, session) => {
+                console.log('Auth state changed:', _event, session?.user?.id)
                 setSession(session)
                 setUser(session?.user ?? null)
+                setLoading(false) // Set loading false immediately
 
                 if (session?.user) {
-                    await fetchProfile(session.user.id)
+                    // Non-blocking profile fetch
+                    fetchProfile(session.user.id)
                 } else {
                     setProfile(null)
                 }
-
-                setLoading(false)
             }
         )
 
         return () => subscription.unsubscribe()
     }, [])
 
+    // Sign in - update state directly to avoid race condition
     const signIn = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
         })
+        
+        // If successful, update state directly
+        if (!error && data.session) {
+            console.log('Sign in successful, setting state directly')
+            setSession(data.session)
+            setUser(data.user)
+            setLoading(false)
+            // Fetch profile non-blocking
+            fetchProfile(data.user.id)
+        }
+        
         return { error }
     }
 
