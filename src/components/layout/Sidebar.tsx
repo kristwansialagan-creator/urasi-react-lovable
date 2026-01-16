@@ -41,7 +41,7 @@ function NavItem({ to, icon, label, children }: NavItemProps) {
                     className={cn(
                         'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                         isActive
-                            ? 'bg-[hsl(var(--sidebar-lime))]/20 text-[hsl(var(--sidebar-lime))]'
+                            ? 'bg-[hsl(var(--sidebar-gold))]/20 text-[hsl(var(--sidebar-gold))]'
                             : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]'
                     )}
                 >
@@ -61,7 +61,7 @@ function NavItem({ to, icon, label, children }: NavItemProps) {
                                     cn(
                                         'block px-3 py-2 rounded-lg text-sm transition-colors',
                                         isActive
-                                            ? 'bg-[hsl(var(--sidebar-lime))]/20 text-[hsl(var(--sidebar-lime))]'
+                                            ? 'bg-[hsl(var(--sidebar-gold))]/20 text-[hsl(var(--sidebar-gold))]'
                                             : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]'
                                     )
                                 }
@@ -82,7 +82,7 @@ function NavItem({ to, icon, label, children }: NavItemProps) {
                 cn(
                     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                     isActive
-                        ? 'bg-[hsl(var(--sidebar-lime))]/20 text-[hsl(var(--sidebar-lime))]'
+                        ? 'bg-[hsl(var(--sidebar-gold))]/20 text-[hsl(var(--sidebar-gold))]'
                         : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]'
                 )
             }
@@ -191,7 +191,7 @@ export function Sidebar() {
                 {/* User Section */}
                 <div className="border-t border-[hsl(var(--sidebar-accent))] p-4">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-[hsl(var(--sidebar-lime))]/20 flex items-center justify-center text-[hsl(var(--sidebar-lime))] font-semibold">
+                        <div className="w-10 h-10 rounded-full bg-[hsl(var(--sidebar-gold))]/20 flex items-center justify-center text-[hsl(var(--sidebar-gold))] font-semibold">
                             {profile?.username?.[0]?.toUpperCase() || profile?.first_name?.[0]?.toUpperCase() || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">

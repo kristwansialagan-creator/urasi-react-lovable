@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { DashboardLayout } from '@/components/layout'
 
@@ -41,8 +42,9 @@ import UnauthorizedPage from '@/pages/UnauthorizedPage'
 
 function App() {
     return (
-        <AuthProvider>
-            <Routes>
+        <LanguageProvider>
+            <AuthProvider>
+                <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
@@ -120,8 +122,9 @@ function App() {
                 {/* Redirect */}
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-        </AuthProvider>
+                </Routes>
+            </AuthProvider>
+        </LanguageProvider>
     )
 }
 
