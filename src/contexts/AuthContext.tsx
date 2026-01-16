@@ -57,13 +57,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Fetch user profile
     const fetchProfile = async (userId: string) => {
         try {
+            console.log('Fetching profile for user:', userId)
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', userId)
                 .single()
 
-            if (!error && data) {
+            if (error) {
+                console.error('Profile fetch error:', error)
+                // Still allow navigation even if profile fetch fails
+                return
+            }
+            
+            if (data) {
+                console.log('Profile loaded:', data)
                 // Map database response to Profile interface with proper defaults
                 const mappedProfile: Profile = {
                     id: data.id,
@@ -81,8 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     updated_at: data.updated_at ?? new Date().toISOString()
                 }
                 setProfile(mappedProfile)
-                // Fetch permissions after profile is loaded
-                await fetchUserPermissions(userId)
+                // Fetch permissions after profile is loaded (non-blocking)
+                fetchUserPermissions(userId).catch(err => 
+                    console.error('Error fetching permissions:', err)
+                )
             }
         } catch (error) {
             console.error('Error fetching profile:', error)
