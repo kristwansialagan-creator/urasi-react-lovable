@@ -13,13 +13,13 @@ import {
     Truck,
     Tag,
     Gift,
-    Store,
     FileText,
     Calculator,
     ChevronDown,
     LogOut,
 } from 'lucide-react'
 import { useState } from 'react'
+import logoFull from '@/assets/logo-full.png'
 
 interface NavItemProps {
     to: string
@@ -41,8 +41,8 @@ function NavItem({ to, icon, label, children }: NavItemProps) {
                     className={cn(
                         'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                         isActive
-                            ? 'bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))]'
-                            : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]/50'
+                            ? 'bg-[hsl(var(--sidebar-lime))]/20 text-[hsl(var(--sidebar-lime))]'
+                            : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]'
                     )}
                 >
                     {icon}
@@ -61,8 +61,8 @@ function NavItem({ to, icon, label, children }: NavItemProps) {
                                     cn(
                                         'block px-3 py-2 rounded-lg text-sm transition-colors',
                                         isActive
-                                            ? 'bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))]'
-                                            : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]/50'
+                                            ? 'bg-[hsl(var(--sidebar-lime))]/20 text-[hsl(var(--sidebar-lime))]'
+                                            : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]'
                                     )
                                 }
                             >
@@ -82,8 +82,8 @@ function NavItem({ to, icon, label, children }: NavItemProps) {
                 cn(
                     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                     isActive
-                        ? 'bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))]'
-                        : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]/50'
+                        ? 'bg-[hsl(var(--sidebar-lime))]/20 text-[hsl(var(--sidebar-lime))]'
+                        : 'text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]'
                 )
             }
         >
@@ -117,7 +117,6 @@ export function Sidebar() {
             children: [
                 { to: '/orders', label: 'All Orders' },
                 { to: '/orders/instalments', label: 'Instalments' },
-                { to: '/orders/refunds', label: 'Refunds' },
             ],
         },
         {
@@ -167,15 +166,6 @@ export function Sidebar() {
         { to: '/coupons', icon: <Tag className="h-5 w-5" />, label: 'Coupons' },
         { to: '/rewards', icon: <Gift className="h-5 w-5" />, label: 'Rewards' },
         { to: '/media', icon: <FileText className="h-5 w-5" />, label: 'Media Library' },
-        {
-            to: '/tools',
-            icon: <Settings className="h-5 w-5" />,
-            label: 'Tools',
-            children: [
-                { to: '/tools/data-management', label: 'Data Management' },
-                { to: '/tools/bulk-editor', label: 'Bulk Editor' },
-            ],
-        },
         { to: '/settings', icon: <Settings className="h-5 w-5" />, label: 'Settings' },
     ]
 
@@ -183,14 +173,12 @@ export function Sidebar() {
         <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-[hsl(var(--sidebar-background))] border-r border-[hsl(var(--sidebar-accent))]">
             <div className="flex flex-col h-full">
                 {/* Logo */}
-                <div className="flex items-center gap-3 px-6 py-5 border-b border-[hsl(var(--sidebar-accent))]">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-                        <Store className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-bold text-[hsl(var(--sidebar-foreground))]">URASI POS</h1>
-                        <p className="text-xs text-[hsl(var(--sidebar-foreground))]/60">Point of Sale</p>
-                    </div>
+                <div className="flex items-center justify-center px-4 py-5 border-b border-[hsl(var(--sidebar-accent))]">
+                    <img 
+                        src={logoFull} 
+                        alt="URASI" 
+                        className="h-10 w-auto brightness-0 invert"
+                    />
                 </div>
 
                 {/* Navigation */}
@@ -203,12 +191,12 @@ export function Sidebar() {
                 {/* User Section */}
                 <div className="border-t border-[hsl(var(--sidebar-accent))] p-4">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-[hsl(var(--sidebar-accent))] flex items-center justify-center text-[hsl(var(--sidebar-accent-foreground))] font-semibold">
-                            {profile?.username?.[0]?.toUpperCase() || 'U'}
+                        <div className="w-10 h-10 rounded-full bg-[hsl(var(--sidebar-lime))]/20 flex items-center justify-center text-[hsl(var(--sidebar-lime))] font-semibold">
+                            {profile?.username?.[0]?.toUpperCase() || profile?.first_name?.[0]?.toUpperCase() || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-[hsl(var(--sidebar-foreground))] truncate">
-                                {profile?.username || 'User'}
+                                {profile?.first_name || profile?.username || 'User'}
                             </p>
                             <p className="text-xs text-[hsl(var(--sidebar-foreground))]/60 capitalize">
                                 {profile?.role || 'Guest'}
@@ -217,7 +205,7 @@ export function Sidebar() {
                     </div>
                     <button
                         onClick={signOut}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]/50 transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10 transition-colors"
                     >
                         <LogOut className="h-4 w-4" />
                         Sign Out

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Store, Mail, Lock, AlertCircle, XCircle } from 'lucide-react'
+import { Mail, Lock, XCircle } from 'lucide-react'
 import {
     Dialog,
     DialogContent,
@@ -13,6 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import logoFull from '@/assets/logo-full.png'
 
 // Map Supabase error codes to user-friendly messages
 const getErrorMessage = (error: { message: string; code?: string }) => {
@@ -136,22 +137,25 @@ export default function LoginPage() {
                 </DialogContent>
             </Dialog>
 
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(217.2,32.6%,17.5%)] to-[hsl(222.2,84%,4.9%)] p-4">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(224,58%,18%)] via-[hsl(224,58%,24%)] to-[hsl(224,58%,12%)] p-4">
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex flex-col items-center mb-8">
-                        <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-lg mb-4">
-                            <Store className="h-8 w-8 text-white" />
+                        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 mb-4">
+                            <img 
+                                src={logoFull} 
+                                alt="URASI" 
+                                className="h-12 w-auto brightness-0 invert"
+                            />
                         </div>
-                        <h1 className="text-3xl font-bold text-white">URASI POS</h1>
                         <p className="text-white/60 mt-1">Point of Sale System</p>
                     </div>
 
                     {/* Login Card */}
                     <Card className="border-0 shadow-2xl">
                         <CardHeader className="text-center">
-                            <CardTitle className="text-2xl">Welcome Back</CardTitle>
-                            <CardDescription>Sign in to your account to continue</CardDescription>
+                            <CardTitle className="text-2xl">Selamat Datang</CardTitle>
+                            <CardDescription>Masuk ke akun Anda untuk melanjutkan</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-4">
@@ -160,7 +164,7 @@ export default function LoginPage() {
                                     <Input
                                         id="email"
                                         type="email"
-                                        placeholder="Enter your email"
+                                        placeholder="Masukkan email Anda"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         icon={<Mail className="h-4 w-4" />}
@@ -173,7 +177,7 @@ export default function LoginPage() {
                                     <Input
                                         id="password"
                                         type="password"
-                                        placeholder="Enter your password"
+                                        placeholder="Masukkan password Anda"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         icon={<Lock className="h-4 w-4" />}
@@ -182,14 +186,14 @@ export default function LoginPage() {
                                 </div>
 
                                 <Button type="submit" className="w-full" size="lg" loading={loading}>
-                                    Sign In
+                                    Masuk
                                 </Button>
                             </form>
 
-                            <div className="mt-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
-                                Don't have an account?{' '}
-                                <Link to="/register" className="text-[hsl(var(--primary))] hover:underline font-medium">
-                                    Sign up
+                            <div className="mt-6 text-center text-sm text-muted-foreground">
+                                Belum punya akun?{' '}
+                                <Link to="/register" className="text-primary hover:underline font-medium">
+                                    Daftar
                                 </Link>
                             </div>
                         </CardContent>
