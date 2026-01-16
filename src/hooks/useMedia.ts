@@ -4,13 +4,13 @@ import { supabase } from '@/lib/supabase'
 interface Media {
     id: string
     name: string
-    extension: string
-    slug: string
-    url: string | null
-    alt: string | null
-    author: string
-    created_at: string
-    updated_at: string
+    extension: string | null
+    slug: string | null
+    url?: string | null
+    alt?: string | null
+    author?: string | null
+    created_at: string | null
+    updated_at: string | null
 }
 
 export function useMedia() {
@@ -21,10 +21,10 @@ export function useMedia() {
     const fetchMedia = useCallback(async () => {
         setLoading(true)
         try {
-            const { data, error: err } = await supabase
-                .from('media')
+            const { data, error: err } = await (supabase
+                .from('medias')
                 .select('*')
-                .order('created_at', { ascending: false })
+                .order('created_at', { ascending: false }) as any)
 
             if (err) throw err
             setMedia(data || [])
@@ -57,7 +57,7 @@ export function useMedia() {
 
             // Create record
             const { error: dbErr } = await supabase
-                .from('media')
+                .from('medias')
                 .insert([{
                     name: file.name,
                     extension: ext,
@@ -92,7 +92,7 @@ export function useMedia() {
 
             // Delete from DB
             const { error: err } = await supabase
-                .from('media')
+                .from('medias')
                 .delete()
                 .eq('id', id)
 
@@ -108,7 +108,7 @@ export function useMedia() {
     const updateMedia = useCallback(async (id: string, data: Partial<Media>) => {
         try {
             const { error: err } = await supabase
-                .from('media')
+                .from('medias')
                 .update(data as never)
                 .eq('id', id)
 

@@ -4,21 +4,21 @@ import { supabase } from '@/lib/supabase'
 interface Tax {
     id: string
     name: string
-    rate: number
-    type: 'percentage' | 'flat'
+    rate: number | null
+    type: string | null
     description: string | null
-    author: string
-    created_at: string
-    updated_at: string
+    author: string | null
+    created_at: string | null
+    updated_at: string | null
 }
 
 interface TaxGroup {
     id: string
     name: string
     description: string | null
-    taxes: Tax[]
-    author: string
-    created_at: string
+    taxes?: Tax[] | null
+    author: string | null
+    created_at: string | null
 }
 
 export function useTaxes() {
@@ -30,10 +30,10 @@ export function useTaxes() {
     const fetchTaxes = useCallback(async () => {
         setLoading(true)
         try {
-            const { data, error: err } = await supabase
+            const { data, error: err } = await (supabase
                 .from('taxes')
                 .select('*')
-                .order('name')
+                .order('name') as any)
 
             if (err) throw err
             setTaxes(data || [])
@@ -46,10 +46,10 @@ export function useTaxes() {
 
     const fetchGroups = useCallback(async () => {
         try {
-            const { data, error: err } = await supabase
+            const { data, error: err } = await (supabase
                 .from('taxes_groups')
                 .select('*')
-                .order('name')
+                .order('name') as any)
 
             if (err) throw err
             setGroups(data || [])
@@ -156,7 +156,7 @@ export function useTaxes() {
 
     const calculateTax = useCallback((amount: number, taxId: string) => {
         const tax = taxes.find(t => t.id === taxId)
-        if (!tax) return 0
+        if (!tax || tax.rate === null) return 0
 
         if (tax.type === 'percentage') {
             return amount * (tax.rate / 100)

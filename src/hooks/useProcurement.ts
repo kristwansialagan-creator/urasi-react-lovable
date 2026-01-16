@@ -6,34 +6,34 @@ interface Provider {
     name: string
     email: string | null
     phone: string | null
-    address: string | null
+    address?: string | null
     description: string | null
-    active: boolean
-    created_at: string
+    active?: boolean | null
+    created_at: string | null
 }
 
 interface ProcurementProduct {
     id: string
     procurement_id: string | null
     product_id: string | null
-    product_name: string | null
-    quantity: number
-    purchase_price: number
-    total_price: number
+    product_name?: string | null
+    quantity: number | null
+    purchase_price: number | null
+    total_price?: number | null
 }
 
 interface Procurement {
     id: string
     name: string
     provider_id: string | null
-    status: string
-    payment_status: string
-    total_price: number
-    delivery_status: string
-    delivery_date: string | null
-    created_at: string
-    provider?: Provider
-    products?: ProcurementProduct[]
+    status?: string | null
+    payment_status: string | null
+    total_price?: number | null
+    delivery_status: string | null
+    delivery_date?: string | null
+    created_at: string | null
+    provider?: Provider | null
+    products?: ProcurementProduct[] | null
 }
 
 interface UseProcurementReturn {
@@ -62,14 +62,14 @@ export function useProcurement(): UseProcurementReturn {
         setLoading(true)
         setError(null)
         try {
-            const { data, error: fetchError } = await supabase
+            const { data, error: fetchError } = await (supabase
                 .from('procurements')
                 .select(`
                     *,
                     provider:providers(*),
                     products:procurements_products(*)
                 `)
-                .order('created_at', { ascending: false })
+                .order('created_at', { ascending: false }) as any)
 
             if (fetchError) throw fetchError
             setProcurements((data as Procurement[]) || [])
@@ -82,11 +82,11 @@ export function useProcurement(): UseProcurementReturn {
 
     const fetchProviders = useCallback(async () => {
         try {
-            const { data, error: fetchError } = await supabase
+            const { data, error: fetchError } = await (supabase
                 .from('providers')
                 .select('*')
                 .eq('active', true)
-                .order('name')
+                .order('name') as any)
 
             if (fetchError) throw fetchError
             setProviders((data as Provider[]) || [])

@@ -12,20 +12,20 @@ interface Customer {
 interface Order {
     id: string
     code: string
-    type: string
-    payment_status: string
-    process_status: string
-    delivery_status: string
+    type: string | null
+    payment_status: string | null
+    process_status: string | null
+    delivery_status: string | null
     customer_id: string | null
-    subtotal: number
-    total: number
-    tendered: number
-    change: number
+    subtotal: number | null
+    total: number | null
+    tendered: number | null
+    change: number | null
     voidance_reason: string | null
     note: string | null
     register_id: string | null
-    created_at: string
-    updated_at: string
+    created_at: string | null
+    updated_at: string | null
 }
 
 interface OrderProduct {
@@ -162,7 +162,7 @@ export function useOrders(): UseOrdersReturn {
             if (filters?.to_date) query = query.lte('created_at', filters.to_date)
             if (filters?.search) query = query.ilike('code', `%${filters.search}%`)
 
-            const { data, error: fetchError } = await query
+            const { data, error: fetchError } = await (query as any)
 
             if (fetchError) throw fetchError
             setOrders((data as OrderWithDetails[]) || [])
@@ -175,11 +175,11 @@ export function useOrders(): UseOrdersReturn {
 
     const fetchPaymentTypes = useCallback(async () => {
         try {
-            const { data, error: fetchError } = await supabase
+            const { data, error: fetchError } = await (supabase
                 .from('payment_types')
                 .select('*')
                 .eq('active', true)
-                .order('priority')
+                .order('priority') as any)
 
             if (fetchError) throw fetchError
             setPaymentTypes((data as PaymentType[]) || [])
@@ -190,7 +190,7 @@ export function useOrders(): UseOrdersReturn {
 
     const getOrder = useCallback(async (id: string): Promise<OrderWithDetails | null> => {
         try {
-            const { data, error: fetchError } = await supabase
+            const { data, error: fetchError } = await (supabase
                 .from('orders')
                 .select(`
                     *,
@@ -199,7 +199,7 @@ export function useOrders(): UseOrdersReturn {
                     payments:orders_payments(*)
                 `)
                 .eq('id', id)
-                .single()
+                .single() as any)
 
             if (fetchError) throw fetchError
             return data as OrderWithDetails
@@ -311,11 +311,11 @@ export function useOrders(): UseOrdersReturn {
             } as never)
 
             const totalTendered = (order.tendered || 0) + payment.value
-            const newStatus = totalTendered >= order.total ? 'paid' : 'partially_paid'
+            const newStatus = totalTendered >= (order.total || 0) ? 'paid' : 'partially_paid'
 
             await supabase.from('orders').update({
                 tendered: totalTendered,
-                change: Math.max(0, totalTendered - order.total),
+                change: Math.max(0, totalTendered - (order.total || 0)),
                 payment_status: newStatus
             } as never).eq('id', orderId)
 
@@ -389,11 +389,11 @@ export function useOrders(): UseOrdersReturn {
 
             if (refundError) throw refundError
 
-            const refundData = refund as Refund
+            const refundData = refund as any
 
             // Add refund products
             const refundProducts = products.map(p => ({
-                refund_id: refundData.id,
+                order_refund_id: refundData.id,
                 product_id: p.product_id,
                 quantity: p.quantity,
                 unit_price: p.unit_price,
@@ -412,15 +412,15 @@ export function useOrders(): UseOrdersReturn {
     const processRefund = useCallback(async (refundId: string): Promise<boolean> => {
         try {
             // Get refund products
-            const { data: refundProducts } = await supabase
+            const { data: refundProducts } = await (supabase
                 .from('orders_product_refunds')
                 .select('product_id, quantity')
-                .eq('refund_id', refundId)
+                .eq('order_refund_id', refundId) as any)
 
             if (!refundProducts) return false
 
             // Reverse stock for each product
-            for (const product of refundProducts as { product_id: string; quantity: number }[]) {
+            for (const product of refundProducts as any[]) {
                 const { data: currentStock } = await supabase
                     .from('product_unit_quantities')
                     .select('quantity')

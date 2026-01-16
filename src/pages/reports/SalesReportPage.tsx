@@ -61,7 +61,7 @@ export default function SalesReportPage() {
 
         // Filter orders by date range
         const filteredOrders = orders.filter(o => {
-            const orderDate = new Date(o.created_at)
+            const orderDate = new Date(o.created_at || '')
             return orderDate >= dateFrom && orderDate <= dateTo
         })
 
@@ -80,8 +80,8 @@ export default function SalesReportPage() {
         })
 
         const dailySales = dateRange.map(date => {
-            const dayOrders = filteredOrders.filter(o => o.created_at.startsWith(date))
-            const sales = dayOrders.reduce((sum, o) => sum + o.total, 0)
+            const dayOrders = filteredOrders.filter(o => (o.created_at || '').startsWith(date))
+            const sales = dayOrders.reduce((sum, o) => sum + (o.total || 0), 0)
             return { date, sales }
         })
         setDailyData(dailySales)

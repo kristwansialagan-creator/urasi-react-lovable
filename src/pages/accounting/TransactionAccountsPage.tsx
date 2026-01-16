@@ -27,8 +27,8 @@ export default function TransactionAccountsPage() {
             setFormData({
                 name: account.name,
                 code: account.code || '',
-                type: account.type,
-                balance: account.balance,
+                type: (account.type as any) || 'expense',
+                balance: account.balance || 0,
                 description: account.description || ''
             })
         } else {
@@ -54,7 +54,7 @@ export default function TransactionAccountsPage() {
         }
     }
 
-    const getIconForType = (type: string) => {
+    const getIconForType = (type: string | null) => {
         switch (type) {
             case 'asset': return <Wallet className="text-green-500" />
             case 'liability': return <Wallet className="text-red-500" />
@@ -84,10 +84,10 @@ export default function TransactionAccountsPage() {
                                 {account.code && <span className="mr-2 text-[hsl(var(--muted-foreground))]">[{account.code}]</span>}
                                 {account.name}
                             </CardTitle>
-                            {getIconForType(account.type)}
+                            {getIconForType(account.type || '')}
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{formatCurrency(account.balance)}</div>
+                            <div className="text-2xl font-bold">{formatCurrency(account.balance || 0)}</div>
                             <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1 capitalize">
                                 {account.type} Account
                             </p>

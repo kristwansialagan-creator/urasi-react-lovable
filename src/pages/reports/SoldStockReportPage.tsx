@@ -21,7 +21,7 @@ export default function SoldStockReportPage() {
 
     const processData = () => {
         const filtered = orders.filter(o => {
-            const d = o.created_at.split('T')[0]
+            const d = (o.created_at || '').split('T')[0]
             return d >= dateRange.start && d <= dateRange.end && o.payment_status === 'paid'
         })
 

@@ -11,9 +11,9 @@ import { formatCurrency } from '@/lib/utils'
 interface Product {
     id: string
     name: string
-    sku: string
-    sale_price: number
-    stock_quantity: number
+    sku: string | null
+    sale_price: number | null
+    stock_quantity: number | null
 }
 
 interface GroupProduct extends Product {
@@ -144,7 +144,7 @@ export default function ProcurementProductsPage() {
     const filteredAvailable = availableProducts.filter(p =>
         !groupProducts.find(gp => gp.id === p.id) &&
         (p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+            (p.sku || '').toLowerCase().includes(searchQuery.toLowerCase()))
     )
 
     return (

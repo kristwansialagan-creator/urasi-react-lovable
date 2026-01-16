@@ -21,7 +21,8 @@ export default function OrdersPage() {
         }
     }, [search, fetchOrders])
 
-    const getPaymentStatusBadge = (status: string) => {
+    const getPaymentStatusBadge = (status: string | null) => {
+        const s = status || 'unpaid'
         const styles: Record<string, string> = {
             paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
             unpaid: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -29,7 +30,7 @@ export default function OrdersPage() {
             void: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
         }
         const labels: Record<string, string> = { paid: 'Paid', unpaid: 'Unpaid', partially_paid: 'Partial', void: 'Void' }
-        return <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[status] || styles.unpaid}`}>{labels[status] || status}</span>
+        return <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[s] || styles.unpaid}`}>{labels[s] || s}</span>
     }
 
     const handleVoid = async (id: string) => {
@@ -123,8 +124,8 @@ export default function OrdersPage() {
                                                     ? `${order.customer.first_name || ''} ${order.customer.last_name || ''}`.trim()
                                                     : 'Walk-in'}
                                             </td>
-                                            <td className="py-3 px-4 text-[hsl(var(--muted-foreground))]">{formatDateTime(order.created_at)}</td>
-                                            <td className="py-3 px-4 text-right font-medium">{formatCurrency(order.total)}</td>
+                                            <td className="py-3 px-4 text-[hsl(var(--muted-foreground))]">{formatDateTime(order.created_at || '')}</td>
+                                            <td className="py-3 px-4 text-right font-medium">{formatCurrency(order.total || 0)}</td>
                                             <td className="py-3 px-4">{getPaymentStatusBadge(order.payment_status)}</td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center justify-end gap-2">

@@ -5,16 +5,14 @@ interface Coupon {
     id: string
     name: string
     code: string
-    type: string
-    discount_value: number
-    discount_type: 'percentage' | 'flat'
-    minimum_cart_value: number
-    valid_from: string | null
+    type?: string | null
+    discount_value: number | null
+    discount_type?: string | null
+    minimum_cart_value: number | null
     valid_until: string | null
-    usage_limit: number | null
-    usage_count: number
-    active: boolean
-    created_at: string
+    usage_count: number | null
+    active: boolean | null
+    created_at: string | null
 }
 
 interface CouponValidation {
@@ -44,10 +42,10 @@ export function useCoupons(): UseCouponsReturn {
         setLoading(true)
         setError(null)
         try {
-            const { data, error: fetchError } = await supabase
+            const { data, error: fetchError } = await (supabase
                 .from('coupons')
                 .select('*')
-                .order('created_at', { ascending: false })
+                .order('created_at', { ascending: false }) as any)
 
             if (fetchError) throw fetchError
             setCoupons((data as Coupon[]) || [])
@@ -74,24 +72,16 @@ export function useCoupons(): UseCouponsReturn {
                 return { valid: false, discount: 0, message: 'Invalid coupon code' }
             }
 
-            const couponData = coupon as Coupon
+            const couponData = coupon as any
             const now = new Date()
 
             // Check validity dates
-            if (couponData.valid_from && new Date(couponData.valid_from) > now) {
-                return { valid: false, discount: 0, message: 'Coupon not yet valid' }
-            }
             if (couponData.valid_until && new Date(couponData.valid_until) < now) {
                 return { valid: false, discount: 0, message: 'Coupon has expired' }
             }
 
-            // Check usage limit
-            if (couponData.usage_limit && couponData.usage_count >= couponData.usage_limit) {
-                return { valid: false, discount: 0, message: 'Coupon usage limit reached' }
-            }
-
             // Check minimum cart value
-            if (cartTotal < couponData.minimum_cart_value) {
+            if (cartTotal < (couponData.minimum_cart_value || 0)) {
                 return {
                     valid: false,
                     discount: 0,
@@ -101,8 +91,8 @@ export function useCoupons(): UseCouponsReturn {
 
             // Calculate discount
             const discount = couponData.discount_type === 'percentage'
-                ? (cartTotal * couponData.discount_value) / 100
-                : couponData.discount_value
+                ? (cartTotal * (couponData.discount_value || 0)) / 100
+                : (couponData.discount_value || 0)
 
             return { valid: true, discount, message: 'Coupon applied successfully' }
         } catch {
@@ -112,15 +102,15 @@ export function useCoupons(): UseCouponsReturn {
 
     const applyCoupon = useCallback(async (code: string, orderId: string): Promise<boolean> => {
         try {
-            const { data: coupon } = await supabase
+            const { data: coupon } = await (supabase
                 .from('coupons')
                 .select('*')
                 .eq('code', code)
-                .single()
+                .single() as any)
 
             if (!coupon) return false
 
-            const couponData = coupon as Coupon
+            const couponData = coupon as any
 
             // Record coupon usage
             await supabase.from('orders_coupons').insert({
@@ -133,7 +123,7 @@ export function useCoupons(): UseCouponsReturn {
             // Increment usage count
             await supabase
                 .from('coupons')
-                .update({ usage_count: couponData.usage_count + 1 } as never)
+                .update({ usage_count: (couponData.usage_count || 0) + 1 } as never)
                 .eq('id', couponData.id)
 
             return true
@@ -144,11 +134,11 @@ export function useCoupons(): UseCouponsReturn {
 
     const createCoupon = useCallback(async (coupon: Partial<Coupon>): Promise<Coupon | null> => {
         try {
-            const { data, error: createError } = await supabase
+            const { data, error: createError } = await (supabase
                 .from('coupons')
                 .insert(coupon as never)
                 .select()
-                .single()
+                .single() as any)
 
             if (createError) throw createError
             await fetchCoupons()
@@ -161,12 +151,12 @@ export function useCoupons(): UseCouponsReturn {
 
     const updateCoupon = useCallback(async (id: string, coupon: Partial<Coupon>): Promise<Coupon | null> => {
         try {
-            const { data, error: updateError } = await supabase
+            const { data, error: updateError } = await (supabase
                 .from('coupons')
                 .update(coupon as never)
                 .eq('id', id)
                 .select()
-                .single()
+                .single() as any)
 
             if (updateError) throw updateError
             await fetchCoupons()

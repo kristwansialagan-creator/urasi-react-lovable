@@ -9,20 +9,20 @@ import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 
 interface Order {
-    id: string; code: string; total: number; subtotal: number; tax_value: number
-    discount: number; shipping: number; tendered: number; change: number
-    payment_status: string; delivery_status?: string; type: string
-    created_at: string; final_payment_date?: string
-    customer: { name: string; first_name: string; last_name: string; email?: string }
-    user: { username: string }
+    id: string; code: string; total: number | null; subtotal: number | null; tax_value: number | null
+    discount: number | null; shipping: number | null; tendered: number | null; change: number | null
+    payment_status: string | null; delivery_status?: string | null; type: string | null
+    created_at: string | null; final_payment_date?: string | null
+    customer: { name?: string | null; first_name: string | null; last_name: string | null; email?: string | null } | null
+    user: { username: string | null } | null
     products: Array<{
-        id: string; name: string; unit_price: number; quantity: number
-        discount: number; tax_value: number; total_price: number
-        unit: { name: string }
-    }>
-    taxes: Array<{ id: string; tax_name: string; tax_value: number }>
+        id: string; name: string | null; unit_price: number | null; quantity: number | null
+        discount: number | null; tax_value: number | null; total_price: number | null
+        unit: { name: string | null } | null
+    }> | null
+    taxes: Array<{ id: string; tax_name: string | null; tax_value: number | null }> | null
     billing_address?: any; shipping_address?: any
-    tax_type: string
+    tax_type: string | null
 }
 
 export default function InvoicePage() {
@@ -40,11 +40,11 @@ export default function InvoicePage() {
     const fetchOrder = async () => {
         if (!id) return
         setLoading(true)
-        const { data } = await supabase
+        const { data } = await (supabase
             .from('orders')
-            .select('*, customer:customers(*), user:users(*), products:order_products(*, unit:units(*)), taxes:order_taxes(*)')
+            .select('*, customer:customers(*), user:profiles(*), products:order_products(*, unit:units(*)), taxes:orders_taxes(*)')
             .eq('id', id)
-            .single()
+            .single() as any)
         setOrder(data)
         setLoading(false)
     }
@@ -142,8 +142,8 @@ export default function InvoicePage() {
                                 <h3 className="font-semibold text-lg mb-3 border-b pb-2">Order Details</h3>
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between"><span className="font-medium">Order Code:</span><span className="font-mono">{order.code}</span></div>
-                                    <div className="flex justify-between"><span className="font-medium">Date:</span><span>{new Date(order.created_at).toLocaleDateString()}</span></div>
-                                    <div className="flex justify-between"><span className="font-medium">Cashier:</span><span>{order.user.username}</span></div>
+                                    <div className="flex justify-between"><span className="font-medium">Date:</span><span>{new Date(order.created_at || '').toLocaleDateString()}</span></div>
+                                    <div className="flex justify-between"><span className="font-medium">Cashier:</span><span>{order.user?.username}</span></div>
                                     <div className="flex justify-between"><span className="font-medium">Type:</span><span className="capitalize">{order.type}</span></div>
                                     <div className="flex justify-between"><span className="font-medium">Status:</span><span className={`px-2 py-0.5 rounded text-xs ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{order.payment_status}</span></div>
                                 </div>
@@ -152,8 +152,8 @@ export default function InvoicePage() {
                             <div>
                                 <h3 className="font-semibold text-lg mb-3 border-b pb-2">Customer Details</h3>
                                 <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between"><span className="font-medium">Name:</span><span>{order.customer.name || `${order.customer.first_name} ${order.customer.last_name}`}</span></div>
-                                    {order.customer.email && <div className="flex justify-between"><span className="font-medium">Email:</span><span>{order.customer.email}</span></div>}
+                                    <div className="flex justify-between"><span className="font-medium">Name:</span><span>{order.customer?.name || `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`}</span></div>
+                                    {order.customer?.email && <div className="flex justify-between"><span className="font-medium">Email:</span><span>{order.customer.email}</span></div>}
                                 </div>
                             </div>
 
@@ -181,30 +181,30 @@ export default function InvoicePage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {order.products.map(product => (
+                                    {order.products?.map(product => (
                                         <tr key={product.id}>
                                             <td className="border p-3">
                                                 <div className="font-medium">{product.name}</div>
-                                                <div className="text-xs text-[hsl(var(--muted-foreground))]">{product.unit.name}</div>
+                                                <div className="text-xs text-[hsl(var(--muted-foreground))]">{product.unit?.name}</div>
                                             </td>
-                                            <td className="border p-3 text-right">{formatCurrency(product.unit_price)}</td>
+                                            <td className="border p-3 text-right">{formatCurrency(product.unit_price || 0)}</td>
                                             <td className="border p-3 text-center">{product.quantity}</td>
-                                            <td className="border p-3 text-right">{formatCurrency(product.discount)}</td>
-                                            <td className="border p-3 text-right">{formatCurrency(product.tax_value)}</td>
-                                            <td className="border p-3 text-right font-bold">{formatCurrency(product.total_price)}</td>
+                                            <td className="border p-3 text-right">{formatCurrency(product.discount || 0)}</td>
+                                            <td className="border p-3 text-right">{formatCurrency(product.tax_value || 0)}</td>
+                                            <td className="border p-3 text-right font-bold">{formatCurrency(product.total_price || 0)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                                 <tfoot className="font-semibold">
-                                    <tr><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">Subtotal:</td><td className="border p-3 text-right">{formatCurrency(order.subtotal)}</td></tr>
-                                    {order.discount > 0 && <tr><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">Discount:</td><td className="border p-3 text-right text-red-600">-{formatCurrency(order.discount)}</td></tr>}
-                                    {order.shipping > 0 && <tr><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">Shipping:</td><td className="border p-3 text-right">{formatCurrency(order.shipping)}</td></tr>}
-                                    {order.taxes.map(tax => (
-                                        <tr key={tax.id}><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">{tax.tax_name} ({order.tax_type}):</td><td className="border p-3 text-right">{formatCurrency(tax.tax_value)}</td></tr>
+                                    <tr><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">Subtotal:</td><td className="border p-3 text-right">{formatCurrency(order.subtotal || 0)}</td></tr>
+                                    {(order.discount || 0) > 0 && <tr><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">Discount:</td><td className="border p-3 text-right text-red-600">-{formatCurrency(order.discount || 0)}</td></tr>}
+                                    {(order.shipping || 0) > 0 && <tr><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">Shipping:</td><td className="border p-3 text-right">{formatCurrency(order.shipping || 0)}</td></tr>}
+                                    {order.taxes?.map(tax => (
+                                        <tr key={tax.id}><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">{tax.tax_name} ({order.tax_type}):</td><td className="border p-3 text-right">{formatCurrency(tax.tax_value || 0)}</td></tr>
                                     ))}
-                                    <tr className="bg-[hsl(var(--muted))]"><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right text-lg">TOTAL:</td><td className="border p-3 text-right text-lg text-[hsl(var(--primary))]">{formatCurrency(order.total)}</td></tr>
-                                    <tr><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">Paid:</td><td className="border p-3 text-right">{formatCurrency(order.tendered)}</td></tr>
-                                    <tr><td colSpan={4} className="border p-3 text-sm">{['partially_paid', 'unpaid'].includes(order.payment_status) && order.final_payment_date && `Due Date: ${new Date(order.final_payment_date).toLocaleDateString()}`}</td><td className="border p-3 text-right">{['partially_paid', 'unpaid'].includes(order.payment_status) ? 'Due:' : 'Change:'}</td><td className={`border p-3 text-right ${['partially_paid', 'unpaid'].includes(order.payment_status) ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(order.change))}</td></tr>
+                                    <tr className="bg-[hsl(var(--muted))]"><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right text-lg">TOTAL:</td><td className="border p-3 text-right text-lg text-[hsl(var(--primary))]">{formatCurrency(order.total || 0)}</td></tr>
+                                    <tr><td colSpan={4} className="border p-3"></td><td className="border p-3 text-right">Paid:</td><td className="border p-3 text-right">{formatCurrency(order.tendered || 0)}</td></tr>
+                                    <tr><td colSpan={4} className="border p-3 text-sm">{['partially_paid', 'unpaid'].includes(order.payment_status || '') && order.final_payment_date && `Due Date: ${new Date(order.final_payment_date).toLocaleDateString()}`}</td><td className="border p-3 text-right">{['partially_paid', 'unpaid'].includes(order.payment_status || '') ? 'Due:' : 'Change:'}</td><td className={`border p-3 text-right ${['partially_paid', 'unpaid'].includes(order.payment_status || '') ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(order.change || 0))}</td></tr>
                                 </tfoot>
                             </table>
                         </div>

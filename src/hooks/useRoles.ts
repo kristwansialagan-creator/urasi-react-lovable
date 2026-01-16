@@ -6,7 +6,7 @@ export interface Role {
     name: string
     namespace: string
     description: string | null
-    created_at: string
+    created_at: string | null
 }
 
 export interface Permission {
@@ -26,26 +26,26 @@ export function useRoles() {
     const fetchRoles = useCallback(async () => {
         setLoading(true)
         try {
-            const { data: rolesData, error: rolesErr } = await supabase
+            const { data: rolesData, error: rolesErr } = await (supabase
                 .from('roles')
                 .select('*')
-                .order('name')
+                .order('name') as any)
 
             if (rolesErr) throw rolesErr
             setRoles(rolesData || [])
 
-            const { data: permsData, error: permsErr } = await supabase
+            const { data: permsData, error: permsErr } = await (supabase
                 .from('permissions')
                 .select('*')
-                .order('namespace, name')
+                .order('namespace, name') as any)
 
             if (permsErr) throw permsErr
             setPermissions(permsData || [])
 
             // Fetch role_permissions map
-            const { data: rpData, error: rpErr } = await supabase
+            const { data: rpData, error: rpErr } = await (supabase
                 .from('role_permissions')
-                .select('role_id, permission_id')
+                .select('role_id, permission_id') as any)
 
             if (rpErr) throw rpErr
 

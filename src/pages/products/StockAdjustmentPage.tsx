@@ -54,7 +54,7 @@ export default function StockAdjustmentPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total Products</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{products.length}</div></CardContent></Card>
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Recent Adjustments</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{adjustments.length}</div></CardContent></Card>
-                <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Today's Adjustments</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-[hsl(var(--primary))]">{adjustments.filter(a => a.created_at.split('T')[0] === new Date().toISOString().split('T')[0]).length}</div></CardContent></Card>
+                <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Today's Adjustments</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-[hsl(var(--primary))]">{adjustments.filter(a => (a.created_at || '').split('T')[0] === new Date().toISOString().split('T')[0]).length}</div></CardContent></Card>
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Units Available</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{units.length}</div></CardContent></Card>
             </div>
 
@@ -102,12 +102,12 @@ export default function StockAdjustmentPage() {
                     ) : (
                         <table className="w-full"><thead><tr className="border-b"><th className="text-left p-3">Date</th><th className="text-left p-3">Product</th><th className="text-right p-3">Previous</th><th className="text-right p-3">New</th><th className="text-right p-3">Change</th><th className="text-left p-3">Reason</th></tr></thead>
                             <tbody>{adjustments.filter(a => !search || a.product?.name?.toLowerCase().includes(search.toLowerCase())).slice(0, 50).map(a => {
-                                const change = a.quantity - a.previous_quantity
+                                const change = (a.quantity || 0) - (a.previous_quantity || 0)
                                 return <tr key={a.id} className="border-b hover:bg-[hsl(var(--muted))]">
-                                    <td className="p-3 text-sm">{new Date(a.created_at).toLocaleString()}</td>
+                                    <td className="p-3 text-sm">{new Date(a.created_at || '').toLocaleString()}</td>
                                     <td className="p-3"><div className="font-medium">{a.product?.name || 'Unknown'}</div><div className="text-xs text-[hsl(var(--muted-foreground))]">SKU: {a.product?.sku || '-'}</div></td>
-                                    <td className="p-3 text-right">{a.previous_quantity}</td>
-                                    <td className="p-3 text-right font-bold">{a.quantity}</td>
+                                    <td className="p-3 text-right">{a.previous_quantity || 0}</td>
+                                    <td className="p-3 text-right font-bold">{a.quantity || 0}</td>
                                     <td className={`p-3 text-right font-bold ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>{change >= 0 ? '+' : ''}{change}</td>
                                     <td className="p-3"><span className="px-2 py-1 bg-[hsl(var(--muted))] rounded text-xs">{a.reason || 'adjustment'}</span></td>
                                 </tr>

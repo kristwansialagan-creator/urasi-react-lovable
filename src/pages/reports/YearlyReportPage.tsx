@@ -20,10 +20,10 @@ export default function YearlyReportPage() {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         const data = months.map((month, index) => {
             const monthOrders = orders.filter(o => {
-                const d = new Date(o.created_at)
+                const d = new Date(o.created_at || '')
                 return d.getFullYear() === year && d.getMonth() === index && o.payment_status === 'paid'
             })
-            return { month, revenue: monthOrders.reduce((sum, o) => sum + o.total, 0), orders: monthOrders.length }
+            return { month, revenue: monthOrders.reduce((sum, o) => sum + (o.total || 0), 0), orders: monthOrders.length }
         })
         setMonthlyData(data)
     }

@@ -4,23 +4,23 @@ import { supabase } from '@/lib/supabase'
 interface Reward {
     id: string
     name: string
-    target: number
-    discount_type: 'flat' | 'percentage'
-    discount_value: number
-    min_points: number
-    active: boolean
-    author: string
-    created_at: string
+    target: number | null
+    discount_type?: string | null
+    discount_value?: number | null
+    min_points?: number | null
+    active?: boolean | null
+    author: string | null
+    created_at: string | null
 }
 
 interface RewardTransaction {
     id: string
-    customer_id: string
-    type: 'earn' | 'redeem'
-    points: number
+    customer_id: string | null
+    type?: string | null
+    points: number | null
     description: string | null
-    customer?: { first_name: string; last_name: string }
-    created_at: string
+    customer?: { first_name: string | null; last_name: string | null } | null
+    created_at: string | null
 }
 
 interface UseRewardsReturn {
@@ -47,20 +47,20 @@ export function useRewards(): UseRewardsReturn {
     const fetchRewards = useCallback(async () => {
         setLoading(true)
         try {
-            const { data, error: err } = await supabase
+            const { data, error: err } = await (supabase
                 .from('rewards_system')
                 .select('*')
-                .order('name')
+                .order('name') as any)
 
             if (err) throw err
             setRewards(data || [])
 
             // Fetch transactions
-            const { data: txData } = await supabase
+            const { data: txData } = await (supabase
                 .from('customers_rewards')
                 .select('*, customer:customers(first_name, last_name)')
                 .order('created_at', { ascending: false })
-                .limit(100)
+                .limit(100) as any)
 
             setTransactions(txData || [])
         } catch (err: unknown) {

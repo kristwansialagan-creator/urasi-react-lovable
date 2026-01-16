@@ -48,11 +48,11 @@ export default function DataManagementPage() {
     const handleExportAllData = async () => {
         setExporting(true)
         try {
-            const tables = ['products', 'orders', 'customers', 'categories', 'units', 'taxes']
+            const tables = ['products', 'orders', 'customers', 'product_categories', 'units', 'taxes']
             const exportData: any = {}
 
             for (const table of tables) {
-                const { data } = await supabase.from(table).select('*')
+                const { data } = await (supabase.from(table as any).select('*') as any)
                 exportData[table] = data || []
             }
 

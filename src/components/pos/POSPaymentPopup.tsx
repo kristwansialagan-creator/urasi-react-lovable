@@ -34,10 +34,10 @@ export default function POSPaymentPopup({ open, onClose, total, onConfirm }: POS
 
     const fetchPaymentMethods = async () => {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase
                 .from('payment_types')
                 .select('id, label, identifier')
-                .eq('active', true)
+                .eq('active', true) as any)
 
             if (error) throw error
             setPaymentMethods(data || [])

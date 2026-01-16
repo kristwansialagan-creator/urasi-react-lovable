@@ -9,12 +9,12 @@ export default function MediaLibraryPage() {
 
     const [search, setSearch] = useState('')
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
-    const [viewItem, setViewItem] = useState<{ id: string; name: string; url: string | null; extension: string; created_at: string } | null>(null)
+    const [viewItem, setViewItem] = useState<any | null>(null)
     const [dragActive, setDragActive] = useState(false)
 
     useEffect(() => { fetchMedia() }, [fetchMedia])
 
-    const filteredMedia = media.filter(m => m.name.toLowerCase().includes(search.toLowerCase()))
+    const filteredMedia = media.filter(m => (m.name || '').toLowerCase().includes(search.toLowerCase()))
 
     const handleDrop = useCallback(async (e: React.DragEvent) => {
         e.preventDefault(); setDragActive(false)
@@ -78,8 +78,8 @@ export default function MediaLibraryPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total Files</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{media.length}</div></CardContent></Card>
-                <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Images</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-[hsl(var(--primary))]">{media.filter(m => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(m.extension.toLowerCase())).length}</div></CardContent></Card>
-                <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Documents</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{media.filter(m => !['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(m.extension.toLowerCase())).length}</div></CardContent></Card>
+                <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Images</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-[hsl(var(--primary))]">{media.filter(m => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes((m.extension || '').toLowerCase())).length}</div></CardContent></Card>
+                <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Documents</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{media.filter(m => !['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes((m.extension || '').toLowerCase())).length}</div></CardContent></Card>
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Selected</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{selectedItems.size}</div></CardContent></Card>
             </div>
 
@@ -107,13 +107,13 @@ export default function MediaLibraryPage() {
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         {filteredMedia.map(m => {
-                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(m.extension.toLowerCase())
+                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes((m.extension || '').toLowerCase())
                             return <div key={m.id} className={`relative group rounded-lg border overflow-hidden cursor-pointer transition-all hover:shadow-lg ${selectedItems.has(m.id) ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`} onClick={() => toggleSelect(m.id)}>
                                 <div className="aspect-square bg-[hsl(var(--muted))] flex items-center justify-center">
                                     {isImage && m.url ? (
-                                        <img src={m.url} alt={m.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                        <img src={m.url} alt={m.name || ''} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                                     ) : (
-                                        <span className="text-4xl">{getFileIcon(m.extension)}</span>
+                                        <span className="text-4xl">{getFileIcon(m.extension || '')}</span>
                                     )}
                                 </div>
                                 <div className="p-2">
@@ -145,7 +145,7 @@ export default function MediaLibraryPage() {
                             <div><label className="text-sm font-medium">URL</label><input value={viewItem.url || ''} disabled className="w-full px-3 py-2 border rounded bg-[hsl(var(--muted))]" /><Button size="sm" variant="outline" className="mt-1" onClick={() => navigator.clipboard.writeText(viewItem.url || '')}>Copy URL</Button></div>
                             <div className="flex gap-4 text-sm text-[hsl(var(--muted-foreground))]">
                                 <span>Type: {viewItem.extension}</span>
-                                <span>Uploaded: {new Date(viewItem.created_at).toLocaleDateString()}</span>
+                                <span>Uploaded: {new Date(viewItem.created_at || '').toLocaleDateString()}</span>
                             </div>
                             <div className="flex gap-2 pt-4">
                                 <Button variant="outline" onClick={() => setViewItem(null)} className="flex-1">Close</Button>

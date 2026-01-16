@@ -28,7 +28,7 @@ export default function TransactionsPage() {
         total: transactions.length,
         income: transactions.filter(t => t.type === 'income').length,
         expense: transactions.filter(t => t.type === 'expense').length,
-        totalValue: history.reduce((sum, h) => sum + (h.operation === 'credit' ? h.value : -h.value), 0)
+        totalValue: history.reduce((sum, h) => sum + (h.operation === 'credit' ? (h.value || 0) : -(h.value || 0)), 0)
     }
 
     const handleCreate = async () => {
@@ -92,7 +92,7 @@ export default function TransactionsPage() {
                                 <tr key={t.id} className="border-b hover:bg-[hsl(var(--muted))]">
                                     <td className="p-3 font-medium">{t.name}</td>
                                     <td className="p-3"><span className={`px-2 py-1 rounded text-xs ${t.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.type}</span></td>
-                                    <td className={`p-3 text-right font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(t.value)}</td>
+                                    <td className={`p-3 text-right font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(t.value || 0)}</td>
                                     <td className="p-3 text-sm">{t.account?.name || '-'}</td>
                                     <td className="p-3 text-center"><span className={`px-2 py-1 rounded text-xs ${t.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{t.active ? 'Active' : 'Inactive'}</span></td>
                                     <td className="p-3"><div className="flex gap-1 justify-center">
@@ -127,10 +127,10 @@ export default function TransactionsPage() {
                     <table className="w-full"><thead><tr className="border-b"><th className="text-left p-3">Date</th><th className="text-left p-3">Name</th><th className="text-left p-3">Operation</th><th className="text-right p-3">Value</th><th className="text-left p-3">Status</th></tr></thead>
                         <tbody>{history.slice(0, 100).map(h => (
                             <tr key={h.id} className="border-b">
-                                <td className="p-3 text-sm">{new Date(h.created_at).toLocaleString()}</td>
+                                <td className="p-3 text-sm">{new Date(h.created_at || '').toLocaleString()}</td>
                                 <td className="p-3 font-medium">{h.name}</td>
                                 <td className="p-3"><span className={`px-2 py-1 rounded text-xs ${h.operation === 'credit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{h.operation}</span></td>
-                                <td className={`p-3 text-right font-bold ${h.operation === 'credit' ? 'text-green-600' : 'text-red-600'}`}>{h.operation === 'credit' ? '+' : '-'}{formatCurrency(h.value)}</td>
+                                <td className={`p-3 text-right font-bold ${h.operation === 'credit' ? 'text-green-600' : 'text-red-600'}`}>{h.operation === 'credit' ? '+' : '-'}{formatCurrency(h.value || 0)}</td>
                                 <td className="p-3 text-sm">{h.status}</td>
                             </tr>
                         ))}</tbody></table>

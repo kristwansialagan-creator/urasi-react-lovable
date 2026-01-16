@@ -18,10 +18,10 @@ export default function RewardsPage() {
 
     const stats = {
         totalRewards: rewards.length,
-        activeRewards: rewards.filter((r: { active: boolean }) => r.active).length,
+        activeRewards: rewards.filter((r: any) => r.active).length,
         totalTransactions: transactions.length,
-        pointsAwarded: transactions.filter((t: { type: string }) => t.type === 'earn').reduce((sum: number, t: { points: number }) => sum + t.points, 0),
-        pointsRedeemed: transactions.filter((t: { type: string }) => t.type === 'redeem').reduce((sum: number, t: { points: number }) => sum + Math.abs(t.points), 0)
+        pointsAwarded: transactions.filter((t: any) => t.type === 'earn').reduce((sum: number, t: any) => sum + (t.points || 0), 0),
+        pointsRedeemed: transactions.filter((t: any) => t.type === 'redeem').reduce((sum: number, t: any) => sum + Math.abs(t.points || 0), 0)
     }
 
     const handleCreate = async () => {
@@ -36,8 +36,8 @@ export default function RewardsPage() {
 
     const resetForm = () => setFormData({ name: '', target: 100, discount_type: 'flat', discount_value: 10, min_points: 100, active: true })
 
-    const openEdit = (r: { id: string; name: string; target: number; discount_type: 'flat' | 'percentage'; discount_value: number; min_points: number; active: boolean }) => {
-        setFormData({ name: r.name, target: r.target, discount_type: r.discount_type, discount_value: r.discount_value, min_points: r.min_points, active: r.active })
+    const openEdit = (r: any) => {
+        setFormData({ name: r.name, target: r.target || 0, discount_type: (r.discount_type as any) || 'flat', discount_value: r.discount_value || 0, min_points: r.min_points || 0, active: !!r.active })
         setEditingReward(r); setShowCreateModal(true)
     }
 
@@ -61,7 +61,7 @@ export default function RewardsPage() {
                     <div className="text-center py-8 text-[hsl(var(--muted-foreground))]">No rewards configured. Create your first reward!</div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {rewards.map((r: { id: string; name: string; active: boolean; target: number; min_points: number; discount_type: 'flat' | 'percentage'; discount_value: number }) => (
+                        {rewards.map((r: any) => (
                             <Card key={r.id} className={`relative ${!r.active ? 'opacity-60' : ''}`}>
                                 <CardContent className="pt-6">
                                     <div className="flex justify-between items-start mb-3">
@@ -74,7 +74,7 @@ export default function RewardsPage() {
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between"><span className="text-[hsl(var(--muted-foreground))]">Target Points:</span><span className="font-bold">{r.target}</span></div>
                                         <div className="flex justify-between"><span className="text-[hsl(var(--muted-foreground))]">Min. Points:</span><span>{r.min_points}</span></div>
-                                        <div className="flex justify-between"><span className="text-[hsl(var(--muted-foreground))]">Discount:</span><span className="font-bold text-[hsl(var(--primary))]">{r.discount_type === 'percentage' ? `${r.discount_value}%` : formatCurrency(r.discount_value)}</span></div>
+                                        <div className="flex justify-between"><span className="text-[hsl(var(--muted-foreground))]">Discount:</span><span className="font-bold text-[hsl(var(--primary))]">{r.discount_type === 'percentage' ? `${r.discount_value}%` : formatCurrency(r.discount_value || 0)}</span></div>
                                     </div>
                                     <div className="flex gap-2 mt-4 pt-4 border-t">
                                         <Button size="sm" variant="outline" onClick={() => openEdit(r)} className="flex-1"><Edit className="h-3 w-3 mr-1" />Edit</Button>
@@ -89,10 +89,10 @@ export default function RewardsPage() {
 
             <Card><CardHeader><CardTitle>Recent Point Transactions</CardTitle></CardHeader><CardContent>
                 <table className="w-full"><thead><tr className="border-b"><th className="text-left p-3">Date</th><th className="text-left p-3">Customer</th><th className="text-left p-3">Type</th><th className="text-right p-3">Points</th><th className="text-left p-3">Description</th></tr></thead>
-                    <tbody>{transactions.slice(0, 20).map((t: { id: string; created_at: string; customer?: { first_name: string; last_name: string }; type: string; points: number; description: string | null }) => (
+                    <tbody>{transactions.slice(0, 20).map((t: any) => (
                         <tr key={t.id} className="border-b">
-                            <td className="p-3 text-sm">{new Date(t.created_at).toLocaleString()}</td>
-                            <td className="p-3 font-medium">{t.customer ? `${t.customer.first_name} ${t.customer.last_name}` : 'Unknown'}</td>
+                            <td className="p-3 text-sm">{new Date(t.created_at || '').toLocaleString()}</td>
+                            <td className="p-3 font-medium">{t.customer ? `${t.customer.first_name || ''} ${t.customer.last_name || ''}` : 'Unknown'}</td>
                             <td className="p-3"><span className={`px-2 py-1 rounded text-xs ${t.type === 'earn' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{t.type}</span></td>
                             <td className={`p-3 text-right font-bold ${t.type === 'earn' ? 'text-green-600' : 'text-orange-600'}`}>{t.type === 'earn' ? '+' : ''}{t.points}</td>
                             <td className="p-3 text-sm text-[hsl(var(--muted-foreground))]">{t.description || '-'}</td>

@@ -6,20 +6,20 @@ interface Unit {
     name: string
     identifier: string
     description: string | null
-    value: number
-    base_unit: boolean
+    value: number | null
+    base_unit: boolean | null
     group_id: string | null
-    group?: UnitGroup
-    author: string
-    created_at: string
+    group?: UnitGroup | null
+    author: string | null
+    created_at: string | null
 }
 
 interface UnitGroup {
     id: string
     name: string
     description: string | null
-    author: string
-    created_at: string
+    author: string | null
+    created_at: string | null
 }
 
 export function useUnits() {
@@ -31,10 +31,10 @@ export function useUnits() {
     const fetchUnits = useCallback(async () => {
         setLoading(true)
         try {
-            const { data, error: err } = await supabase
+            const { data, error: err } = await (supabase
                 .from('units')
                 .select('*, group:units_groups(*)')
-                .order('name')
+                .order('name') as any)
 
             if (err) throw err
             setUnits(data || [])
@@ -47,10 +47,10 @@ export function useUnits() {
 
     const fetchGroups = useCallback(async () => {
         try {
-            const { data, error: err } = await supabase
+            const { data, error: err } = await (supabase
                 .from('units_groups')
                 .select('*')
-                .order('name')
+                .order('name') as any)
 
             if (err) throw err
             setGroups(data || [])
@@ -158,7 +158,7 @@ export function useUnits() {
     const convert = useCallback((value: number, fromUnit: string, toUnit: string) => {
         const from = units.find(u => u.id === fromUnit)
         const to = units.find(u => u.id === toUnit)
-        if (!from || !to) return value
+        if (!from || !to || from.value === null || to.value === null) return value
 
         // Convert to base unit then to target
         const baseValue = value * from.value

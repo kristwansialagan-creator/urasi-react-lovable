@@ -44,7 +44,7 @@ export default function ModulesPage() {
                                     <span className="text-sm font-medium">{module.status === 'enabled' ? 'Enabled' : 'Disabled'}</span>
                                     <Switch
                                         checked={module.status === 'enabled'}
-                                        onCheckedChange={() => toggleModule(module.id, module.status)}
+                                        onCheckedChange={() => toggleModule(module.id, module.status || 'disabled')}
                                     />
                                 </div>
                             </div>

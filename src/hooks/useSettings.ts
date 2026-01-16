@@ -5,9 +5,9 @@ interface Setting {
     id: string
     key: string
     value: any
-    category: string
-    created_at: string
-    updated_at: string
+    category: string | null
+    created_at: string | null
+    updated_at: string | null
 }
 
 export function useSettings() {
@@ -24,7 +24,7 @@ export function useSettings() {
                 query = query.eq('category', category)
             }
 
-            const { data, error: err } = await query
+            const { data, error: err } = await (query as any)
 
             if (err) throw err
 

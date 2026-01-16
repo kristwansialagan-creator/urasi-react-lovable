@@ -33,10 +33,10 @@ export default function CashFlowReportPage() {
         // Group by day
         const grouped: Record<string, { income: number; expense: number }> = {}
         result.transactions.forEach((t: any) => {
-            const date = t.created_at.split('T')[0]
+            const date = (t.created_at || '').split('T')[0]
             if (!grouped[date]) grouped[date] = { income: 0, expense: 0 }
-            if (t.operation === 'credit') grouped[date].income += t.value
-            else grouped[date].expense += t.value
+            if (t.operation === 'credit') grouped[date].income += (t.value || 0)
+            else grouped[date].expense += (t.value || 0)
         })
 
         const days = Object.entries(grouped)
@@ -82,11 +82,11 @@ export default function CashFlowReportPage() {
         const csv = [
             ['Date', 'Type', 'Name', 'Amount', 'Status'],
             ...history.map(h => [
-                h.created_at.split('T')[0],
-                h.operation,
-                h.name,
-                h.value,
-                h.status
+                (h.created_at || '').split('T')[0],
+                h.operation || '',
+                h.name || '',
+                h.value || 0,
+                h.status || ''
             ])
         ].map(row => row.join(',')).join('\n')
 
@@ -126,10 +126,10 @@ export default function CashFlowReportPage() {
                     <thead><tr><th>Date</th><th>Type</th><th>Name</th><th>Amount</th></tr></thead>
                     <tbody>
                         ${history.map(h => `<tr>
-                            <td>${h.created_at.split('T')[0]}</td>
-                            <td>${h.operation}</td>
-                            <td>${h.name}</td>
-                            <td style="color:${h.operation === 'credit' ? '#10b981' : '#ef4444'}">${formatCurrency(h.value)}</td>
+                            <td>${(h.created_at || '').split('T')[0]}</td>
+                            <td>${h.operation || ''}</td>
+                            <td>${h.name || ''}</td>
+                            <td style="color:${h.operation === 'credit' ? '#10b981' : '#ef4444'}">${formatCurrency(h.value || 0)}</td>
                         </tr>`).join('')}
                     </tbody>
                 </table>
@@ -201,10 +201,10 @@ export default function CashFlowReportPage() {
                         <tbody>
                             {history.slice(0, 50).map(h => (
                                 <tr key={h.id} className="border-b hover:bg-[hsl(var(--muted))]">
-                                    <td className="p-3 text-sm">{h.created_at.split('T')[0]}</td>
+                                    <td className="p-3 text-sm">{(h.created_at || '').split('T')[0]}</td>
                                     <td className="p-3"><span className={`px-2 py-1 rounded text-xs ${h.operation === 'credit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{h.operation}</span></td>
                                     <td className="p-3 font-medium">{h.name}</td>
-                                    <td className={`p-3 text-right font-bold ${h.operation === 'credit' ? 'text-green-600' : 'text-red-600'}`}>{h.operation === 'credit' ? '+' : '-'}{formatCurrency(h.value)}</td>
+                                    <td className={`p-3 text-right font-bold ${h.operation === 'credit' ? 'text-green-600' : 'text-red-600'}`}>{h.operation === 'credit' ? '+' : '-'}{formatCurrency(h.value || 0)}</td>
                                     <td className="p-3 text-sm">{h.status}</td>
                                 </tr>
                             ))}

@@ -30,11 +30,11 @@ export default function ProfitReportPage() {
 
     const calculateProfit = () => {
         const filtered = orders.filter(o => {
-            const date = o.created_at.split('T')[0]
+            const date = (o.created_at || '').split('T')[0]
             return date >= dateRange.start && date <= dateRange.end && o.payment_status === 'paid'
         })
 
-        const revenue = filtered.reduce((sum, o) => sum + o.total, 0)
+        const revenue = filtered.reduce((sum, o) => sum + (o.total || 0), 0)
         // Estimate cost as 60% of revenue (adjust based on actual cost data)
         const costRatio = 0.6
         const cost = revenue * costRatio
@@ -46,10 +46,10 @@ export default function ProfitReportPage() {
         // Group by day
         const grouped: Record<string, { revenue: number; cost: number }> = {}
         filtered.forEach(o => {
-            const date = o.created_at.split('T')[0]
+            const date = (o.created_at || '').split('T')[0]
             if (!grouped[date]) grouped[date] = { revenue: 0, cost: 0 }
-            grouped[date].revenue += o.total
-            grouped[date].cost += o.total * costRatio
+            grouped[date].revenue += (o.total || 0)
+            grouped[date].cost += (o.total || 0) * costRatio
         })
 
         const days = Object.entries(grouped)

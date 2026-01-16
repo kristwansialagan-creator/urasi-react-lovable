@@ -3,13 +3,13 @@ import { supabase } from '@/lib/supabase'
 
 interface Notification {
     id: string
-    user_id: string
+    user_id: string | null
     title: string
-    message: string
-    type: 'info' | 'success' | 'warning' | 'error'
-    read: boolean
+    description: string | null
+    type?: string | null
+    read: boolean | null
     data?: any
-    created_at: string
+    created_at: string | null
 }
 
 export function useNotifications() {
@@ -24,11 +24,11 @@ export function useNotifications() {
             const user = await supabase.auth.getUser()
             if (!user.data.user) return
 
-            const { data, error: err } = await supabase
+            const { data, error: err } = await (supabase
                 .from('notifications')
                 .select('*')
                 .eq('user_id', user.data.user.id)
-                .order('created_at', { ascending: false })
+                .order('created_at', { ascending: false }) as any)
 
             if (err) throw err
 

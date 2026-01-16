@@ -9,9 +9,9 @@ export interface Provider {
     name: string
     email: string | null
     phone: string | null
-    address: string | null
-    created_at: string
-    updated_at: string
+    address?: string | null
+    created_at: string | null
+    updated_at: string | null
 }
 
 export function useProviders() {
@@ -57,11 +57,11 @@ export interface TransactionAccount {
     id: string
     name: string
     code: string | null
-    type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense'
-    balance: number
+    type: string | null
+    balance: number | null
     description: string | null
-    created_at: string
-    updated_at: string
+    created_at: string | null
+    updated_at: string | null
 }
 
 export function useTransactionAccounts() {
@@ -108,10 +108,10 @@ export interface Module {
     name: string
     label: string
     description: string | null
-    status: 'enabled' | 'disabled'
+    status: string | null
     settings: any
-    created_at: string
-    updated_at: string
+    created_at: string | null
+    updated_at: string | null
 }
 
 export function useModules() {
@@ -120,7 +120,7 @@ export function useModules() {
 
     const fetchModules = useCallback(async () => {
         setLoading(true)
-        const { data } = await supabase.from('modules').select('*').order('label')
+        const { data } = await (supabase.from('modules').select('*').order('label') as any)
         setModules(data || [])
         setLoading(false)
     }, [])

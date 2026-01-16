@@ -4,42 +4,42 @@ import { supabase } from '@/lib/supabase'
 interface Transaction {
     id: string
     name: string
-    type: 'income' | 'expense'
-    status: 'active' | 'inactive'
+    type: string | null
+    status: string | null
     account_id: string | null
-    account?: TransactionAccount
-    value: number
+    account?: TransactionAccount | null
+    value: number | null
     description: string | null
-    recurring: boolean
+    recurring?: boolean | null
     occurrence: string | null
     scheduled_date: string | null
-    active: boolean
-    author: string
-    created_at: string
-    updated_at: string
+    active: boolean | null
+    author: string | null
+    created_at: string | null
+    updated_at: string | null
 }
 
 interface TransactionAccount {
     id: string
     name: string
     account: string
-    operation: 'debit' | 'credit'
+    operation: string | null
     description: string | null
-    author: string
-    created_at: string
-    updated_at: string
+    author: string | null
+    created_at: string | null
+    updated_at: string | null
 }
 
 interface TransactionHistory {
     id: string
-    transaction_id: string
-    transaction?: Transaction
-    operation: 'debit' | 'credit'
-    value: number
-    name: string
-    status: string
-    author: string
-    created_at: string
+    transaction_id: string | null
+    transaction?: Transaction | null
+    operation: string | null
+    value: number | null
+    name: string | null
+    status: string | null
+    author: string | null
+    created_at: string | null
 }
 
 export function useTransactions() {
@@ -52,10 +52,10 @@ export function useTransactions() {
     const fetchTransactions = useCallback(async () => {
         setLoading(true)
         try {
-            const { data, error: err } = await supabase
+            const { data, error: err } = await (supabase
                 .from('transactions')
                 .select('*, account:transactions_accounts(*)')
-                .order('created_at', { ascending: false })
+                .order('created_at', { ascending: false }) as any)
 
             if (err) throw err
             setTransactions(data || [])
@@ -68,10 +68,10 @@ export function useTransactions() {
 
     const fetchAccounts = useCallback(async () => {
         try {
-            const { data, error: err } = await supabase
+            const { data, error: err } = await (supabase
                 .from('transactions_accounts')
                 .select('*')
-                .order('name')
+                .order('name') as any)
 
             if (err) throw err
             setAccounts(data || [])
@@ -84,14 +84,14 @@ export function useTransactions() {
         setLoading(true)
         try {
             let query = supabase
-                .from('transactions_histories')
+                .from('transactions_history')
                 .select('*, transaction:transactions(*)')
                 .order('created_at', { ascending: false })
 
             if (startDate) query = query.gte('created_at', startDate)
             if (endDate) query = query.lte('created_at', endDate)
 
-            const { data, error: err } = await query.limit(500)
+            const { data, error: err } = await (query.limit(500) as any)
 
             if (err) throw err
             setHistory(data || [])
@@ -157,11 +157,11 @@ export function useTransactions() {
             if (!transaction) throw new Error('Transaction not found')
 
             const { error: err } = await supabase
-                .from('transactions_histories')
+                .from('transactions_history')
                 .insert([{
                     transaction_id: transactionId,
                     operation: transaction.type === 'income' ? 'credit' : 'debit',
-                    value: value || transaction.value,
+                    value: value || transaction.value || 0,
                     name: transaction.name,
                     status: 'completed',
                     author: (await supabase.auth.getUser()).data.user?.id
@@ -225,23 +225,23 @@ export function useTransactions() {
 
     const getCashFlow = useCallback(async (startDate: string, endDate: string) => {
         try {
-            const { data, error: err } = await supabase
-                .from('transactions_histories')
+            const { data, error: err } = await (supabase
+                .from('transactions_history')
                 .select('*')
                 .gte('created_at', startDate)
                 .lte('created_at', endDate)
-                .order('created_at')
+                .order('created_at') as any)
 
             if (err) throw err
 
             const txData = data || []
             const income = txData
-                .filter((h: { operation: string }) => h.operation === 'credit')
-                .reduce((sum: number, h: { value: number }) => sum + h.value, 0)
+                .filter((h: any) => h.operation === 'credit')
+                .reduce((sum: number, h: any) => sum + (h.value || 0), 0)
 
             const expense = txData
-                .filter((h: { operation: string }) => h.operation === 'debit')
-                .reduce((sum: number, h: { value: number }) => sum + h.value, 0)
+                .filter((h: any) => h.operation === 'debit')
+                .reduce((sum: number, h: any) => sum + (h.value || 0), 0)
 
             return { income, expense, net: income - expense, transactions: txData }
         } catch (err: any) {
