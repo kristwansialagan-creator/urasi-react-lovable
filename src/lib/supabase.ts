@@ -1,16 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database.types'
+// Re-export from the auto-generated client for consistency
+// This maintains backward compatibility while using the correct credentials
+export { supabase } from '@/integrations/supabase/client'
+export type { Database } from '@/integrations/supabase/types'
 
-const supabaseUrl = 'https://higfoctduijxbszgqhuc.supabase.co'
-const supabaseAnonKey = 'sb_publishable_8755edjLg2ePkQ4GSgVgHg_6_JrziI-'
-
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-    },
-})
+import { supabase } from '@/integrations/supabase/client'
 
 // Helper to get current user
 export const getCurrentUser = async () => {
