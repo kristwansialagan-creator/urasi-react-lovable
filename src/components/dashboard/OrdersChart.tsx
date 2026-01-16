@@ -36,9 +36,10 @@ export function OrdersChart() {
             }
 
             orders?.forEach(order => {
+                if (!order.created_at) return
                 const dateKey = order.created_at.split('T')[0]
                 if (groupedData[dateKey]) {
-                    groupedData[dateKey].total += order.total
+                    groupedData[dateKey].total += order.total ?? 0
                     groupedData[dateKey].count += 1
                 }
             })

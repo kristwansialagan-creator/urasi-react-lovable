@@ -56,7 +56,17 @@ export default function POSCustomerPopup({ open, onClose, onSelect }: POSCustome
                 .limit(50)
 
             if (error) throw error
-            setCustomers(data || [])
+            
+            // Map to ensure proper types with fallbacks for null values
+            const mappedCustomers: Customer[] = (data || []).map(c => ({
+                id: c.id,
+                first_name: c.first_name || '',
+                last_name: c.last_name || '',
+                email: c.email || undefined,
+                phone: c.phone || undefined
+            }))
+            
+            setCustomers(mappedCustomers)
         } catch (error) {
             console.error('Error fetching customers:', error)
         } finally {

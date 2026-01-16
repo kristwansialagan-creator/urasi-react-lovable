@@ -40,12 +40,12 @@ export function BestCustomers() {
                 if (!customerMap[customerId]) {
                     customerMap[customerId] = {
                         id: customerId,
-                        name: `${order.customer.first_name} ${order.customer.last_name}`,
+                        name: `${order.customer.first_name || ''} ${order.customer.last_name || ''}`.trim() || 'Unknown',
                         total_spent: 0,
                         order_count: 0
                     }
                 }
-                customerMap[customerId].total_spent += order.total
+                customerMap[customerId].total_spent += order.total ?? 0
                 customerMap[customerId].order_count += 1
             })
 

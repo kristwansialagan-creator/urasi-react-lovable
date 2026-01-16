@@ -13,8 +13,8 @@ interface Coupon {
     name: string
     discount_type: 'percentage' | 'flat'
     discount_value: number
-    min_purchase?: number
-    max_discount?: number
+    minimum_cart_value?: number | null
+    max_discount?: number | null
     active: boolean
 }
 
@@ -44,10 +44,26 @@ export default function POSCouponsPopup({ open, onClose, subtotal, onApply, appl
                 .from('coupons')
                 .select('*')
                 .eq('active', true)
-                .lte('min_purchase', subtotal)
 
             if (error) throw error
-            setAvailableCoupons(data || [])
+            
+            // Filter and map to proper type
+            const mappedCoupons: Coupon[] = (data || [])
+                .filter(c => !c.minimum_cart_value || subtotal >= c.minimum_cart_value)
+                .map(c => ({
+                    id: c.id,
+                    code: c.code,
+                    name: c.name,
+                    discount_type: (c.discount_type === 'percentage' || c.discount_type === 'flat') 
+                        ? c.discount_type 
+                        : 'flat',
+                    discount_value: c.discount_value ?? 0,
+                    minimum_cart_value: c.minimum_cart_value,
+                    max_discount: null,
+                    active: c.active ?? true
+                }))
+            
+            setAvailableCoupons(mappedCoupons)
         } catch (error) {
             console.error('Error fetching coupons:', error)
         }
@@ -72,8 +88,8 @@ export default function POSCouponsPopup({ open, onClose, subtotal, onApply, appl
                 return
             }
 
-            if (data.min_purchase && subtotal < data.min_purchase) {
-                setError(`Minimum purchase of ${formatCurrency(data.min_purchase)} required`)
+            if (data.minimum_cart_value && subtotal < data.minimum_cart_value) {
+                setError(`Minimum purchase of ${formatCurrency(data.minimum_cart_value)} required`)
                 return
             }
 
@@ -82,7 +98,20 @@ export default function POSCouponsPopup({ open, onClose, subtotal, onApply, appl
                 return
             }
 
-            onApply(data)
+            const mappedCoupon: Coupon = {
+                id: data.id,
+                code: data.code,
+                name: data.name,
+                discount_type: (data.discount_type === 'percentage' || data.discount_type === 'flat') 
+                    ? data.discount_type 
+                    : 'flat',
+                discount_value: data.discount_value ?? 0,
+                minimum_cart_value: data.minimum_cart_value,
+                max_discount: null,
+                active: data.active ?? true
+            }
+
+            onApply(mappedCoupon)
             setCouponCode('')
             setError('')
         } catch (error) {
@@ -193,8 +222,8 @@ export default function POSCouponsPopup({ open, onClose, subtotal, onApply, appl
                                                                     ? `${coupon.discount_value}%`
                                                                     : formatCurrency(coupon.discount_value)}
                                                             </p>
-                                                            {coupon.min_purchase && (
-                                                                <p>Min. Purchase: {formatCurrency(coupon.min_purchase)}</p>
+                                                            {coupon.minimum_cart_value && (
+                                                                <p>Min. Purchase: {formatCurrency(coupon.minimum_cart_value)}</p>
                                                             )}
                                                             {coupon.max_discount && (
                                                                 <p>Max. Discount: {formatCurrency(coupon.max_discount)}</p>

@@ -1,10 +1,23 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import type { Tables } from '@/types/database'
 import { usePermissions } from '@/hooks/usePermissions'
 
-type Profile = Tables<'profiles'>
+interface Profile {
+    id: string
+    username: string | null
+    email: string | null
+    first_name: string | null
+    second_name: string | null
+    phone: string | null
+    role: string
+    active: boolean
+    total_sales_count: number
+    total_sales: number
+    avatar_url: string | null
+    created_at: string
+    updated_at: string
+}
 
 interface AuthContextType {
     user: User | null
@@ -51,7 +64,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .single()
 
             if (!error && data) {
-                setProfile(data)
+                // Map database response to Profile interface with proper defaults
+                const mappedProfile: Profile = {
+                    id: data.id,
+                    username: data.username,
+                    email: data.email,
+                    first_name: data.first_name,
+                    second_name: data.second_name,
+                    phone: data.phone,
+                    role: data.role ?? 'user',
+                    active: data.active ?? true,
+                    total_sales_count: data.total_sales_count ?? 0,
+                    total_sales: data.total_sales ?? 0,
+                    avatar_url: data.avatar_url,
+                    created_at: data.created_at ?? new Date().toISOString(),
+                    updated_at: data.updated_at ?? new Date().toISOString()
+                }
+                setProfile(mappedProfile)
                 // Fetch permissions after profile is loaded
                 await fetchUserPermissions(userId)
             }
