@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { createSystemNotification, formatCurrency, NotificationTypes } from '@/services/notificationService'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Register {
     id: string
@@ -47,6 +49,7 @@ export function useRegisters(): UseRegistersReturn {
     const [registers, setRegisters] = useState<Register[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const { user } = useAuth()
 
     const fetchRegisters = useCallback(async () => {
         setLoading(true)
@@ -170,13 +173,28 @@ export function useRegisters(): UseRegistersReturn {
                 description: 'Register opened'
             } as never)
 
+            // Create notification for register opening
+            if (user?.id) {
+                createSystemNotification({
+                    userId: user.id,
+                    title: 'Register Opened',
+                    description: `${register.name} opened with balance ${formatCurrency(openingBalance)}`,
+                    type: NotificationTypes.REGISTER_OPENED,
+                    url: '/registers',
+                    source: 'register',
+                    entityType: 'register',
+                    entityId: id,
+                    identifier: `register_open_${id}_${Date.now()}`
+                }).catch(err => console.error('Failed to create register open notification:', err))
+            }
+
             await fetchRegisters()
             return true
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to open register')
             return false
         }
-    }, [getRegister, fetchRegisters])
+    }, [getRegister, fetchRegisters, user?.id])
 
     const closeRegister = useCallback(async (id: string): Promise<boolean> => {
         try {
@@ -201,13 +219,28 @@ export function useRegisters(): UseRegistersReturn {
                 description: 'Register closed'
             } as never)
 
+            // Create notification for register closing
+            if (user?.id) {
+                createSystemNotification({
+                    userId: user.id,
+                    title: 'Register Closed',
+                    description: `${register.name} closed. Final balance: ${formatCurrency(closingBalance)}`,
+                    type: NotificationTypes.REGISTER_CLOSED,
+                    url: '/registers',
+                    source: 'register',
+                    entityType: 'register',
+                    entityId: id,
+                    identifier: `register_close_${id}_${Date.now()}`
+                }).catch(err => console.error('Failed to create register close notification:', err))
+            }
+
             await fetchRegisters()
             return true
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to close register')
             return false
         }
-    }, [getRegister, fetchRegisters])
+    }, [getRegister, fetchRegisters, user?.id])
 
     const cashIn = useCallback(async (id: string, amount: number, description: string): Promise<boolean> => {
         try {

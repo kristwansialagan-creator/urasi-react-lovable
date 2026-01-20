@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Bell, CheckCircle, AlertCircle, Info, AlertTriangle, Trash2, Check } from 'lucide-react'
+import { Bell, CheckCircle, AlertCircle, Info, AlertTriangle, Trash2, Check, ExternalLink } from 'lucide-react'
 import { useNotifications } from '@/hooks'
+import { Link } from 'react-router-dom'
 
 export default function NotificationsPage() {
     const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications()
@@ -25,33 +26,48 @@ export default function NotificationsPage() {
 
     const getColorClass = (type: string) => {
         switch (type) {
-            case 'success': return 'border-l-green-500 bg-green-50'
-            case 'error': return 'border-l-red-500 bg-red-50'
-            case 'warning': return 'border-l-yellow-500 bg-yellow-50'
-            default: return 'border-l-blue-500 bg-blue-50'
+            case 'success': return 'border-l-green-500 bg-green-50 dark:bg-green-900/20'
+            case 'error': return 'border-l-red-500 bg-red-50 dark:bg-red-900/20'
+            case 'warning': return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/20'
+            default: return 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/20'
+        }
+    }
+
+    const getSourceLabel = (source: string) => {
+        switch (source) {
+            case 'auth': return 'Authentication'
+            case 'register': return 'Register'
+            case 'stock': return 'Stock'
+            case 'expiry': return 'Expiry'
+            case 'installment': return 'Installment'
+            case 'order': return 'Order'
+            default: return 'System'
         }
     }
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold flex items-center gap-2"><Bell className="h-8 w-8" />Notifications {unreadCount > 0 && <span className="px-2 py-1 bg-red-500 text-white rounded-full text-sm">{unreadCount}</span>}</h1>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h1 className="text-3xl font-bold flex items-center gap-2">
+                    <Bell className="h-8 w-8" />Notifications 
+                    {unreadCount > 0 && <span className="px-2 py-1 bg-red-500 text-white rounded-full text-sm">{unreadCount}</span>}
+                </h1>
                 <div className="flex gap-2">
                     {unreadCount > 0 && <Button variant="outline" onClick={markAllAsRead}><Check className="h-4 w-4 mr-2" />Mark All Read</Button>}
                     {notifications.length > 0 && <Button variant="destructive" onClick={() => { if (confirm('Clear all notifications?')) clearAll() }}><Trash2 className="h-4 w-4 mr-2" />Clear All</Button>}
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{notifications.length}</div></CardContent></Card>
                 <Card className="border-red-500"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-red-500" />Unread</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-red-600">{unreadCount}</div></CardContent></Card>
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Info className="h-4 w-4 text-blue-500" />Info</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-blue-600">{notifications.filter((n: any) => n.type === 'info').length}</div></CardContent></Card>
-                <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" />Success</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{notifications.filter((n: any) => n.type === 'success').length}</div></CardContent></Card>
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-yellow-500" />Warnings</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-yellow-600">{notifications.filter((n: any) => n.type === 'warning').length}</div></CardContent></Card>
+                <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-red-500" />Errors</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-red-600">{notifications.filter((n: any) => n.type === 'error').length}</div></CardContent></Card>
             </div>
 
             <Card><CardContent className="pt-6">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     {(['all', 'unread', 'info', 'success', 'warning', 'error'] as const).map(f => (
                         <Button key={f} variant={filter === f ? 'default' : 'outline'} onClick={() => setFilter(f)} className="capitalize" size="sm">{f}</Button>
                     ))}
@@ -74,15 +90,27 @@ export default function NotificationsPage() {
                                 <div className="flex items-start gap-4">
                                     <div className="mt-1">{getIcon(notification.type)}</div>
                                     <div className="flex-1">
-                                        <div className="flex items-start justify-between mb-2">
+                                        <div className="flex flex-col md:flex-row md:items-start justify-between mb-2 gap-2">
                                             <div>
                                                 <h3 className="font-semibold text-lg">{notification.title}</h3>
-                                                {!notification.read && <span className="inline-block px-2 py-0.5 bg-red-500 text-white text-xs rounded-full mt-1">New</span>}
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    {!notification.read && <span className="inline-block px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">New</span>}
+                                                    <span className="inline-block px-2 py-0.5 bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] text-xs rounded-full">
+                                                        {getSourceLabel(notification.source)}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <span className="text-sm text-[hsl(var(--muted-foreground))]">{new Date(notification.created_at).toLocaleString()}</span>
+                                            <span className="text-sm text-[hsl(var(--muted-foreground))]">{new Date(notification.created_at).toLocaleString('id-ID')}</span>
                                         </div>
-                                        <p className="text-[hsl(var(--muted-foreground))] mb-3">{notification.message}</p>
-                                        <div className="flex gap-2">
+                                        <p className="text-[hsl(var(--muted-foreground))] mb-3">{notification.description || ''}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {notification.url && (
+                                                <Button size="sm" variant="outline" asChild>
+                                                    <Link to={notification.url}>
+                                                        <ExternalLink className="h-3 w-3 mr-1" />View Details
+                                                    </Link>
+                                                </Button>
+                                            )}
                                             {!notification.read && (
                                                 <Button size="sm" variant="outline" onClick={() => markAsRead(notification.id)}><Check className="h-3 w-3 mr-1" />Mark as Read</Button>
                                             )}

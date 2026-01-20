@@ -10,11 +10,15 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 import { useIsMobile } from '@/hooks/use-mobile'
 import AIChatWidget from '@/components/ai-chat/AIChatWidget'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
+import { useNotificationChecker } from '@/hooks/useNotificationChecker'
 
 export function DashboardLayout() {
     const isMobile = useIsMobile()
     const location = useLocation()
     const navigate = useNavigate()
+    
+    // Initialize notification checker for periodic checks
+    useNotificationChecker()
     
     // Auto-hide sidebar on POS page
     const isPOSPage = location.pathname === '/pos'
