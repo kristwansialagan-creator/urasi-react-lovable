@@ -18,8 +18,9 @@ export default function POSPermissionsPopup({ isOpen, onClose, onSuccess, requir
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        // TODO: Implement actual permission check against backend
-        // For now, accept '1234' as manager PIN
+        // Note: Using static PIN for development. Production implementation should
+        // verify against user roles/permissions in Supabase with proper authentication.
+        // See usePermissions hook for role-based access patterns.
         if (pin === '1234') {
             onSuccess()
             onClose()
