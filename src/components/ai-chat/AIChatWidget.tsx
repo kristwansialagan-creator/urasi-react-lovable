@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bot, Loader2, MessageSquare, Paperclip, Send, Terminal, Trash2, User, X, Plus, History, LogIn } from 'lucide-react'
+import { Bot, Loader2, MessageSquare, Paperclip, Send, Terminal, Trash2, User, X, Plus, History, LogIn, LogOut } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSanitize from 'rehype-sanitize'
@@ -19,7 +19,7 @@ import {
   getUser,
   isSignedIn
 } from './chatSessionStore'
-import { chatStream, deletePath, listModels, uploadFiles } from './puterClient'
+import { chatStream, deletePath, listModels, uploadFiles, signOut } from './puterClient'
 
 // Known Vision Models
 const VISION_MODELS = [
@@ -464,9 +464,28 @@ export default function AIChatWidget() {
           </ScrollArea>
           <div className="p-2.5 border-t border-[hsl(var(--border))]">
             {isUserSignedIn && user ? (
-              <div className="flex items-center gap-2 text-[10px] text-[hsl(var(--muted-foreground))]">
-                <User className="h-2.5 w-2.5" />
-                <span className="truncate flex-1">Signed in as {user.username}</span>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 text-[10px] text-[hsl(var(--muted-foreground))]">
+                  <User className="h-2.5 w-2.5" />
+                  <span className="truncate flex-1">{user.username}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full text-[10px] h-6 text-red-500 hover:text-red-600 hover:bg-red-500/10" 
+                  onClick={async () => {
+                    try {
+                      await signOut()
+                      setIsUserSignedIn(false)
+                      setUser(null)
+                    } catch (e) {
+                      console.error('Sign out failed', e)
+                    }
+                  }}
+                >
+                  <LogOut className="h-2.5 w-2.5 mr-1.5" />
+                  Sign Out
+                </Button>
               </div>
             ) : (
               <Button variant="outline" size="sm" className="w-full text-[10px] h-7" onClick={handleSignIn}>
