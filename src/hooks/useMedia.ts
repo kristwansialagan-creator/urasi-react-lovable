@@ -7,8 +7,7 @@ interface Media {
     extension: string | null
     slug: string | null
     url?: string | null
-    alt?: string | null
-    author?: string | null
+    user_id?: string | null
     created_at: string | null
     updated_at: string | null
 }
@@ -21,13 +20,33 @@ export function useMedia() {
     const fetchMedia = useCallback(async () => {
         setLoading(true)
         try {
-            const { data, error: err } = await (supabase
+            const { data, error: err } = await supabase
                 .from('medias')
                 .select('*')
-                .order('created_at', { ascending: false }) as any)
+                .order('created_at', { ascending: false })
 
             if (err) throw err
-            setMedia(data || [])
+
+            // Generate URL from slug for each media item
+            const mediaWithUrls = (data || []).map(item => {
+                let url = null
+                if (item.slug) {
+                    // Extract bucket name from slug (e.g., "product-images/xxx.jpg")
+                    const parts = item.slug.split('/')
+                    const bucketName = parts[0]
+                    const filePath = parts.slice(1).join('/')
+
+                    if (bucketName && filePath) {
+                        const { data: urlData } = supabase.storage
+                            .from(bucketName)
+                            .getPublicUrl(filePath)
+                        url = urlData?.publicUrl
+                    }
+                }
+                return { ...item, url }
+            })
+
+            setMedia(mediaWithUrls)
         } catch (err: any) {
             setError(err.message)
         } finally {
@@ -41,34 +60,37 @@ export function useMedia() {
             const user = await supabase.auth.getUser()
             const ext = file.name.split('.').pop() || 'unknown'
             const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+            // Use product-images bucket (the existing public bucket)
+            const bucketName = 'product-images'
             const path = `uploads/${fileName}`
 
-            // Upload to Supabase Storage
             const { error: uploadErr } = await supabase.storage
-                .from('media')
+                .from(bucketName)
                 .upload(path, file)
 
             if (uploadErr) throw uploadErr
 
-            // Get public URL
-            const { data: urlData } = supabase.storage
-                .from('media')
-                .getPublicUrl(path)
+            // Save path as "bucket-name/path" format for consistency
+            const slug = `${bucketName}/${path}`
 
-            // Create record
             const { error: dbErr } = await supabase
                 .from('medias')
                 .insert([{
                     name: file.name,
                     extension: ext,
-                    slug: path,
-                    url: urlData.publicUrl,
-                    author: user.data.user?.id
-                }] as never)
+                    slug: slug,
+                    user_id: user.data.user?.id
+                }])
 
             if (dbErr) throw dbErr
 
             await fetchMedia()
+
+            // Return the public URL
+            const { data: urlData } = supabase.storage
+                .from(bucketName)
+                .getPublicUrl(path)
             return urlData.publicUrl
         } catch (err: any) {
             setError(err.message)
@@ -83,11 +105,17 @@ export function useMedia() {
             const item = media.find(m => m.id === id)
             if (!item) return false
 
-            // Delete from storage
+            // Delete from storage using slug
             if (item.slug) {
-                await supabase.storage
-                    .from('media')
-                    .remove([item.slug])
+                const parts = item.slug.split('/')
+                const bucketName = parts[0]
+                const filePath = parts.slice(1).join('/')
+
+                if (bucketName && filePath) {
+                    await supabase.storage
+                        .from(bucketName)
+                        .remove([filePath])
+                }
             }
 
             // Delete from DB
