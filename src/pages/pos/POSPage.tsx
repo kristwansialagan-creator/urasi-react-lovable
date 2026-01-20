@@ -395,7 +395,7 @@ export default function POSPage() {
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         onKeyDown={handleSearchKeyDown}
-                                        icon={<Search className="h-4 w-4" />}
+                                        icon={<Barcode className="h-4 w-4" />}
                                         className="text-sm"
                                     />
                                 </div>
