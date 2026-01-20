@@ -519,68 +519,63 @@ export default function POSPage() {
                 </div>
 
                 {/* Right Section: Cart */}
-                <div className="w-full lg:w-[320px] xl:w-[400px] 2xl:w-[450px] shrink-0 flex flex-col min-h-[400px] lg:min-h-0 lg:h-full">
-                    <Card className="flex flex-col h-full shadow-lg">
+                <div className="w-full lg:w-[280px] xl:w-[320px] 2xl:w-[360px] shrink-0 lg:h-full lg:max-h-full overflow-hidden">
+                    <Card className="flex flex-col h-full max-h-[calc(100vh-120px)] lg:max-h-full shadow-lg overflow-hidden">
                         {/* Header - Fixed */}
-                        <CardHeader className="py-2 sm:py-3 border-b shrink-0 px-3 sm:px-4">
-                            <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
-                                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <CardHeader className="py-1.5 sm:py-2 border-b shrink-0 px-2 sm:px-3">
+                            <CardTitle className="flex items-center gap-1.5 text-xs sm:text-sm">
+                                <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 Current Order ({cart.length})
                             </CardTitle>
                         </CardHeader>
                         
                         {/* Content - Flex container with proper constraints */}
-                        <CardContent className="flex-1 flex flex-col min-h-0 p-0">
-                            {/* Scrollable Cart Items */}
-                            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 min-h-0">
+                        <CardContent className="flex-1 flex flex-col min-h-0 p-0 overflow-hidden">
+                            {/* Scrollable Cart Items - Takes remaining space */}
+                            <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 min-h-0">
                                 {cart.length === 0 ? (
-                                    <div className="h-32 flex flex-col items-center justify-center text-[hsl(var(--muted-foreground))] opacity-50">
-                                        <ShoppingCart className="h-8 w-8 mb-2" />
-                                        <p>Cart is empty</p>
-                                        <p className="text-xs">Scan or select products</p>
+                                    <div className="h-20 flex flex-col items-center justify-center text-[hsl(var(--muted-foreground))] opacity-50">
+                                        <ShoppingCart className="h-6 w-6 mb-1" />
+                                        <p className="text-xs">Cart is empty</p>
                                     </div>
                                 ) : (
                                     cart.map((item) => (
-                                        <div key={item.product_id} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border bg-[hsl(var(--muted))]/30">
+                                        <div key={item.product_id} className="flex items-center gap-1.5 p-1.5 rounded border bg-[hsl(var(--muted))]/30 text-xs">
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-medium text-sm truncate">{item.name}</div>
-                                                <div className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] flex items-center gap-1">
-                                                    <span>{formatCurrency(item.unit_price)}</span>
-                                                    <span>x</span>
-                                                    <span className="font-medium text-foreground">{item.quantity}</span>
+                                                <div className="font-medium truncate text-xs">{item.name}</div>
+                                                <div className="text-[10px] text-[hsl(var(--muted-foreground))]">
+                                                    {formatCurrency(item.unit_price)} x {item.quantity}
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <Button size="icon" variant="outline" className="h-5 w-5 sm:h-6 sm:w-6" onClick={() => updateQuantity(item.product_id, 1)}>
-                                                        <Plus className="h-3 w-3" />
-                                                    </Button>
-                                                    <Button size="icon" variant="outline" className="h-5 w-5 sm:h-6 sm:w-6" onClick={() => updateQuantity(item.product_id, -1)}>
-                                                        <Minus className="h-3 w-3" />
-                                                    </Button>
-                                                </div>
-                                                <div className="text-right min-w-[70px] sm:min-w-[80px]">
-                                                    <div className="font-bold text-sm">{formatCurrency(item.total_price)}</div>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        className="h-5 w-5 sm:h-6 sm:w-6 text-destructive hover:text-destructive hover:bg-destructive/10 -mr-1 mt-0.5"
-                                                        onClick={() => removeFromCart(item.product_id)}
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </Button>
-                                                </div>
+                                            <div className="flex items-center gap-0.5">
+                                                <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQuantity(item.product_id, 1)}>
+                                                    <Plus className="h-2.5 w-2.5" />
+                                                </Button>
+                                                <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQuantity(item.product_id, -1)}>
+                                                    <Minus className="h-2.5 w-2.5" />
+                                                </Button>
                                             </div>
+                                            <div className="text-right min-w-[60px]">
+                                                <div className="font-bold text-xs">{formatCurrency(item.total_price)}</div>
+                                            </div>
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                onClick={() => removeFromCart(item.product_id)}
+                                            >
+                                                <Trash2 className="h-2.5 w-2.5" />
+                                            </Button>
                                         </div>
                                     ))
                                 )}
                             </div>
 
                             {/* Fixed Footer - Summary & Payment */}
-                            <div className="shrink-0 p-3 sm:p-4 bg-[hsl(var(--muted))]/10 border-t space-y-2 sm:space-y-3 overflow-y-auto max-h-[55vh]">
+                            <div className="shrink-0 p-2 bg-[hsl(var(--muted))]/10 border-t space-y-1.5">
                                 {/* Customer Select */}
                                 <select
-                                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border rounded-md bg-background text-xs sm:text-sm"
+                                    className="w-full px-2 py-1 border rounded-md bg-background text-xs"
                                     value={selectedCustomer || ''}
                                     onChange={(e) => setSelectedCustomer(e.target.value || null)}
                                 >
@@ -593,44 +588,44 @@ export default function POSPage() {
                                 </select>
 
                                 {/* Coupon Input */}
-                                <div className="flex gap-2">
+                                <div className="flex gap-1">
                                     <Input
                                         placeholder="Coupon code"
                                         value={couponCode}
                                         onChange={(e) => setCouponCode(e.target.value)}
-                                        className="h-8 text-xs sm:text-sm"
+                                        className="h-7 text-xs"
                                     />
-                                    <Button onClick={applyCoupon} size="sm" variant="outline" className="h-8 text-xs sm:text-sm">Apply</Button>
+                                    <Button onClick={applyCoupon} size="sm" variant="outline" className="h-7 text-xs px-2">Apply</Button>
                                 </div>
 
                                 {/* Order Summary */}
-                                <div className="space-y-1 text-xs sm:text-sm pt-1 sm:pt-2">
+                                <div className="space-y-0.5 text-xs pt-1">
                                     <div className="flex justify-between text-[hsl(var(--muted-foreground))]"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
                                     {discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-{formatCurrency(discount)}</span></div>}
-                                    <div className="flex justify-between font-bold text-base sm:text-xl pt-1 sm:pt-2 border-t mt-1 sm:mt-2"><span>Total</span><span>{formatCurrency(total)}</span></div>
+                                    <div className="flex justify-between font-bold text-sm pt-1 border-t mt-1"><span>Total</span><span>{formatCurrency(total)}</span></div>
                                 </div>
 
                                 {/* Payment Section */}
                                 {showPayment ? (
-                                    <div className="w-full bg-background border-t pt-2 animate-in slide-in-from-bottom-2 space-y-2">
+                                    <div className="w-full bg-background border-t pt-1.5 space-y-1.5">
                                         {/* Payment Header */}
                                         <div className="flex justify-between items-center">
                                             <h3 className="text-xs font-bold">Payment</h3>
-                                            <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => {
+                                            <Button variant="ghost" size="sm" className="h-5 text-[10px] px-1.5" onClick={() => {
                                                 setShowPayment(false)
                                                 setPayments([])
                                             }}>Cancel</Button>
                                         </div>
 
                                         {/* Payment Methods Grid */}
-                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                                        <div className="grid grid-cols-3 gap-1">
                                             {paymentTypes.map(pt => {
                                                 const isSelected = payments.find(p => p.payment_type_id === pt.id)
                                                 return (
                                                     <Button
                                                         key={pt.id}
                                                         variant={isSelected ? "default" : "outline"}
-                                                        className={`h-7 text-xs px-1 justify-center relative ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
+                                                        className={`h-6 text-[10px] px-1 justify-center ${isSelected ? 'ring-1 ring-primary' : ''}`}
                                                         onClick={() => {
                                                             const existing = payments.find(p => p.payment_type_id === pt.id)
                                                             if (existing) {
@@ -642,7 +637,7 @@ export default function POSPage() {
                                                         }}
                                                     >
                                                         <span className="truncate">{pt.label}</span>
-                                                        {isSelected && <Check className="h-2 w-2 ml-1 flex-shrink-0" />}
+                                                        {isSelected && <Check className="h-2 w-2 ml-0.5 shrink-0" />}
                                                     </Button>
                                                 )
                                             })}
@@ -650,16 +645,16 @@ export default function POSPage() {
 
                                         {/* Payment Inputs */}
                                         {payments.length > 0 && (
-                                            <div className="space-y-1.5">
+                                            <div className="space-y-1">
                                                 {payments.map(p => {
                                                     const type = paymentTypes.find(pt => pt.id === p.payment_type_id)
                                                     return (
-                                                        <div key={p.payment_type_id} className="flex items-center gap-2">
-                                                            <span className="text-xs flex-1 truncate">{type?.label}</span>
+                                                        <div key={p.payment_type_id} className="flex items-center gap-1">
+                                                            <span className="text-[10px] flex-1 truncate">{type?.label}</span>
                                                             <Input
                                                                 type="number"
                                                                 value={p.value}
-                                                                className="w-20 text-right font-mono h-6 text-xs"
+                                                                className="w-20 text-right font-mono h-5 text-[10px]"
                                                                 onChange={(e) => {
                                                                     const val = parseFloat(e.target.value)
                                                                     setPayments(payments.map(pay =>
@@ -677,13 +672,13 @@ export default function POSPage() {
 
                                         {/* No Payment Selected Message */}
                                         {payments.length === 0 && (
-                                            <div className="text-center text-xs text-[hsl(var(--muted-foreground))] py-1">
-                                                Select a payment method to continue
+                                            <div className="text-center text-[10px] text-[hsl(var(--muted-foreground))] py-0.5">
+                                                Select payment method
                                             </div>
                                         )}
 
                                         {/* Payment Summary */}
-                                        <div className="flex justify-between text-xs font-semibold bg-[hsl(var(--muted))] p-1.5 rounded">
+                                        <div className="flex justify-between text-[10px] font-semibold bg-[hsl(var(--muted))] p-1 rounded">
                                             <span>Paid: {formatCurrency(totalPaid)}</span>
                                             <span className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
                                                 Change: {formatCurrency(change)}
@@ -693,18 +688,15 @@ export default function POSPage() {
                                         {/* Complete Button */}
                                         <Button 
                                             onClick={handleCheckout} 
-                                            className="w-full h-9 sm:h-10 text-sm font-semibold" 
-                                            size="lg"
+                                            className="w-full h-8 text-xs font-semibold" 
+                                            size="sm"
                                         >
                                             {totalPaid >= total ? 'Complete Sale' : totalPaid > 0 ? 'Complete (Partial)' : 'Complete (Unpaid)'}
                                         </Button>
                                     </div>
                                 ) : (
-                                    <Button onClick={() => setShowPayment(true)} disabled={cart.length === 0} className="w-full h-10 sm:h-12 text-base sm:text-lg shadow-md" size="lg">
-                                        <div className="flex flex-col items-center -space-y-1">
-                                            <span>Charge</span>
-                                            <span className="text-xs opacity-90 font-normal">{formatCurrency(total)}</span>
-                                        </div>
+                                    <Button onClick={() => setShowPayment(true)} disabled={cart.length === 0} className="w-full h-8 text-xs shadow-sm" size="sm">
+                                        Charge {formatCurrency(total)}
                                     </Button>
                                 )}
                             </div>
