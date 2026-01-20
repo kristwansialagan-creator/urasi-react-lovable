@@ -516,12 +516,12 @@ export default function POSPage() {
                         {/* Cart Footer - Customer & Coupon */}
                         <div className="shrink-0 p-2 border-t bg-muted/10 space-y-2">
                             {/* Customer Select */}
-                            <Select value={selectedCustomer || ''} onValueChange={(v) => setSelectedCustomer(v || null)}>
+                            <Select value={selectedCustomer || 'walk-in'} onValueChange={(v) => setSelectedCustomer(v === 'walk-in' ? null : v)}>
                                 <SelectTrigger className="h-8 text-xs">
                                     <SelectValue placeholder="Walk-in Customer" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-popover z-[150]">
-                                    <SelectItem value="">Walk-in Customer</SelectItem>
+                                    <SelectItem value="walk-in">Walk-in Customer</SelectItem>
                                     {customers.map(c => (
                                         <SelectItem key={c.id} value={c.id}>
                                             {c.first_name} {c.last_name}
