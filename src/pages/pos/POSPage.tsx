@@ -519,17 +519,20 @@ export default function POSPage() {
                 </div>
 
                 {/* Right Section: Cart */}
-                <div className="w-full lg:w-[320px] xl:w-[400px] 2xl:w-[450px] flex-none min-h-[300px] lg:min-h-0 lg:h-full flex flex-col">
-                    <Card className="flex flex-col h-full overflow-hidden shadow-lg">
-                        <CardHeader className="py-2 sm:py-4 border-b shrink-0 px-2 sm:px-4">
+                <div className="w-full lg:w-[320px] xl:w-[400px] 2xl:w-[450px] shrink-0 flex flex-col min-h-[400px] lg:min-h-0 lg:h-full">
+                    <Card className="flex flex-col h-full shadow-lg">
+                        {/* Header - Fixed */}
+                        <CardHeader className="py-2 sm:py-3 border-b shrink-0 px-3 sm:px-4">
                             <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
                                 <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                                 Current Order ({cart.length})
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="flex flex-col p-0 overflow-hidden">
-                            {/* Cart Items List */}
-                            <div className="overflow-y-auto p-4 space-y-3 flex-1">
+                        
+                        {/* Content - Flex container with proper constraints */}
+                        <CardContent className="flex-1 flex flex-col min-h-0 p-0">
+                            {/* Scrollable Cart Items */}
+                            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 min-h-0">
                                 {cart.length === 0 ? (
                                     <div className="h-32 flex flex-col items-center justify-center text-[hsl(var(--muted-foreground))] opacity-50">
                                         <ShoppingCart className="h-8 w-8 mb-2" />
@@ -538,10 +541,10 @@ export default function POSPage() {
                                     </div>
                                 ) : (
                                     cart.map((item) => (
-                                        <div key={item.product_id} className="flex items-start gap-3 p-3 rounded-lg border bg-[hsl(var(--muted))]/30">
+                                        <div key={item.product_id} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border bg-[hsl(var(--muted))]/30">
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-medium truncate">{item.name}</div>
-                                                <div className="text-sm text-[hsl(var(--muted-foreground))] flex items-center gap-1">
+                                                <div className="font-medium text-sm truncate">{item.name}</div>
+                                                <div className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] flex items-center gap-1">
                                                     <span>{formatCurrency(item.unit_price)}</span>
                                                     <span>x</span>
                                                     <span className="font-medium text-foreground">{item.quantity}</span>
@@ -549,19 +552,19 @@ export default function POSPage() {
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <div className="flex flex-col gap-0.5">
-                                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.product_id, 1)}>
+                                                    <Button size="icon" variant="outline" className="h-5 w-5 sm:h-6 sm:w-6" onClick={() => updateQuantity(item.product_id, 1)}>
                                                         <Plus className="h-3 w-3" />
                                                     </Button>
-                                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.product_id, -1)}>
+                                                    <Button size="icon" variant="outline" className="h-5 w-5 sm:h-6 sm:w-6" onClick={() => updateQuantity(item.product_id, -1)}>
                                                         <Minus className="h-3 w-3" />
                                                     </Button>
                                                 </div>
-                                                <div className="text-right min-w-[80px]">
-                                                    <div className="font-bold">{formatCurrency(item.total_price)}</div>
+                                                <div className="text-right min-w-[70px] sm:min-w-[80px]">
+                                                    <div className="font-bold text-sm">{formatCurrency(item.total_price)}</div>
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
-                                                        className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10 -mr-1 mt-1"
+                                                        className="h-5 w-5 sm:h-6 sm:w-6 text-destructive hover:text-destructive hover:bg-destructive/10 -mr-1 mt-0.5"
                                                         onClick={() => removeFromCart(item.product_id)}
                                                     >
                                                         <Trash2 className="h-3 w-3" />
@@ -573,10 +576,11 @@ export default function POSPage() {
                                 )}
                             </div>
 
-                            {/* Summary & Payment (Fixed at bottom of cart) */}
-                            <div className="p-4 bg-[hsl(var(--muted))]/10 border-t space-y-3">
+                            {/* Fixed Footer - Summary & Payment */}
+                            <div className="shrink-0 p-3 sm:p-4 bg-[hsl(var(--muted))]/10 border-t space-y-2 sm:space-y-3 overflow-y-auto max-h-[55vh]">
+                                {/* Customer Select */}
                                 <select
-                                    className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border rounded-md bg-background text-xs sm:text-sm"
                                     value={selectedCustomer || ''}
                                     onChange={(e) => setSelectedCustomer(e.target.value || null)}
                                 >
@@ -588,26 +592,29 @@ export default function POSPage() {
                                     ))}
                                 </select>
 
+                                {/* Coupon Input */}
                                 <div className="flex gap-2">
                                     <Input
                                         placeholder="Coupon code"
                                         value={couponCode}
                                         onChange={(e) => setCouponCode(e.target.value)}
-                                        className="h-9 text-sm"
+                                        className="h-8 text-xs sm:text-sm"
                                     />
-                                    <Button onClick={applyCoupon} size="sm" variant="outline">Apply</Button>
+                                    <Button onClick={applyCoupon} size="sm" variant="outline" className="h-8 text-xs sm:text-sm">Apply</Button>
                                 </div>
 
-                                <div className="space-y-1 text-sm pt-2">
+                                {/* Order Summary */}
+                                <div className="space-y-1 text-xs sm:text-sm pt-1 sm:pt-2">
                                     <div className="flex justify-between text-[hsl(var(--muted-foreground))]"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
                                     {discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-{formatCurrency(discount)}</span></div>}
-                                    <div className="flex justify-between font-bold text-xl pt-2 border-t mt-2"><span>Total</span><span>{formatCurrency(total)}</span></div>
+                                    <div className="flex justify-between font-bold text-base sm:text-xl pt-1 sm:pt-2 border-t mt-1 sm:mt-2"><span>Total</span><span>{formatCurrency(total)}</span></div>
                                 </div>
 
+                                {/* Payment Section */}
                                 {showPayment ? (
-                                    <div className="w-full bg-background border-t pt-2 animate-in slide-in-from-bottom-2">
-                                        {/* Inline Payment View */}
-                                        <div className="flex justify-between items-center mb-2">
+                                    <div className="w-full bg-background border-t pt-2 animate-in slide-in-from-bottom-2 space-y-2">
+                                        {/* Payment Header */}
+                                        <div className="flex justify-between items-center">
                                             <h3 className="text-xs font-bold">Payment</h3>
                                             <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => {
                                                 setShowPayment(false)
@@ -615,8 +622,8 @@ export default function POSPage() {
                                             }}>Cancel</Button>
                                         </div>
 
-                                        {/* Payment Methods Grid - 4 columns */}
-                                        <div className="grid grid-cols-4 gap-1 mb-2 max-h-[100px] overflow-y-auto pr-1">
+                                        {/* Payment Methods Grid */}
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                                             {paymentTypes.map(pt => {
                                                 const isSelected = payments.find(p => p.payment_type_id === pt.id)
                                                 return (
@@ -641,9 +648,9 @@ export default function POSPage() {
                                             })}
                                         </div>
 
-                                        {/* Payment Inputs - Always show when there are payment methods selected */}
+                                        {/* Payment Inputs */}
                                         {payments.length > 0 && (
-                                            <div className="space-y-1 mb-2 max-h-[80px] overflow-y-auto">
+                                            <div className="space-y-1.5">
                                                 {payments.map(p => {
                                                     const type = paymentTypes.find(pt => pt.id === p.payment_type_id)
                                                     return (
@@ -668,30 +675,32 @@ export default function POSPage() {
                                             </div>
                                         )}
 
-                                        {/* Show message when no payment method selected */}
+                                        {/* No Payment Selected Message */}
                                         {payments.length === 0 && (
-                                            <div className="text-center text-xs text-gray-500 py-1">
+                                            <div className="text-center text-xs text-[hsl(var(--muted-foreground))] py-1">
                                                 Select a payment method to continue
                                             </div>
                                         )}
 
-                                        <div className="flex justify-between text-xs font-semibold mb-2 bg-[hsl(var(--muted))] p-1 rounded">
+                                        {/* Payment Summary */}
+                                        <div className="flex justify-between text-xs font-semibold bg-[hsl(var(--muted))] p-1.5 rounded">
                                             <span>Paid: {formatCurrency(totalPaid)}</span>
                                             <span className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
                                                 Change: {formatCurrency(change)}
                                             </span>
                                         </div>
 
+                                        {/* Complete Button */}
                                         <Button 
                                             onClick={handleCheckout} 
-                                            className="w-full h-10 text-sm font-semibold" 
+                                            className="w-full h-9 sm:h-10 text-sm font-semibold" 
                                             size="lg"
                                         >
                                             {totalPaid >= total ? 'Complete Sale' : totalPaid > 0 ? 'Complete (Partial)' : 'Complete (Unpaid)'}
                                         </Button>
                                     </div>
                                 ) : (
-                                    <Button onClick={() => setShowPayment(true)} disabled={cart.length === 0} className="w-full h-12 text-lg shadow-md" size="lg">
+                                    <Button onClick={() => setShowPayment(true)} disabled={cart.length === 0} className="w-full h-10 sm:h-12 text-base sm:text-lg shadow-md" size="lg">
                                         <div className="flex flex-col items-center -space-y-1">
                                             <span>Charge</span>
                                             <span className="text-xs opacity-90 font-normal">{formatCurrency(total)}</span>
