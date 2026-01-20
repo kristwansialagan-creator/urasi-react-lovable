@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bot, Loader2, MessageSquare, Paperclip, Send, Terminal, Trash2, User, X, Plus, History, LogIn, LogOut } from 'lucide-react'
+import { Bot, Globe, Loader2, MessageSquare, Paperclip, Send, Terminal, Trash2, User, X, Plus, History, LogIn, LogOut, ExternalLink } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSanitize from 'rehype-sanitize'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import {
   getChatIndex,
@@ -20,6 +21,7 @@ import {
   isSignedIn
 } from './chatSessionStore'
 import { chatStream, deletePath, listModels, uploadFiles, signOut } from './puterClient'
+import { firecrawlApi, isValidUrl } from '@/lib/api/firecrawl'
 
 // Known Vision Models
 const VISION_MODELS = [
@@ -35,6 +37,7 @@ const VISION_MODELS = [
 ]
 
 type ConnectionStatus = 'loading' | 'ready' | 'error'
+type ChatMode = 'ai' | 'scraper'
 
 type ChatAttachment = {
   name: string
@@ -44,10 +47,15 @@ type ChatAttachment = {
 
 type ChatMessage = {
   id: string
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'scraper'
   content: string
   createdAt: number
   attachments?: ChatAttachment[]
+  metadata?: {
+    url?: string
+    title?: string
+    sourceUrl?: string
+  }
 }
 
 type ModelOption = {
@@ -100,6 +108,7 @@ export default function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [chatMode, setChatMode] = useState<ChatMode>('ai')
 
   // Data State
   const [user, setUser] = useState<any>(null)
@@ -297,7 +306,106 @@ export default function AIChatWidget() {
     }
   }
 
+  // Handle Scraper Mode
+  async function handleScraperSend() {
+    const trimmed = prompt.trim()
+    if (!trimmed) return
+    if (isSending) return
+
+    setIsSending(true)
+    setShowWelcome(false)
+
+    // Determine if it's a URL or search query
+    const isUrl = isValidUrl(trimmed)
+
+    // Create user message
+    const userMessage: ChatMessage = {
+      id: uid(),
+      role: 'user',
+      content: trimmed,
+      createdAt: Date.now(),
+    }
+
+    const scraperMessageId = uid()
+    const scraperMessage: ChatMessage = {
+      id: scraperMessageId,
+      role: 'scraper',
+      content: isUrl ? 'Scraping webpage...' : 'Searching the web...',
+      createdAt: Date.now(),
+      metadata: isUrl ? { url: trimmed } : undefined
+    }
+
+    const newMessages = [...messages, userMessage, scraperMessage]
+    setMessages(newMessages)
+    setPrompt('')
+
+    try {
+      let resultContent = ''
+      let metadata: ChatMessage['metadata'] = {}
+
+      if (isUrl) {
+        // Scrape single URL
+        const response = await firecrawlApi.scrape(trimmed)
+        
+        if (response.success && response.data) {
+          const { markdown, metadata: pageMetadata } = response.data
+          resultContent = markdown || 'No content extracted from the page.'
+          metadata = {
+            url: trimmed,
+            title: pageMetadata?.title || trimmed,
+            sourceUrl: pageMetadata?.sourceURL || trimmed
+          }
+        } else {
+          resultContent = `**Error:** ${response.error || 'Failed to scrape the page.'}`
+        }
+      } else {
+        // Web search
+        const response = await firecrawlApi.search(trimmed)
+        
+        if (response.success && response.data) {
+          const results = response.data
+          
+          if (Array.isArray(results) && results.length > 0) {
+            resultContent = results.map((r: any, i: number) => {
+              const title = r.title || r.metadata?.title || 'Untitled'
+              const url = r.url || r.metadata?.sourceURL || ''
+              const description = r.description || r.markdown?.slice(0, 200) || ''
+              return `### ${i + 1}. ${title}\n${url ? `🔗 ${url}\n` : ''}\n${description}${description.length >= 200 ? '...' : ''}`
+            }).join('\n\n---\n\n')
+          } else {
+            resultContent = 'No search results found.'
+          }
+        } else {
+          resultContent = `**Error:** ${response.error || 'Failed to search.'}`
+        }
+      }
+
+      // Update scraper message with result
+      setMessages(prev => prev.map(m => 
+        m.id === scraperMessageId 
+          ? { ...m, content: resultContent, metadata } 
+          : m
+      ))
+
+    } catch (error: any) {
+      console.error('Scraper error:', error)
+      setMessages(prev => prev.map(m => 
+        m.id === scraperMessageId 
+          ? { ...m, content: `**Error:** ${error?.message || 'An unexpected error occurred.'}` } 
+          : m
+      ))
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  // Handle AI Chat Mode (Original)
   async function onSend() {
+    // Route to scraper if in scraper mode
+    if (chatMode === 'scraper') {
+      return handleScraperSend()
+    }
+
     const trimmed = prompt.trim()
     if (!trimmed && pendingFiles.length === 0) return
     if (isSending) return
@@ -306,10 +414,6 @@ export default function AIChatWidget() {
     const isVisionModel = VISION_MODELS.some(v => selectedModel.toLowerCase().includes(v))
     if (pendingFiles.length > 0 && !isVisionModel) {
       alert(`Model currently selected (${selectedModel}) might not support images. Please switch to GPT-4o, Claude 3.5 Sonnet, or Gemini 1.5.`)
-      // We don't return here, we let them try, but warn them. or maybe we should auto-switch?
-      // Let's just return to be safe to avoid API errors
-      // actually, let's just warn in console and proceed, but user complained about error.
-      // Better: Append a system warning in chat if it fails?
     }
 
     setIsSending(true)
@@ -511,11 +615,13 @@ export default function AIChatWidget() {
             </Button>
             
             <div className="flex flex-col ml-0.5">
-              <span className="font-semibold text-[hsl(var(--primary))] tracking-tight text-xs">AI Assistant</span>
+              <span className="font-semibold text-[hsl(var(--primary))] tracking-tight text-xs">
+                {chatMode === 'ai' ? 'AI Assistant' : 'Web Scraper'}
+              </span>
               <div className="flex items-center gap-1">
                 <span className={classNames("h-1 w-1 rounded-full", status === 'ready' ? "bg-green-500" : "bg-gray-400")}></span>
                 <span className="text-[9px] font-medium text-[hsl(var(--muted-foreground))]">
-                  {status === 'ready' ? 'Online' : 'Offline'}
+                  {chatMode === 'ai' ? (status === 'ready' ? 'Online' : 'Offline') : 'Firecrawl'}
                 </span>
               </div>
             </div>
@@ -528,6 +634,22 @@ export default function AIChatWidget() {
           </div>
         </div>
 
+        {/* Mode Toggle */}
+        <div className="flex-none px-3 py-1.5 bg-[hsl(var(--background))] border-b border-[hsl(var(--border))]">
+          <Tabs value={chatMode} onValueChange={(v) => setChatMode(v as ChatMode)} className="w-full">
+            <TabsList className="w-full h-7 bg-[hsl(var(--muted))]">
+              <TabsTrigger value="ai" className="flex-1 h-5 text-[10px] data-[state=active]:bg-[hsl(var(--card))]">
+                <Bot className="h-3 w-3 mr-1" />
+                AI Chat
+              </TabsTrigger>
+              <TabsTrigger value="scraper" className="flex-1 h-5 text-[10px] data-[state=active]:bg-[hsl(var(--card))]">
+                <Globe className="h-3 w-3 mr-1" />
+                Web Scraper
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {/* Chat Area - List View - With Scrollbar */}
         <ScrollArea className="flex-1 w-full bg-[hsl(var(--background))] [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar]:!w-1.5 [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb]:!bg-[hsl(var(--muted-foreground)/0.3)] hover:[&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb]:!bg-[hsl(var(--muted-foreground)/0.5)] [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-track]:!bg-transparent transition-colors">
           <div className="flex flex-col py-3 px-3 gap-4 min-h-full">
@@ -535,12 +657,21 @@ export default function AIChatWidget() {
             {(messages.length === 0 || showWelcome) && !isLoadingHistory ? (
               <div className="flex flex-col items-center justify-center flex-1 h-[200px] text-center space-y-3 opacity-30 select-none">
                 <div className="h-10 w-10 bg-[hsl(var(--muted))] rounded-xl flex items-center justify-center">
-                  <Terminal className="h-5 w-5 text-[hsl(var(--primary))]" />
+                  {chatMode === 'ai' ? (
+                    <Terminal className="h-5 w-5 text-[hsl(var(--primary))]" />
+                  ) : (
+                    <Globe className="h-5 w-5 text-[hsl(var(--primary))]" />
+                  )}
                 </div>
                 <div className="space-y-0.5">
-                  <h3 className="text-sm font-medium text-[hsl(var(--foreground))]">AI Assistant</h3>
+                  <h3 className="text-sm font-medium text-[hsl(var(--foreground))]">
+                    {chatMode === 'ai' ? 'AI Assistant' : 'Web Scraper'}
+                  </h3>
                   <p className="text-xs text-gray-500">
-                    {user ? `Logged in as ${user.username}` : `Temporary Session`}
+                    {chatMode === 'ai' 
+                      ? (user ? `Logged in as ${user.username}` : `Temporary Session`)
+                      : 'Enter URL to scrape or text to search'
+                    }
                   </p>
                 </div>
               </div>
@@ -554,6 +685,7 @@ export default function AIChatWidget() {
 
             {!isLoadingHistory && messages.map((m) => {
               const isUser = m.role === 'user'
+              const isScraper = m.role === 'scraper'
               return (
                 <div key={m.id} className={classNames(
                   "group relative flex gap-2 w-full",
@@ -565,9 +697,17 @@ export default function AIChatWidget() {
                       "h-6 w-6 rounded-full flex items-center justify-center border shadow-sm",
                       isUser
                         ? "bg-[hsl(var(--muted))] border-[hsl(var(--border))]"
-                        : "bg-[hsl(var(--primary))] border-transparent"
+                        : isScraper
+                          ? "bg-blue-500 border-transparent"
+                          : "bg-[hsl(var(--primary))] border-transparent"
                     )}>
-                      {isUser ? <User className="h-3 w-3 text-[hsl(var(--muted-foreground))]" /> : <Bot className="h-3 w-3 text-[hsl(var(--primary-foreground))]" />}
+                      {isUser ? (
+                        <User className="h-3 w-3 text-[hsl(var(--muted-foreground))]" />
+                      ) : isScraper ? (
+                        <Globe className="h-3 w-3 text-white" />
+                      ) : (
+                        <Bot className="h-3 w-3 text-[hsl(var(--primary-foreground))]" />
+                      )}
                     </div>
                   </div>
 
@@ -579,11 +719,22 @@ export default function AIChatWidget() {
 
                     <div className={classNames("flex items-center gap-1.5", isUser ? "flex-row-reverse" : "flex-row")}>
                       <span className="text-xs font-semibold text-[hsl(var(--foreground))]">
-                        {isUser ? 'You' : 'AI'}
+                        {isUser ? 'You' : isScraper ? 'Scraper' : 'AI'}
                       </span>
                       <span className="text-[9px] text-[hsl(var(--muted-foreground))]">
                         {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
+                      {isScraper && m.metadata?.sourceUrl && (
+                        <a 
+                          href={m.metadata.sourceUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[9px] text-blue-500 hover:underline flex items-center gap-0.5"
+                        >
+                          <ExternalLink className="h-2 w-2" />
+                          Source
+                        </a>
+                      )}
                     </div>
 
                     {/* Attachments */}
@@ -603,7 +754,7 @@ export default function AIChatWidget() {
                       "prose prose-xs max-w-none text-[hsl(var(--foreground))] break-words prose-p:leading-5 prose-p:text-xs prose-pre:bg-[hsl(var(--muted))] prose-pre:border prose-pre:border-[hsl(var(--border))] prose-pre:text-[hsl(var(--foreground))] prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:text-[10px] prose-code:bg-[hsl(var(--muted))] prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[10px] prose-code:before:content-none prose-code:after:content-none min-w-0 w-full overflow-hidden",
                       isUser ? "text-right items-end" : "text-left items-start"
                     )}>
-                      {m.role === 'assistant' ? (
+                      {(m.role === 'assistant' || m.role === 'scraper') ? (
                         <div className="text-left text-xs">
                           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
                             {m.content || (isSending ? 'Thinking...' : '')}
@@ -625,7 +776,7 @@ export default function AIChatWidget() {
         <div className="flex-none p-2 bg-[hsl(var(--background))] border-t border-[hsl(var(--border))]">
           <div className="relative flex flex-col bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-[hsl(var(--ring)/0.2)] transition-all overflow-hidden">
 
-            {pendingFiles.length > 0 && (
+            {chatMode === 'ai' && pendingFiles.length > 0 && (
               <div className="flex flex-wrap gap-1 px-2 pt-2">
                 {pendingFiles.map((f) => (
                   <div key={f.name} className="flex items-center gap-1 bg-[hsl(var(--muted))] px-1.5 py-0.5 rounded text-[10px] border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
@@ -641,7 +792,7 @@ export default function AIChatWidget() {
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ask anything..."
+              placeholder={chatMode === 'ai' ? "Ask anything..." : "Enter URL to scrape or search query..."}
               className="min-h-[36px] max-h-24 w-full resize-none border-0 bg-transparent px-3 py-2 text-xs focus-visible:ring-0 shadow-none text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -654,57 +805,70 @@ export default function AIChatWidget() {
 
             <div className="flex justify-between items-center px-1.5 pb-1.5">
               <div className="flex items-center gap-0.5">
-                <input
-                  ref={fileInputRef} type="file" className="hidden" multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files ?? [])
-                    if (files.length === 0) return
-                    setPendingFiles((prev) => [...prev, ...files].slice(0, 5))
-                    e.target.value = ''
-                  }}
-                />
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent)/0.1)] rounded transition-colors" onClick={() => fileInputRef.current?.click()} disabled={isSending}>
-                  <Paperclip className="h-3 w-3" />
-                </Button>
+                {chatMode === 'ai' && (
+                  <>
+                    <input
+                      ref={fileInputRef} type="file" className="hidden" multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files ?? [])
+                        if (files.length === 0) return
+                        setPendingFiles((prev) => [...prev, ...files].slice(0, 5))
+                        e.target.value = ''
+                      }}
+                    />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent)/0.1)] rounded transition-colors" onClick={() => fileInputRef.current?.click()} disabled={isSending}>
+                      <Paperclip className="h-3 w-3" />
+                    </Button>
 
-                {/* Provider Selector */}
-                <div className="hidden sm:flex items-center">
-                  <Select value={selectedProvider} onValueChange={setSelectedProvider} disabled={status !== 'ready'}>
-                    <SelectTrigger className="h-6 w-[70px] text-[10px] border-0 bg-transparent hover:bg-[hsl(var(--accent)/0.1)] rounded px-1.5 text-[hsl(var(--muted-foreground))] font-medium focus:ring-0 transition-colors">
-                      <SelectValue placeholder="Provider" />
-                    </SelectTrigger>
-                    <SelectContent align="start" className="bg-[hsl(var(--popover))] border border-[hsl(var(--border))] shadow-lg p-1 max-h-[200px] overflow-y-auto">
-                      {providers.map((p) => <SelectItem key={p} value={p} className="text-[10px]">{p.toUpperCase()}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    {/* Provider Selector */}
+                    <div className="hidden sm:flex items-center">
+                      <Select value={selectedProvider} onValueChange={setSelectedProvider} disabled={status !== 'ready'}>
+                        <SelectTrigger className="h-6 w-[70px] text-[10px] border-0 bg-transparent hover:bg-[hsl(var(--accent)/0.1)] rounded px-1.5 text-[hsl(var(--muted-foreground))] font-medium focus:ring-0 transition-colors">
+                          <SelectValue placeholder="Provider" />
+                        </SelectTrigger>
+                        <SelectContent align="start" className="bg-[hsl(var(--popover))] border border-[hsl(var(--border))] shadow-lg p-1 max-h-[200px] overflow-y-auto">
+                          {providers.map((p) => <SelectItem key={p} value={p} className="text-[10px]">{p.toUpperCase()}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* Model Selector */}
-                <Select value={selectedModel} onValueChange={setSelectedModel} disabled={status !== 'ready' || !selectedProvider}>
-                  <SelectTrigger className="h-6 max-w-[100px] text-[10px] border-0 bg-transparent hover:bg-[hsl(var(--accent)/0.1)] rounded px-1.5 text-[hsl(var(--muted-foreground))] font-medium focus:ring-0 truncate transition-colors">
-                    <SelectValue placeholder="Model" />
-                  </SelectTrigger>
-                  <SelectContent align="start" className="bg-[hsl(var(--popover))] border border-[hsl(var(--border))] shadow-lg p-1 max-h-[200px] overflow-y-auto">
-                    {filteredModels.map((m) => {
-                      const isVision = VISION_MODELS.some(v => m.id.toLowerCase().includes(v))
-                      return (
-                        <SelectItem key={m.id} value={m.id} className="text-[10px]">
-                          {m.label} {isVision && <span className="ml-1 text-[8px] opacity-70">👁️</span>}
-                        </SelectItem>
-                      )
-                    })}
-                  </SelectContent>
-                </Select>
+                    {/* Model Selector */}
+                    <Select value={selectedModel} onValueChange={setSelectedModel} disabled={status !== 'ready' || !selectedProvider}>
+                      <SelectTrigger className="h-6 max-w-[100px] text-[10px] border-0 bg-transparent hover:bg-[hsl(var(--accent)/0.1)] rounded px-1.5 text-[hsl(var(--muted-foreground))] font-medium focus:ring-0 truncate transition-colors">
+                        <SelectValue placeholder="Model" />
+                      </SelectTrigger>
+                      <SelectContent align="start" className="bg-[hsl(var(--popover))] border border-[hsl(var(--border))] shadow-lg p-1 max-h-[200px] overflow-y-auto">
+                        {filteredModels.map((m) => {
+                          const isVision = VISION_MODELS.some(v => m.id.toLowerCase().includes(v))
+                          return (
+                            <SelectItem key={m.id} value={m.id} className="text-[10px]">
+                              {m.label} {isVision && <span className="ml-1 text-[8px] opacity-70">👁️</span>}
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+
+                {chatMode === 'scraper' && (
+                  <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--muted-foreground))] px-1">
+                    <Globe className="h-3 w-3" />
+                    <span>Firecrawl</span>
+                  </div>
+                )}
               </div>
 
-              <Button size="icon" onClick={onSend} disabled={(!prompt.trim() && pendingFiles.length === 0) || isSending} className={classNames("h-6 w-6 rounded transition-all flex items-center justify-center ml-auto bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary)/0.9)] shadow-sm")}>
+              <Button size="icon" onClick={onSend} disabled={!prompt.trim() || isSending} className={classNames("h-6 w-6 rounded transition-all flex items-center justify-center ml-auto bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary)/0.9)] shadow-sm")}>
                 {isSending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
               </Button>
             </div>
           </div>
 
           <div className="text-center mt-1">
-            <span className="text-[8px] text-[hsl(var(--muted-foreground))] font-medium">Powered by Puter.js</span>
+            <span className="text-[8px] text-[hsl(var(--muted-foreground))] font-medium">
+              {chatMode === 'ai' ? 'Powered by Puter.js' : 'Powered by Firecrawl'}
+            </span>
           </div>
         </div>
       </div>
