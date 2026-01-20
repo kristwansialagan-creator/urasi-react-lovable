@@ -1,5 +1,28 @@
+/**
+ * Product Extraction Context
+ * 
+ * Stores extracted product data from Firecrawl for use in Add Product form.
+ * 
+ * ============================================
+ * IMPORTANT: When adding new fields, update these files:
+ * ============================================
+ * 1. src/schemas/productSchema.ts (schema definition - START HERE)
+ * 2. supabase/functions/firecrawl-product-extract/index.ts (extraction)
+ * 3. This file (ExtractedProductData interface)
+ * 4. src/pages/products/ProductCreatePage.tsx (form auto-fill)
+ * 
+ * See: docs/PRODUCT_EXTRACTION_GUIDE.md for complete instructions
+ * ============================================
+ */
+
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
+/**
+ * Extracted product data interface
+ * Keep in sync with:
+ * - src/schemas/productSchema.ts (PRODUCT_FIELDS)
+ * - supabase/functions/firecrawl-product-extract/index.ts (PRODUCT_EXTRACTION_SCHEMA)
+ */
 export interface ExtractedProductData {
   name?: string;
   sku?: string;
