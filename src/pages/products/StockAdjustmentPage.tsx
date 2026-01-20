@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { format, differenceInDays, parseISO } from 'date-fns'
+import { UnitSelector } from '@/components/ui/UnitSelector'
 
 export default function StockAdjustmentPage() {
     const { adjustments, loading, adjustStock, fetchAdjustments } = useStockAdjustment()
@@ -136,14 +137,6 @@ export default function StockAdjustmentPage() {
         )
     }, [products, batchProductSearch])
 
-    // Get units available for the selected product
-    const availableUnits = useMemo(() => {
-        if (!selectedProduct?.stock || !Array.isArray(selectedProduct.stock)) return units
-        const stockArr = selectedProduct.stock as { unit_id: string }[]
-        const stockUnitIds = new Set(stockArr.map(s => s.unit_id))
-        const filtered = units.filter(u => stockUnitIds.has(u.id))
-        return filtered.length > 0 ? filtered : units
-    }, [selectedProduct, units])
 
     // Helper to get expiry status
     const getExpiryStatus = (expiryDate: string | null) => {
@@ -277,21 +270,11 @@ export default function StockAdjustmentPage() {
                                 {/* Unit Selection */}
                                 <div className="space-y-2">
                                     <Label>Unit *</Label>
-                                    <Select 
-                                        value={batchFormData.unit_id} 
-                                        onValueChange={(value) => setBatchFormData({ ...batchFormData, unit_id: value })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select unit..." />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-popover z-50">
-                                            {units.map((unit) => (
-                                                <SelectItem key={unit.id} value={unit.id}>
-                                                    {unit.name || unit.identifier}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <UnitSelector
+                                        value={batchFormData.unit_id}
+                                        onChange={(val) => setBatchFormData({ ...batchFormData, unit_id: val })}
+                                        placeholder="Select unit..."
+                                    />
                                 </div>
 
                                 {/* Batch Number */}
@@ -501,21 +484,12 @@ export default function StockAdjustmentPage() {
                             </div>
                             <div>
                                 <Label>Unit</Label>
-                                <Select 
-                                    value={formData.unit_id} 
-                                    onValueChange={(value) => setFormData({ ...formData, unit_id: value })}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select unit..." />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-popover z-50">
-                                        {availableUnits.map((unit) => (
-                                            <SelectItem key={unit.id} value={unit.id}>
-                                                {unit.name || unit.identifier} ({unit.identifier})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <UnitSelector
+                                    value={formData.unit_id}
+                                    onChange={(val) => setFormData({ ...formData, unit_id: val })}
+                                    placeholder="Select unit..."
+                                    filterByProductStock={selectedProduct?.stock as { unit_id: string }[] | undefined}
+                                />
                             </div>
                             <div><Label>Current Stock</Label><Input value={currentQty} disabled className="bg-muted" /></div>
                             <div><Label>New Quantity</Label><Input type="number" value={formData.new_quantity} onChange={e => setFormData({ ...formData, new_quantity: Number(e.target.value) })} /></div>
