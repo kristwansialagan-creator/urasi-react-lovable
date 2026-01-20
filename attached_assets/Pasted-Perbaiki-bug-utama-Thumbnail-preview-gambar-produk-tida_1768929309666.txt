@@ -1,0 +1,49 @@
+Perbaiki bug utama
+
+Thumbnail / preview gambar produk tidak muncul di halaman POS dan Media.
+
+Temukan akar masalahnya (path, state, API, hook, atau komponen UI), jelaskan penyebabnya singkat, lalu perbaiki sampai berfungsi.
+
+Debug & testing fitur yang sudah ada
+
+Review semua fitur utama POS (produk, cart, transaksi, media, user/session, dsb).
+
+Jalankan dan cek flow lengkap di browser (/pos) dan perbaiki error/bug/logika yang tidak konsisten.
+
+Tambahkan log/debug seperlunya, lalu hapus kembali log yang tidak perlu setelah masalah beres.
+
+Refactor code & struktur
+
+Rapikan struktur file, komponen, hooks, dan service supaya lebih mudah di-maintain (tanpa memutus fungsionalitas).
+
+Perbaiki React hooks yang salah pakai (dependency array, stale state, unnecessary re-render).
+
+Hilangkan code yang tidak terpakai dan kurangi duplikasi (extract ke hooks/utilities kalau perlu).
+
+Sync data & integrasi Supabase
+
+Pastikan semua operasi CRUD (produk, media, transaksi) benar-benar tersinkron dengan Supabase (tidak ada state lokal yang “bohong”).
+
+Periksa query, insert, update, delete, dan error handling dari Supabase client, sesuaikan jika ada pola yang kurang aman atau tidak efisien.
+
+UI/UX & performa
+
+Pastikan UI interaktif dan responsif (loading state jelas, error message jelas, tidak ada UI “freeze”).
+
+Periksa dropdown, modal, dan komponen lain agar kontras warna dan tema (light/dark) jelas dan mudah dibaca.
+
+Optimalkan performa jika ada render berulang yang tidak perlu (memoization, split komponen, dsb).
+
+Aturan penting:
+
+Anggap source code saat ini adalah source of truth: jangan mengubah konsep bisnis POS, hanya perbaiki dan tingkatkan implementasi teknis.
+
+Setiap kali mengubah file, jelaskan singkat: tujuan perubahan, file yang diubah, dan efeknya ke fitur.
+
+Jika perlu menambah fitur kecil pendukung (misal: loading state, validasi form, error handling), boleh ditambahkan selama relevan dengan kebutuhan POS modern.
+
+Mulai dari:
+
+identifikasi dan perbaiki bug thumbnail/preview produk di halaman POS & Media,
+
+kemudian lanjut review dan perbaikan bagian lain yang paling riskan.
