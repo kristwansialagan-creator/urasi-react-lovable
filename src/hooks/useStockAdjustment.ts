@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useToast } from '@/hooks/use-toast'
 
 interface StockAdjustment {
     id: string
@@ -7,18 +8,20 @@ interface StockAdjustment {
     product?: { id: string; name: string; sku: string | null } | null
     unit_id: string | null
     unit?: { id: string; identifier: string } | null
+    before_quantity: number | null
+    after_quantity: number | null
     quantity: number | null
-    previous_quantity?: number | null
-    reason?: string | null
     description: string | null
     author: string | null
     created_at: string | null
+    operation_type: string | null
 }
 
 export function useStockAdjustment() {
     const [adjustments, setAdjustments] = useState<StockAdjustment[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const { toast } = useToast()
 
     const fetchAdjustments = useCallback(async () => {
         setLoading(true)
@@ -48,26 +51,37 @@ export function useStockAdjustment() {
     ) => {
         setLoading(true)
         try {
-            // Get current quantity
-            const { data: stockData } = await supabase
+            // Get current quantity from product_unit_quantities
+            const { data: stockData, error: stockErr } = await supabase
                 .from('product_unit_quantities')
-                .select('quantity')
+                .select('id, quantity')
                 .eq('product_id', productId)
                 .eq('unit_id', unitId)
-                .single()
+                .maybeSingle()
 
-            const previousQty = (stockData as { quantity: number } | null)?.quantity || 0
+            if (stockErr) throw stockErr
 
-            // Update stock
-            const { error: updateErr } = await supabase
-                .from('product_unit_quantities')
-                .upsert({
-                    product_id: productId,
-                    unit_id: unitId,
-                    quantity: newQuantity
-                } as never, { onConflict: 'product_id,unit_id' })
+            const previousQty = stockData?.quantity || 0
 
-            if (updateErr) throw updateErr
+            // Update or insert stock
+            if (stockData?.id) {
+                const { error: updateErr } = await supabase
+                    .from('product_unit_quantities')
+                    .update({ quantity: newQuantity })
+                    .eq('id', stockData.id)
+
+                if (updateErr) throw updateErr
+            } else {
+                const { error: insertErr } = await supabase
+                    .from('product_unit_quantities')
+                    .insert([{
+                        product_id: productId,
+                        unit_id: unitId,
+                        quantity: newQuantity
+                    }])
+
+                if (insertErr) throw insertErr
+            }
 
             // Record history
             const user = await supabase.auth.getUser()
@@ -82,19 +96,29 @@ export function useStockAdjustment() {
                     after_quantity: newQuantity,
                     description: description || reason,
                     author: user.data.user?.id
-                }] as never)
+                }])
 
             if (histErr) throw histErr
+
+            toast({
+                title: 'Stock Adjusted',
+                description: `Stock updated from ${previousQty} to ${newQuantity}`
+            })
 
             await fetchAdjustments()
             return true
         } catch (err: any) {
             setError(err.message)
+            toast({
+                title: 'Error',
+                description: err.message,
+                variant: 'destructive'
+            })
             return false
         } finally {
             setLoading(false)
         }
-    }, [fetchAdjustments])
+    }, [fetchAdjustments, toast])
 
     const bulkAdjust = useCallback(async (
         adjustments: { productId: string; unitId: string; newQuantity: number }[],
