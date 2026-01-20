@@ -22,7 +22,7 @@ export default function BestProductsReportPage() {
     }
 
     const totalRevenue = topProducts.reduce((sum, p) => sum + p.total_sales, 0)
-    const totalUnits = topProducts.reduce((sum, p) => sum + p.total_quantity, 0)
+    const totalUnits = topProducts.reduce((sum, p) => sum + p.quantity_sold, 0)
 
     const chartData = {
         labels: topProducts.slice(0, 10).map(p => p.name.slice(0, 20)),
@@ -31,16 +31,16 @@ export default function BestProductsReportPage() {
 
     const quantityChart = {
         labels: topProducts.slice(0, 10).map(p => p.name.slice(0, 20)),
-        datasets: [{ label: 'Units Sold', data: topProducts.slice(0, 10).map(p => p.total_quantity), backgroundColor: 'rgba(16, 185, 129, 0.8)' }]
+        datasets: [{ label: 'Units Sold', data: topProducts.slice(0, 10).map(p => p.quantity_sold), backgroundColor: 'rgba(16, 185, 129, 0.8)' }]
     }
 
     const exportCSV = () => {
-        const csv = [['Rank', 'Product', 'Units Sold', 'Revenue', 'Avg Price'], ...topProducts.map((p, i) => [i + 1, p.name, p.total_quantity, p.total_sales, (p.total_sales / p.total_quantity).toFixed(0)])].map(r => r.join(',')).join('\n')
+        const csv = [['Rank', 'Product', 'Units Sold', 'Revenue', 'Avg Price'], ...topProducts.map((p, i) => [i + 1, p.name, p.quantity_sold, p.total_sales, p.quantity_sold > 0 ? (p.total_sales / p.quantity_sold).toFixed(0) : 0])].map(r => r.join(',')).join('\n')
         const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'best-products-report.csv'; a.click()
     }
 
     const exportPDF = () => {
-        const html = `<!DOCTYPE html><html><head><title>Best Products Report</title><style>body{font-family:Arial;margin:40px}.gold{background:linear-gradient(135deg,#ffd700,#ffb800);color:#000;padding:20px;border-radius:8px;margin:20px 0}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:10px}th{background:#f4f4f4}.rank{font-size:24px;font-weight:bold}</style></head><body><h1>🏆 Best Products Report</h1><p>Top ${limit} products by revenue</p><div class="gold"><h2>🥇 #1 Best Seller: ${topProducts[0]?.name || 'N/A'}</h2><p>Revenue: ${formatCurrency(topProducts[0]?.total_sales || 0)} | Units: ${topProducts[0]?.total_quantity || 0}</p></div><table><thead><tr><th>Rank</th><th>Product</th><th>Units</th><th>Revenue</th><th>%</th></tr></thead><tbody>${topProducts.map((p, i) => `<tr><td class="rank">${i + 1}</td><td>${p.name}</td><td>${p.total_quantity}</td><td>${formatCurrency(p.total_sales)}</td><td>${((p.total_sales / totalRevenue) * 100).toFixed(1)}%</td></tr>`).join('')}</tbody></table></body></html>`
+        const html = `<!DOCTYPE html><html><head><title>Best Products Report</title><style>body{font-family:Arial;margin:40px}.gold{background:linear-gradient(135deg,#ffd700,#ffb800);color:#000;padding:20px;border-radius:8px;margin:20px 0}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:10px}th{background:#f4f4f4}.rank{font-size:24px;font-weight:bold}</style></head><body><h1>🏆 Best Products Report</h1><p>Top ${limit} products by revenue</p><div class="gold"><h2>🥇 #1 Best Seller: ${topProducts[0]?.name || 'N/A'}</h2><p>Revenue: ${formatCurrency(topProducts[0]?.total_sales || 0)} | Units: ${topProducts[0]?.quantity_sold || 0}</p></div><table><thead><tr><th>Rank</th><th>Product</th><th>Units</th><th>Revenue</th><th>%</th></tr></thead><tbody>${topProducts.map((p, i) => `<tr><td class="rank">${i + 1}</td><td>${p.name}</td><td>${p.quantity_sold}</td><td>${formatCurrency(p.total_sales)}</td><td>${((p.total_sales / totalRevenue) * 100).toFixed(1)}%</td></tr>`).join('')}</tbody></table></body></html>`
         const w = window.open('', '', 'width=900,height=700'); if (w) { w.document.write(html); w.document.close(); w.print() }
     }
 
@@ -67,7 +67,7 @@ export default function BestProductsReportPage() {
                                 <div className="text-2xl font-bold">{topProducts[0].name}</div>
                                 <div className="flex gap-4 mt-2">
                                     <span className="font-bold">{formatCurrency(topProducts[0].total_sales)}</span>
-                                    <span>{topProducts[0].total_quantity} units sold</span>
+                                    <span>{topProducts[0].quantity_sold} units sold</span>
                                 </div>
                             </div>
                         </div>
@@ -91,9 +91,9 @@ export default function BestProductsReportPage() {
                     <tbody>{topProducts.map((p, i) => <tr key={p.id} className={`border-b hover:bg-[hsl(var(--muted))] ${i < 3 ? 'bg-yellow-50' : ''}`}>
                         <td className="p-3 text-center"><span className={`text-2xl ${i === 0 ? '' : i === 1 ? 'opacity-70' : i === 2 ? 'opacity-50' : 'text-sm'}`}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</span></td>
                         <td className="p-3 font-medium">{p.name}</td>
-                        <td className="p-3 text-right">{p.total_quantity}</td>
+                        <td className="p-3 text-right">{p.quantity_sold}</td>
                         <td className="p-3 text-right font-bold text-[hsl(var(--primary))]">{formatCurrency(p.total_sales)}</td>
-                        <td className="p-3 text-right text-sm">{formatCurrency(p.total_quantity > 0 ? p.total_sales / p.total_quantity : 0)}</td>
+                        <td className="p-3 text-right text-sm">{formatCurrency(p.quantity_sold > 0 ? p.total_sales / p.quantity_sold : 0)}</td>
                         <td className="p-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-16 h-2 bg-[hsl(var(--muted))] rounded"><div className="h-2 bg-[hsl(var(--primary))] rounded" style={{ width: `${(p.total_sales / totalRevenue) * 100}%` }}></div></div><span className="text-sm">{((p.total_sales / totalRevenue) * 100).toFixed(1)}%</span></div></td>
                     </tr>)}</tbody></table>
             </CardContent></Card>

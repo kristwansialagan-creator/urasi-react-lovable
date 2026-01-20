@@ -90,7 +90,7 @@ export default function SalesReportPage() {
     const exportCSV = () => {
         const csv = [
             ['Product', 'Units Sold', 'Total Sales'],
-            ...topProducts.map(p => [p.name, p.total_quantity, p.total_sales])
+            ...topProducts.map(p => [p.name, p.quantity_sold, p.total_sales])
         ].map(row => row.join(',')).join('\n')
 
         const blob = new Blob([csv], { type: 'text/csv' })
@@ -150,7 +150,7 @@ export default function SalesReportPage() {
                         ${topProducts.map(p => `
                             <tr>
                                 <td>${p.name}</td>
-                                <td>${p.total_quantity}</td>
+                                <td>${p.quantity_sold}</td>
                                 <td>${formatCurrency(p.total_sales)}</td>
                             </tr>
                         `).join('')}
@@ -168,7 +168,7 @@ export default function SalesReportPage() {
                     <tbody>
                         ${paymentBreakdown.map(p => `
                             <tr>
-                                <td>${p.payment_type}</td>
+                                <td>${p.label}</td>
                                 <td>${formatCurrency(p.total)}</td>
                             </tr>
                         `).join('')}
@@ -213,7 +213,7 @@ export default function SalesReportPage() {
     }
 
     const paymentChartData = {
-        labels: paymentBreakdown.map(p => p.payment_type),
+        labels: paymentBreakdown.map(p => p.label),
         datasets: [{
             data: paymentBreakdown.map(p => p.total),
             backgroundColor: [
@@ -339,7 +339,7 @@ export default function SalesReportPage() {
                                     <div>
                                         <div className="font-medium">{product.name}</div>
                                         <div className="text-sm text-[hsl(var(--muted-foreground))]">
-                                            {product.total_quantity} units sold
+                                            {product.quantity_sold} units sold
                                         </div>
                                     </div>
                                     <div className="font-bold">
