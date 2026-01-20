@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { ShoppingCart, TrendingUp, TrendingDown } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function SaleCard() {
+    const { t } = useLanguage()
     const [data, setData] = useState({
         thisWeek: 0,
         lastWeek: 0,
@@ -91,7 +93,7 @@ export function SaleCard() {
     return (
         <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Last 7 Days Sales</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('dashboard.weeklySales')}</CardTitle>
                 <ShoppingCart className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             </CardHeader>
             <CardContent className="pb-3">
@@ -105,10 +107,10 @@ export function SaleCard() {
                     <span className={data.percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}>
                         {Math.abs(data.percentageChange).toFixed(1)}%
                     </span>
-                    <span className="ml-1">vs previous 7 days</span>
+                    <span className="ml-1">{t('dashboard.fromLastWeek')}</span>
                 </div>
                 <div className="text-sm font-medium text-[hsl(var(--muted-foreground))] mt-2">
-                    {data.last7DaysOrders} Orders
+                    {data.last7DaysOrders} {t('dashboard.totalOrders')}
                 </div>
             </CardContent>
         </Card>

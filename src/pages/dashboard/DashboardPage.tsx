@@ -21,6 +21,7 @@ import { MonthlySalesCard } from '@/components/dashboard/MonthlySalesCard'
 import { OrdersChart } from '@/components/dashboard/OrdersChart'
 import { BestCustomers } from '@/components/dashboard/BestCustomers'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface QuickAction {
     to: string
@@ -31,6 +32,7 @@ interface QuickAction {
 
 export default function DashboardPage() {
     const { profile } = useAuth()
+    const { t } = useLanguage()
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -42,38 +44,38 @@ export default function DashboardPage() {
         {
             to: '/pos',
             icon: <ShoppingCart className="h-6 w-6" />,
-            label: 'Buka POS',
-            description: 'Mulai transaksi baru'
+            label: t('dashboard.openPOS'),
+            description: t('dashboard.startNewTransaction')
         },
         {
             to: '/products/create',
             icon: <Plus className="h-6 w-6" />,
-            label: 'Tambah Produk',
-            description: 'Daftarkan produk baru'
+            label: t('dashboard.addProduct'),
+            description: t('dashboard.registerNewProduct')
         },
         {
             to: '/customers',
             icon: <Users className="h-6 w-6" />,
-            label: 'Pelanggan',
-            description: 'Kelola data pelanggan'
+            label: t('dashboard.customers'),
+            description: t('dashboard.manageCustomerData')
         },
         {
             to: '/orders',
             icon: <Receipt className="h-6 w-6" />,
-            label: 'Pesanan',
-            description: 'Lihat semua pesanan'
+            label: t('dashboard.orders'),
+            description: t('dashboard.viewAllOrders')
         },
         {
             to: '/reports/sales',
             icon: <BarChart3 className="h-6 w-6" />,
-            label: 'Laporan',
-            description: 'Analisis penjualan'
+            label: t('dashboard.reports'),
+            description: t('dashboard.salesAnalysis')
         },
         {
             to: '/settings',
             icon: <Settings className="h-6 w-6" />,
-            label: 'Pengaturan',
-            description: 'Konfigurasi sistem'
+            label: t('dashboard.settings'),
+            description: t('dashboard.systemConfiguration')
         },
     ]
 
@@ -81,26 +83,26 @@ export default function DashboardPage() {
         {
             to: '/products',
             icon: <Package className="h-5 w-5" />,
-            label: 'Produk',
-            description: 'Kelola inventaris'
+            label: t('dashboard.products'),
+            description: t('dashboard.manageInventory')
         },
         {
             to: '/procurements',
             icon: <Truck className="h-5 w-5" />,
-            label: 'Pengadaan',
-            description: 'Kelola pembelian'
+            label: t('dashboard.procurement'),
+            description: t('dashboard.managePurchases')
         },
         {
             to: '/registers',
             icon: <Calculator className="h-5 w-5" />,
-            label: 'Register',
-            description: 'Kelola kasir'
+            label: t('dashboard.register'),
+            description: t('dashboard.manageCashier')
         },
         {
             to: '/coupons',
             icon: <Tag className="h-5 w-5" />,
-            label: 'Kupon',
-            description: 'Kelola diskon'
+            label: t('dashboard.coupons'),
+            description: t('dashboard.manageDiscounts')
         },
     ]
 
@@ -117,15 +119,15 @@ export default function DashboardPage() {
             {/* Compact Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
+                    <h1 className="text-xl font-bold text-foreground">{t('dashboard.title')}</h1>
                     <p className="text-sm text-muted-foreground">
-                        Selamat datang kembali, {profile?.first_name || profile?.username || 'User'}!
+                        {t('dashboard.welcomeMessage')}, {profile?.first_name || profile?.username || 'User'}!
                     </p>
                 </div>
                 <Link to="/pos">
                     <Button className="gap-2">
                         <ShoppingCart className="h-4 w-4" />
-                        Buka POS
+                        {t('dashboard.openPOS')}
                     </Button>
                 </Link>
             </div>
@@ -151,7 +153,7 @@ export default function DashboardPage() {
             {/* Compact Additional Actions */}
             <Card>
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Menu Lainnya</CardTitle>
+                    <CardTitle className="text-base">{t('dashboard.otherMenus')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">

@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Calendar, TrendingUp, TrendingDown } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function MonthlySalesCard() {
+    const { t } = useLanguage()
     const [data, setData] = useState({
         last30Days: 0,
         previous30Days: 0,
@@ -91,7 +93,7 @@ export function MonthlySalesCard() {
     return (
         <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Last 30 Days Sales</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('common.thisMonth')}</CardTitle>
                 <Calendar className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             </CardHeader>
             <CardContent className="pb-3">
@@ -105,10 +107,10 @@ export function MonthlySalesCard() {
                     <span className={data.percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}>
                         {Math.abs(data.percentageChange).toFixed(1)}%
                     </span>
-                    <span className="ml-1">vs previous 30 days</span>
+                    <span className="ml-1">vs {t('common.lastMonth').toLowerCase()}</span>
                 </div>
                 <div className="text-sm font-medium text-[hsl(var(--muted-foreground))] mt-2">
-                    {data.last30DaysOrders} Orders
+                    {data.last30DaysOrders} {t('dashboard.totalOrders')}
                 </div>
             </CardContent>
         </Card>
