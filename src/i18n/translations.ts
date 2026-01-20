@@ -351,6 +351,36 @@ export interface TranslationKeys {
         revenueByCategory: string
         salesTrend: string
     }
+
+    // Registers
+    registers: {
+        title: string
+        subtitle: string
+        addRegister: string
+        addRegisterDesc: string
+        registerName: string
+        registerNamePlaceholder: string
+        activeRegisters: string
+        totalBalance: string
+        totalRegisters: string
+        closedRegisters: string
+        noRegisters: string
+        currentBalance: string
+        open: string
+        closed: string
+        openRegister: string
+        openRegisterDesc: string
+        openingBalance: string
+        closeRegister: string
+        closeRegisterConfirm: string
+        closeRegisterConfirmDesc: string
+        cashIn: string
+        cashInDesc: string
+        cashOut: string
+        cashOutDesc: string
+        descriptionPlaceholder: string
+        viewHistory: string
+    }
     
     // Settings
     settings: {
@@ -719,6 +749,34 @@ const en: TranslationKeys = {
         revenueByCategory: 'Revenue by Category',
         salesTrend: 'Sales Trend',
     },
+    registers: {
+        title: 'Cash Registers',
+        subtitle: 'Manage your cash registers',
+        addRegister: 'Add Register',
+        addRegisterDesc: 'Create a new cash register for your store.',
+        registerName: 'Register Name',
+        registerNamePlaceholder: 'e.g. Main Register',
+        activeRegisters: 'Active Registers',
+        totalBalance: 'Total Balance',
+        totalRegisters: 'Total Registers',
+        closedRegisters: 'Closed Registers',
+        noRegisters: 'No registers found. Create your first register to get started.',
+        currentBalance: 'Current Balance',
+        open: 'Open',
+        closed: 'Closed',
+        openRegister: 'Open Register',
+        openRegisterDesc: 'Enter the opening balance for this register.',
+        openingBalance: 'Opening Balance',
+        closeRegister: 'Close Register',
+        closeRegisterConfirm: 'Close Register?',
+        closeRegisterConfirmDesc: 'Are you sure you want to close this register? Make sure all transactions are recorded.',
+        cashIn: 'Cash In',
+        cashInDesc: 'Add cash to the register.',
+        cashOut: 'Cash Out',
+        cashOutDesc: 'Withdraw cash from the register.',
+        descriptionPlaceholder: 'Enter description...',
+        viewHistory: 'View History',
+    },
     settings: {
         title: 'Settings',
         general: 'General',
@@ -1084,6 +1142,34 @@ const id: TranslationKeys = {
         topSellingProducts: 'Produk Terlaris',
         revenueByCategory: 'Pendapatan per Kategori',
         salesTrend: 'Tren Penjualan',
+    },
+    registers: {
+        title: 'Mesin Kasir',
+        subtitle: 'Kelola mesin kasir Anda',
+        addRegister: 'Tambah Kasir',
+        addRegisterDesc: 'Buat mesin kasir baru untuk toko Anda.',
+        registerName: 'Nama Kasir',
+        registerNamePlaceholder: 'contoh: Kasir Utama',
+        activeRegisters: 'Kasir Aktif',
+        totalBalance: 'Total Saldo',
+        totalRegisters: 'Total Kasir',
+        closedRegisters: 'Kasir Tertutup',
+        noRegisters: 'Belum ada kasir. Buat kasir pertama untuk memulai.',
+        currentBalance: 'Saldo Saat Ini',
+        open: 'Buka',
+        closed: 'Tutup',
+        openRegister: 'Buka Kasir',
+        openRegisterDesc: 'Masukkan saldo awal untuk kasir ini.',
+        openingBalance: 'Saldo Awal',
+        closeRegister: 'Tutup Kasir',
+        closeRegisterConfirm: 'Tutup Kasir?',
+        closeRegisterConfirmDesc: 'Apakah Anda yakin ingin menutup kasir ini? Pastikan semua transaksi sudah dicatat.',
+        cashIn: 'Kas Masuk',
+        cashInDesc: 'Tambahkan uang ke kasir.',
+        cashOut: 'Kas Keluar',
+        cashOutDesc: 'Tarik uang dari kasir.',
+        descriptionPlaceholder: 'Masukkan deskripsi...',
+        viewHistory: 'Lihat Riwayat',
     },
     settings: {
         title: 'Pengaturan',

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import NotificationBell from '@/components/notifications/NotificationBell'
+import { LanguageToggle } from '@/components/LanguageToggle'
 import { useIsMobile } from '@/hooks/use-mobile'
 import AIChatWidget from '@/components/ai-chat/AIChatWidget'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
@@ -122,6 +123,7 @@ export function DashboardLayout() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <LanguageToggle />
                         <NotificationBell />
                     </div>
                 </header>
