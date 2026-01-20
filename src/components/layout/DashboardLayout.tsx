@@ -1,6 +1,6 @@
-import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
-import { Search, Menu } from 'lucide-react'
+import { Search, Menu, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
@@ -8,19 +8,37 @@ import { cn } from '@/lib/utils'
 import NotificationBell from '@/components/notifications/NotificationBell'
 import { useIsMobile } from '@/hooks/use-mobile'
 import AIChatWidget from '@/components/ai-chat/AIChatWidget'
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 
 export function DashboardLayout() {
     const isMobile = useIsMobile()
-    const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
+    const location = useLocation()
+    const navigate = useNavigate()
+    
+    // Auto-hide sidebar on POS page
+    const isPOSPage = location.pathname === '/pos'
+    const [sidebarOpen, setSidebarOpen] = useState(!isMobile && !isPOSPage)
+    const [autoHide, setAutoHide] = useState(() => {
+        const saved = localStorage.getItem('sidebar-auto-hide')
+        return saved ? JSON.parse(saved) : true
+    })
 
-    // Update sidebar state when screen size changes
+    // Update sidebar state when screen size or route changes
     useEffect(() => {
-        setSidebarOpen(!isMobile)
-    }, [isMobile])
+        if (isMobile) {
+            setSidebarOpen(false)
+        } else if (autoHide && isPOSPage) {
+            setSidebarOpen(false)
+        } else if (!isPOSPage) {
+            setSidebarOpen(true)
+        }
+    }, [isMobile, isPOSPage, autoHide])
 
-    const navigate = useNavigate() // Added
+    // Save auto-hide preference
+    useEffect(() => {
+        localStorage.setItem('sidebar-auto-hide', JSON.stringify(autoHide))
+    }, [autoHide])
 
-    // Added
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             const term = (e.target as HTMLInputElement).value
@@ -28,6 +46,10 @@ export function DashboardLayout() {
                 navigate(`/products?search=${encodeURIComponent(term.trim())}`)
             }
         }
+    }
+
+    const toggleAutoHide = () => {
+        setAutoHide(!autoHide)
     }
 
     return (
@@ -55,8 +77,8 @@ export function DashboardLayout() {
             )}>
                 {/* Top Header */}
                 <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60 px-4 md:px-6">
-                    <div className="flex items-center gap-4">
-                        {/* Toggle button - visible on all screen sizes */}
+                    <div className="flex items-center gap-2">
+                        {/* Toggle sidebar button */}
                         <Button
                             variant="ghost"
                             size="icon"
@@ -64,6 +86,30 @@ export function DashboardLayout() {
                         >
                             <Menu className="h-5 w-5" />
                         </Button>
+                        
+                        {/* Auto-hide toggle - only visible on desktop */}
+                        {!isMobile && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={toggleAutoHide}
+                                            className={cn(
+                                                "h-8 w-8",
+                                                autoHide ? "text-primary" : "text-muted-foreground"
+                                            )}
+                                        >
+                                            {autoHide ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">{autoHide ? 'Auto-hide ON (POS)' : 'Auto-hide OFF'}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
                         <div className="relative w-72 hidden md:block">
                             <Input
                                 type="search"
