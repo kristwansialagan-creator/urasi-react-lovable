@@ -53,3 +53,16 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# AI/Agent tools
+.agent/
+.kiro/
+.trae/
+
+# Debug logs
+*.log
+mcp-debug.log
+
+# Lock files (optional - keep if team collaboration needed)
+# bun.lockb
+# package-lock.json
