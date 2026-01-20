@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button'
 import { FileText, Table as TableIcon, Calendar, TrendingUp } from 'lucide-react'
 import { useOrders } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js'
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler } from 'chart.js'
 import { Bar, Line } from 'react-chartjs-2'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler)
 
 export default function YearlyReportPage() {
     const { orders } = useOrders()

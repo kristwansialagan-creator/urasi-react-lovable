@@ -172,3 +172,42 @@ body {
 .bg-gold-accent {
   background-color: hsl(45, 93%, 58%);
 }
+
+.urasi-scanner video {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: cover !important;
+}
+
+.urasi-scanner button,
+.urasi-scanner select,
+.urasi-scanner input[type="file"] {
+  font: inherit;
+}
+
+.urasi-scanner button {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: 0 !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.urasi-scanner button:hover {
+  filter: brightness(0.95);
+}
+
+.urasi-scanner a {
+  color: hsl(var(--primary)) !important;
+}
+
+.urasi-scanner #html5-qrcode-anchor-scan-type-change {
+  color: hsl(var(--primary)) !important;
+  font-weight: 600;
+}
+
+.urasi-scanner span,
+.urasi-scanner div,
+.urasi-scanner p {
+  color: hsl(var(--foreground));
+}

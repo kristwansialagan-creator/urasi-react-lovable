@@ -57,14 +57,14 @@ export default function ProductGroupsPage() {
         e.preventDefault()
         try {
             if (editingGroup) {
-                const { error } = await (supabase as any)
+                const { error } = await supabase
                     .from('product_groups')
                     .update(formData)
                     .eq('id', editingGroup.id)
                 if (error) throw error
                 toast({ title: 'Success', description: 'Product group updated' })
             } else {
-                const { error } = await (supabase as any)
+                const { error } = await supabase
                     .from('product_groups')
                     .insert([formData])
                 if (error) throw error

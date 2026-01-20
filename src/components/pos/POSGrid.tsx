@@ -55,7 +55,7 @@ export default function POSGrid({ onProductSelect }: POSGridProps) {
             setLoading(true)
             const { data, error } = await supabase
                 .from('products')
-                .select('id, name, sku, sale_price, stock_quantity, category_id, thumbnail_id')
+                .select('id, name, sku, sale_price, stock_quantity, category_id, thumbnail_id, thumbnail:medias(*)')
                 .eq('status', 'available')
                 .gt('stock_quantity', 0)
 
@@ -69,7 +69,7 @@ export default function POSGrid({ onProductSelect }: POSGridProps) {
                 sale_price: p.sale_price ?? 0,
                 stock_quantity: p.stock_quantity ?? 0,
                 category_id: p.category_id || undefined,
-                image_url: undefined // We could fetch from medias table if needed
+                image_url: p.thumbnail?.slug ? `https://higfoctduijxbszgqhuc.supabase.co/storage/v1/object/public/product-images/${p.thumbnail.slug}` : undefined
             }))
             
             setProducts(mappedProducts)
@@ -146,30 +146,44 @@ export default function POSGrid({ onProductSelect }: POSGridProps) {
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {filteredProducts.map((product) => (
-                            <button
-                                key={product.id}
-                                onClick={() => onProductSelect(product)}
-                                className="p-4 border rounded-lg hover:border-[hsl(var(--primary))] hover:shadow-md transition-all text-left"
-                            >
-                                {product.image_url && (
+                        {filteredProducts.map((product) => {
+                            const hasImage = product.image_url
+                            return (
+                                <button
+                                    key={product.id}
+                                    onClick={() => onProductSelect(product)}
+                                    className="p-4 border rounded-lg hover:border-[hsl(var(--primary))] hover:shadow-md transition-all text-left"
+                                >
                                     <div className="w-full aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg mb-3 overflow-hidden">
-                                        <img
-                                            src={product.image_url}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover"
-                                        />
+                                        {hasImage ? (
+                                            <img
+                                                src={product.image_url}
+                                                alt={product.name}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.src = '/placeholder.svg'
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                                    <span className="text-gray-500 dark:text-gray-400 text-xs font-bold">
+                                                        {product.name.charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                                <h4 className="font-medium text-sm mb-1 line-clamp-2">{product.name}</h4>
-                                <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">
-                                    {product.sku} • Stock: {product.stock_quantity}
-                                </p>
-                                <p className="text-lg font-bold text-[hsl(var(--primary))]">
-                                    {formatCurrency(product.sale_price)}
-                                </p>
-                            </button>
-                        ))}
+                                    <h4 className="font-medium text-sm mb-1 line-clamp-2">{product.name}</h4>
+                                    <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">
+                                        {product.sku} • Stock: {product.stock_quantity}
+                                    </p>
+                                    <p className="text-lg font-bold text-[hsl(var(--primary))]">
+                                        {formatCurrency(product.sale_price)}
+                                    </p>
+                                </button>
+                            )
+                        })}
                     </div>
                 )}
             </div>

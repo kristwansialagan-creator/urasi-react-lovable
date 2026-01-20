@@ -73,15 +73,15 @@ export default function LabelTemplatesPage() {
         }
 
         if (editingTemplate) {
-            const { error } = await (supabase
-                .from('label_templates') as any)
+            const { error } = await supabase
+                .from('label_templates')
                 .update(templateData)
                 .eq('id', editingTemplate.id)
 
             if (error) return alert('Failed to update template')
         } else {
-            const { error } = await (supabase
-                .from('label_templates') as any)
+            const { error } = await supabase
+                .from('label_templates')
                 .insert([{ ...templateData, author: user.data.user?.id }])
 
             if (error) return alert('Failed to create template')

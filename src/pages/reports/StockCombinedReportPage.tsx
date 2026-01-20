@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button'
 import { FileText, Table as TableIcon, Package, TrendingUp } from 'lucide-react'
 import { useProducts, useOrders } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js'
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, Filler } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, Filler)
 
 interface StockData { id: string; name: string; sku: string | null; category: string; currentStock: number; sold: number; incoming: number; value: number }
 

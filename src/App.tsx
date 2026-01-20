@@ -1,128 +1,145 @@
+import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { DashboardLayout } from '@/components/layout'
+import AIChatWidget from '@/components/ai-chat/AIChatWidget'
+import { Loader2 } from 'lucide-react'
 
-// Pages
-import LoginPage from '@/pages/auth/LoginPage'
-import RegisterPage from '@/pages/auth/RegisterPage'
-import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
-import DashboardPage from '@/pages/dashboard/DashboardPage'
-import POSPage from '@/pages/pos/POSPage'
-import ProductsPage from '@/pages/products/ProductsPage'
-import ProductCreatePage from '@/pages/products/ProductCreatePage'
-import CategoriesPage from '@/pages/products/CategoriesPage'
-import StockAdjustmentPage from '@/pages/products/StockAdjustmentPage'
-import PrintLabelsPage from '@/pages/products/PrintLabelsPage'
-import OrdersPage from '@/pages/orders/OrdersPage'
-import OrderDetailsPage from '@/pages/orders/OrderDetailsPage'
-import OrderRefundPage from '@/pages/orders/OrderRefundPage'
-import OrderPaymentPage from '@/pages/orders/OrderPaymentPage'
-import InstalmentsPage from '@/pages/orders/InstalmentsPage'
-import InvoicePage from '@/pages/orders/InvoicePage'
-import CustomersPage from '@/pages/customers/CustomersPage'
-import RegistersPage from '@/pages/registers/RegistersPage'
-import ReportsPage from '@/pages/reports/ReportsPage'
-import SettingsPage from '@/pages/settings/SettingsPage'
-import ProcurementPage from '@/pages/procurement/ProcurementPage'
-import ProductGroupsPage from '@/pages/procurement/ProductGroupsPage'
-import ProcurementProductsPage from '@/pages/procurement/ProcurementProductsPage'
-import CouponsPage from '@/pages/marketing/CouponsPage'
-import TransactionsPage from '@/pages/transactions/TransactionsPage'
-import MediaLibraryPage from '@/pages/media/MediaLibraryPage'
-import RewardsPage from '@/pages/rewards/RewardsPage'
-import ProfilePage from '@/pages/profile/ProfilePage'
-import NotificationsPage from '@/pages/notifications/NotificationsPage'
-import DataManagementPage from '@/pages/tools/DataManagementPage'
-import CustomerGroupsPage from '@/pages/customers/CustomerGroupsPage'
-import ProvidersPage from '@/pages/procurement/ProvidersPage'
-import BulkEditorPage from '@/pages/tools/BulkEditorPage'
-import UnauthorizedPage from '@/pages/UnauthorizedPage'
+// Lazy Load Pages
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'))
+const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
+const POSPage = lazy(() => import('@/pages/pos/POSPage'))
+const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'))
+const ProductCreatePage = lazy(() => import('@/pages/products/ProductCreatePage'))
+const CategoriesPage = lazy(() => import('@/pages/products/CategoriesPage'))
+const StockAdjustmentPage = lazy(() => import('@/pages/products/StockAdjustmentPage'))
+const PrintLabelsPage = lazy(() => import('@/pages/products/PrintLabelsPage'))
+const OrdersPage = lazy(() => import('@/pages/orders/OrdersPage'))
+const OrderDetailsPage = lazy(() => import('@/pages/orders/OrderDetailsPage'))
+const OrderRefundPage = lazy(() => import('@/pages/orders/OrderRefundPage'))
+const OrderPaymentPage = lazy(() => import('@/pages/orders/OrderPaymentPage'))
+const InstallmentsPage = lazy(() => import('@/pages/installments/InstallmentsPage'))
+const InvoicePage = lazy(() => import('@/pages/orders/InvoicePage'))
+const CustomersPage = lazy(() => import('@/pages/customers/CustomersPage'))
+const RegistersPage = lazy(() => import('@/pages/registers/RegistersPage'))
+const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'))
+const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
+const ProcurementPage = lazy(() => import('@/pages/procurement/ProcurementPage'))
+const ProductGroupsPage = lazy(() => import('@/pages/procurement/ProductGroupsPage'))
+const ProcurementProductsPage = lazy(() => import('@/pages/procurement/ProcurementProductsPage'))
+const CouponsPage = lazy(() => import('@/pages/marketing/CouponsPage'))
+const TransactionsPage = lazy(() => import('@/pages/transactions/TransactionsPage'))
+const MediaLibraryPage = lazy(() => import('@/pages/media/MediaLibraryPage'))
+const RewardsPage = lazy(() => import('@/pages/rewards/RewardsPage'))
+const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'))
+const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage'))
+const DataManagementPage = lazy(() => import('@/pages/tools/DataManagementPage'))
+const CustomerGroupsPage = lazy(() => import('@/pages/customers/CustomerGroupsPage'))
+const ProvidersPage = lazy(() => import('@/pages/procurement/ProvidersPage'))
+const BulkEditorPage = lazy(() => import('@/pages/tools/BulkEditorPage'))
+const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
+const JournalEntriesPage = lazy(() => import('@/pages/accounting/JournalEntriesPage'))
+const MobileScannerPage = lazy(() => import('@/pages/pos/MobileScannerPage'))
+
+// Loading Component
+const PageLoader = () => (
+    <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+)
 
 function App() {
     return (
         <LanguageProvider>
             <AuthProvider>
-                <Routes>
-                {/* Public Routes */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                        {/* Public Routes */}
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/register" element={<RegisterPage />} />
+                        <Route path="/reset-password" element={<ResetPasswordPage />} />
+                        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                        <Route path="/scanner/:sessionId" element={<MobileScannerPage />} />
 
-                {/* Protected Routes */}
-                <Route
-                    element={
-                        <ProtectedRoute>
-                            <DashboardLayout />
-                        </ProtectedRoute>
-                    }
-                >
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/pos" element={<POSPage />} />
+                        {/* Protected Routes */}
+                        <Route
+                            element={
+                                <ProtectedRoute>
+                                    <DashboardLayout />
+                                </ProtectedRoute>
+                            }
+                        >
+                            <Route path="/dashboard" element={<DashboardPage />} />
+                            <Route path="/pos" element={<POSPage />} />
 
-                    {/* Products */}
-                    <Route path="/products" element={<ProductsPage />} />
-                    <Route path="/products/create" element={<ProductCreatePage />} />
-                    <Route path="/products/categories" element={<CategoriesPage />} />
-                    <Route path="/products/stock-adjustment" element={<StockAdjustmentPage />} />
-                    <Route path="/products/print-labels" element={<PrintLabelsPage />} />
+                            {/* Products */}
+                            <Route path="/products" element={<ProductsPage />} />
+                            <Route path="/products/create" element={<ProductCreatePage />} />
+                            <Route path="/products/edit/:id" element={<ProductCreatePage />} />
+                            <Route path="/products/categories" element={<CategoriesPage />} />
+                            <Route path="/products/stock-adjustment" element={<StockAdjustmentPage />} />
+                            <Route path="/products/print-labels" element={<PrintLabelsPage />} />
 
-                    {/* Orders */}
-                    <Route path="/orders" element={<OrdersPage />} />
-                    <Route path="/orders/:id" element={<OrderDetailsPage />} />
-                    <Route path="/orders/:id/refund" element={<OrderRefundPage />} />
-                    <Route path="/orders/:id/payment" element={<OrderPaymentPage />} />
-                    <Route path="/orders/instalments" element={<InstalmentsPage />} />
-                    <Route path="/orders/invoice/:id" element={<InvoicePage />} />
+                            {/* Orders */}
+                            <Route path="/orders" element={<OrdersPage />} />
+                            <Route path="/orders/:id" element={<OrderDetailsPage />} />
+                            <Route path="/orders/:id/refund" element={<OrderRefundPage />} />
+                            <Route path="/orders/:id/payment" element={<OrderPaymentPage />} />
+                            <Route path="/installments" element={<InstallmentsPage />} />
+                            <Route path="/orders/invoice/:id" element={<InvoicePage />} />
 
-                    {/* Customers */}
-                    <Route path="/customers" element={<CustomersPage />} />
-                    <Route path="/customers/groups" element={<CustomerGroupsPage />} />
+                            {/* Customers */}
+                            <Route path="/customers" element={<CustomersPage />} />
+                            <Route path="/customers/groups" element={<CustomerGroupsPage />} />
 
-                    {/* Registers */}
-                    <Route path="/registers" element={<RegistersPage />} />
+                            {/* Registers */}
+                            <Route path="/registers" element={<RegistersPage />} />
 
-                    {/* Reports - catch-all for sub-reports */}
-                    <Route path="/reports/*" element={<ReportsPage />} />
+                            {/* Reports */}
+                            <Route path="/reports/*" element={<ReportsPage />} />
 
-                    {/* Procurement */}
-                    <Route path="/procurements" element={<ProcurementPage />} />
-                    <Route path="/procurements/providers" element={<ProvidersPage />} />
-                    <Route path="/procurement/groups" element={<ProductGroupsPage />} />
-                    <Route path="/procurement/groups/:groupId/products" element={<ProcurementProductsPage />} />
+                            {/* Procurement */}
+                            <Route path="/procurements" element={<ProcurementPage />} />
+                            <Route path="/procurements/providers" element={<ProvidersPage />} />
+                            <Route path="/procurement/groups" element={<ProductGroupsPage />} />
+                            <Route path="/procurement/groups/:groupId/products" element={<ProcurementProductsPage />} />
 
-                    {/* Marketing */}
-                    <Route path="/coupons" element={<CouponsPage />} />
+                            {/* Marketing */}
+                            <Route path="/coupons" element={<CouponsPage />} />
 
-                    {/* Transactions / Accounting */}
-                    <Route path="/transactions" element={<TransactionsPage />} />
+                            {/* Transactions / Accounting */}
+                            <Route path="/transactions" element={<TransactionsPage />} />
+                            <Route path="/accounting/journal-entries" element={<JournalEntriesPage />} />
 
-                    {/* Media */}
-                    <Route path="/media" element={<MediaLibraryPage />} />
+                            {/* Media */}
+                            <Route path="/media" element={<MediaLibraryPage />} />
 
-                    {/* Rewards */}
-                    <Route path="/rewards" element={<RewardsPage />} />
+                            {/* Rewards */}
+                            <Route path="/rewards" element={<RewardsPage />} />
 
-                    {/* Profile */}
-                    <Route path="/profile" element={<ProfilePage />} />
+                            {/* Profile */}
+                            <Route path="/profile" element={<ProfilePage />} />
 
-                    {/* Notifications */}
-                    <Route path="/notifications" element={<NotificationsPage />} />
+                            {/* Notifications */}
+                            <Route path="/notifications" element={<NotificationsPage />} />
 
-                    {/* Tools */}
-                    <Route path="/tools/data-management" element={<DataManagementPage />} />
-                    <Route path="/tools/bulk-editor" element={<BulkEditorPage />} />
+                            {/* Tools */}
+                            <Route path="/tools/data-management" element={<DataManagementPage />} />
+                            <Route path="/tools/bulk-editor" element={<BulkEditorPage />} />
 
-                    {/* Settings */}
-                    <Route path="/settings/*" element={<SettingsPage />} />
-                </Route>
+                            {/* Settings */}
+                            <Route path="/settings/*" element={<SettingsPage />} />
+                        </Route>
 
-                {/* Redirect */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
+                        {/* Redirect */}
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                    </Routes>
+                </Suspense>
             </AuthProvider>
         </LanguageProvider>
     )

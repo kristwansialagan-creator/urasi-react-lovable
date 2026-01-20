@@ -14,6 +14,7 @@ interface Product {
     selling_price: number
     purchase_price: number
     tax_type: string
+    thumbnail_id: string | null
     created_at: string
     updated_at: string
 }
@@ -23,10 +24,15 @@ interface ProductCategory {
     name: string
     parent_id: string | null
     description: string | null
-    total_items: number
-    displays_on_pos: boolean
-    created_at: string
-    updated_at: string
+    total_items: number | null
+    displays_on_pos: boolean | null
+    media_id?: string | null
+    author?: string | null
+    status?: 'active' | 'inactive' | null
+    icon?: string | null
+    thumbnail?: string | null
+    created_at: string | null
+    updated_at: string | null
 }
 
 interface ProductUnitQuantity {
@@ -43,6 +49,15 @@ interface ProductUnitQuantity {
 interface ProductWithStock extends Product {
     category?: ProductCategory | null
     stock?: ProductUnitQuantity[]
+    thumbnail?: {
+        id: string
+        name: string
+        extension: string | null
+        slug: string | null
+        user_id: string | null
+        created_at: string
+        updated_at: string
+    } | null
 }
 
 interface UseProductsReturn {
@@ -77,7 +92,8 @@ export function useProducts(): UseProductsReturn {
                 .select(`
                     *,
                     category:product_categories(*),
-                    stock:product_unit_quantities(*)
+                    stock:product_unit_quantities(*),
+                    thumbnail:medias(*)
                 `)
                 .order('created_at', { ascending: false })
 
@@ -100,6 +116,8 @@ export function useProducts(): UseProductsReturn {
     }, [])
 
     const fetchCategories = useCallback(async () => {
+        setLoading(true)
+        setError(null)
         try {
             const { data, error: fetchError } = await supabase
                 .from('product_categories')
@@ -110,6 +128,8 @@ export function useProducts(): UseProductsReturn {
             setCategories((data as ProductCategory[]) || [])
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch categories')
+        } finally {
+            setLoading(false)
         }
     }, [])
 
@@ -117,7 +137,7 @@ export function useProducts(): UseProductsReturn {
         try {
             const { data, error: createError } = await supabase
                 .from('products')
-                .insert(product as never)
+                .insert(product as any)
                 .select()
                 .single()
 
@@ -134,7 +154,7 @@ export function useProducts(): UseProductsReturn {
         try {
             const { data, error: updateError } = await supabase
                 .from('products')
-                .update(product as never)
+                .update(product)
                 .eq('id', id)
                 .select()
                 .single()
@@ -168,7 +188,7 @@ export function useProducts(): UseProductsReturn {
         try {
             const { data, error: createError } = await supabase
                 .from('product_categories')
-                .insert(category as never)
+                .insert(category as any)
                 .select()
                 .single()
 
@@ -185,7 +205,7 @@ export function useProducts(): UseProductsReturn {
         try {
             const { data, error: updateError } = await supabase
                 .from('product_categories')
-                .update(category as never)
+                .update(category)
                 .eq('id', id)
                 .select()
                 .single()
@@ -223,7 +243,7 @@ export function useProducts(): UseProductsReturn {
                     product_id: productId,
                     unit_id: unitId,
                     quantity
-                } as never, { onConflict: 'product_id,unit_id' })
+                }, { onConflict: 'product_id,unit_id' })
 
             if (updateError) throw updateError
             await fetchProducts()
@@ -238,7 +258,7 @@ export function useProducts(): UseProductsReturn {
         try {
             const { data } = await supabase
                 .from('products')
-                .select(`*, category:product_categories(*), stock:product_unit_quantities(*)`)
+                .select(`*, category:product_categories(*), stock:product_unit_quantities(*), thumbnail:medias(*)`)
 
             const allProducts = (data || []) as ProductWithStock[]
             return allProducts.filter(p =>

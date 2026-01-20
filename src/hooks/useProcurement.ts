@@ -149,6 +149,7 @@ export function useProcurement(): UseProcurementReturn {
 
             // Update stock for each product
             for (const product of products as { product_id: string; quantity: number }[]) {
+                // Update product_unit_quantities
                 const { data: currentStock } = await supabase
                     .from('product_unit_quantities')
                     .select('quantity')
@@ -161,6 +162,29 @@ export function useProcurement(): UseProcurementReturn {
                         .from('product_unit_quantities')
                         .update({ quantity: stockData.quantity + product.quantity } as never)
                         .eq('product_id', product.product_id)
+                } else {
+                    // Create stock record if doesn't exist
+                    await supabase
+                        .from('product_unit_quantities')
+                        .insert({
+                            product_id: product.product_id,
+                            quantity: product.quantity
+                        } as never)
+                }
+
+                // Update main products table stock_quantity
+                const { data: mainProduct } = await supabase
+                    .from('products')
+                    .select('stock_quantity')
+                    .eq('id', product.product_id)
+                    .single()
+
+                if (mainProduct) {
+                    const currentMainStock = (mainProduct as any).stock_quantity || 0
+                    await supabase
+                        .from('products')
+                        .update({ stock_quantity: currentMainStock + product.quantity } as never)
+                        .eq('id', product.product_id)
                 }
             }
 

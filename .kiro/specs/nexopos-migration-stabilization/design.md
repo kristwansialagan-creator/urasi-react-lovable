@@ -1,4 +1,5 @@
 # Design Document: NexoPOS Migration Stabilization
+Nexopos original path: C:\Users\En Raymon\Documents\Urasi
 
 ## Overview
 

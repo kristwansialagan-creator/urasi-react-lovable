@@ -101,12 +101,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+            if (error) {
+                console.error('Initial session fetch error:', error)
+                // If it's a refresh token error, clear session
+                if (error.message.includes('Refresh Token Not Found')) {
+                    supabase.auth.signOut()
+                    setSession(null)
+                    setUser(null)
+                    setLoading(false)
+                    return
+                }
+            }
+            
             setSession(session)
             setUser(session?.user ?? null)
             if (session?.user) {
                 fetchProfile(session.user.id)
             }
+            setLoading(false)
+        }).catch(err => {
+            console.error('Unexpected session fetch error:', err)
             setLoading(false)
         })
 
@@ -114,6 +129,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {
                 console.log('Auth state changed:', _event, session?.user?.id)
+                
+                // Handle token refresh failure
+                if ((_event as string) === 'TOKEN_REFRESH_FAILED') {
+                    console.error('Token refresh failed, signing out...')
+                    supabase.auth.signOut()
+                    setSession(null)
+                    setUser(null)
+                    setProfile(null)
+                    setLoading(false)
+                    return
+                }
+
                 setSession(session)
                 setUser(session?.user ?? null)
                 setLoading(false) // Set loading false immediately

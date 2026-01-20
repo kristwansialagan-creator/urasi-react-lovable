@@ -50,9 +50,9 @@ export default function InvoicePage() {
     }
 
     const fetchSettings = async () => {
-        const { data } = await supabase.from('settings').select('*')
+        const { data: settingsData } = await supabase.from('settings').select('*')
         const settingsObj: any = {}
-        data?.forEach((s: any) => { settingsObj[s.key] = s.value })
+        settingsData?.forEach((s: any) => { settingsObj[s.key] = s.value })
         setSettings(settingsObj)
     }
 

@@ -102,7 +102,7 @@ export function useRegisters(): UseRegistersReturn {
         try {
             const { data, error: createError } = await supabase
                 .from('registers')
-                .insert(register as never)
+                .insert(register)
                 .select()
                 .single()
 
@@ -119,7 +119,7 @@ export function useRegisters(): UseRegistersReturn {
         try {
             const { data, error: updateError } = await supabase
                 .from('registers')
-                .update(register as never)
+                .update(register)
                 .eq('id', id)
                 .select()
                 .single()

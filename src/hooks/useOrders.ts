@@ -26,6 +26,8 @@ interface Order {
     register_id: string | null
     created_at: string | null
     updated_at: string | null
+    discount: number | null
+    total_coupons: number | null
 }
 
 interface OrderProduct {
@@ -56,6 +58,7 @@ interface OrderWithDetails extends Order {
     customer?: Customer | null
     products?: OrderProduct[]
     payments?: OrderPayment[]
+    installments?: any[]
 }
 
 interface CartItem {
@@ -88,6 +91,7 @@ interface RefundProduct {
 
 interface UseOrdersReturn {
     orders: OrderWithDetails[]
+    totalCount: number
     paymentTypes: PaymentType[]
     loading: boolean
     error: string | null
@@ -111,6 +115,10 @@ interface OrderFilters {
     from_date?: string
     to_date?: string
     search?: string
+    payment_method_id?: string
+    has_installments?: boolean
+    page?: number
+    limit?: number
 }
 
 interface CreateOrderInput {
@@ -135,6 +143,7 @@ interface OrderStats {
 
 export function useOrders(): UseOrdersReturn {
     const [orders, setOrders] = useState<OrderWithDetails[]>([])
+    const [totalCount, setTotalCount] = useState(0)
     const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -143,16 +152,23 @@ export function useOrders(): UseOrdersReturn {
         setLoading(true)
         setError(null)
         try {
+            const paymentsRelation = filters?.payment_method_id ? 'payments:orders_payments!inner(*)' : 'payments:orders_payments(*)'
+            const page = filters?.page || 1
+            const limit = filters?.limit || 20
+            const from = (page - 1) * limit
+            const to = from + limit - 1
+
             let query = supabase
                 .from('orders')
                 .select(`
                     *,
                     customer:customers(*),
                     products:orders_products(*),
-                    payments:orders_payments(*)
-                `)
+                    ${paymentsRelation},
+                    installments:orders_instalments(*)
+                `, { count: 'exact' })
                 .order('created_at', { ascending: false })
-                .limit(100)
+                .range(from, to)
 
             if (filters?.payment_status) query = query.eq('payment_status', filters.payment_status)
             if (filters?.process_status) query = query.eq('process_status', filters.process_status)
@@ -161,11 +177,20 @@ export function useOrders(): UseOrdersReturn {
             if (filters?.from_date) query = query.gte('created_at', filters.from_date)
             if (filters?.to_date) query = query.lte('created_at', filters.to_date)
             if (filters?.search) query = query.ilike('code', `%${filters.search}%`)
+            if (filters?.payment_method_id) query = query.eq('payments.payment_type_id', filters.payment_method_id)
+            if (filters?.has_installments !== undefined) {
+                if (filters.has_installments) {
+                    query = query.not('installments.id', 'is', null)
+                } else {
+                    query = query.is('installments.id', null)
+                }
+            }
 
-            const { data, error: fetchError } = await (query as any)
+            const { data, count, error: fetchError } = await (query as any)
 
             if (fetchError) throw fetchError
             setOrders((data as OrderWithDetails[]) || [])
+            setTotalCount(count || 0)
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch orders')
         } finally {
@@ -456,6 +481,7 @@ export function useOrders(): UseOrdersReturn {
 
     return {
         orders,
+        totalCount,
         paymentTypes,
         loading,
         error,

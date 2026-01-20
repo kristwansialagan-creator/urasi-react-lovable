@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,11 +16,22 @@ import {
     Loader2,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
-import { useProducts } from '@/hooks'
+import { useProducts, useCategories } from '@/hooks'
+import { Select, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 
 export default function ProductsPage() {
     const { products, loading, error, fetchProducts, deleteProduct } = useProducts()
-    const [search, setSearch] = useState('')
+    const { categories } = useCategories()
+    const [searchParams] = useSearchParams()
+    const [search, setSearch] = useState(searchParams.get('search') || '')
+    const [categoryFilter, setCategoryFilter] = useState('none')
+    const [categorySearch, setCategorySearch] = useState('')
+
+    // Product Detail Dialog State
+    const [selectedProduct, setSelectedProduct] = useState<any>(null)
+    const [isDetailOpen, setIsDetailOpen] = useState(false)
 
     useEffect(() => {
         if (search) {
@@ -50,15 +61,21 @@ export default function ProductsPage() {
         }
     }
 
+    // Filter products by category
+    const filteredProducts = useMemo(() => {
+        if (!categoryFilter || categoryFilter === 'none') return products
+        return products.filter(p => p.category_id === categoryFilter)
+    }, [products, categoryFilter])
+
     // Calculate stats
-    const totalProducts = products.length
-    const inStock = products.filter(p => getProductStock(p) > 0).length
-    const lowStock = products.filter(p => {
+    const totalProducts = filteredProducts.length
+    const inStock = filteredProducts.filter(p => getProductStock(p) > 0).length
+    const lowStock = filteredProducts.filter(p => {
         const stock = getProductStock(p)
         const lowQty = p.stock?.[0]?.low_quantity || 10
         return stock > 0 && stock < lowQty
     }).length
-    const outOfStock = products.filter(p => getProductStock(p) === 0).length
+    const outOfStock = filteredProducts.filter(p => getProductStock(p) === 0).length
 
     return (
         <div className="space-y-6">
@@ -156,10 +173,75 @@ export default function ProductsPage() {
                                 icon={<Search className="h-4 w-4" />}
                             />
                         </div>
-                        <Button variant="outline" className="gap-2">
-                            <Filter className="h-4 w-4" />
-                            Filter
-                        </Button>
+                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                            <SelectTrigger className="w-[200px]">
+                                <Filter className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="All Categories" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-2 border-border shadow-lg max-h-[300px]">
+                                {/* Search Input */}
+                                <div className="p-2 border-b sticky top-0 bg-white z-10">
+                                    <Input
+                                        placeholder="Search categories..."
+                                        value={categorySearch}
+                                        onChange={(e) => setCategorySearch(e.target.value)}
+                                        className="h-8 text-sm"
+                                        onClick={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => e.stopPropagation()}
+                                    />
+                                </div>
+
+                                <SelectItem value="none" className="font-medium">All Categories</SelectItem>
+
+                                {categories
+                                    .filter(cat => !cat.parent_id)
+                                    .filter(parent => {
+                                        // Filter by search term
+                                        if (!categorySearch) return true
+                                        const searchLower = categorySearch.toLowerCase()
+                                        const parentMatch = parent.name.toLowerCase().includes(searchLower)
+                                        const childMatch = categories
+                                            .filter(c => c.parent_id === parent.id)
+                                            .some(child => child.name.toLowerCase().includes(searchLower))
+                                        return parentMatch || childMatch
+                                    })
+                                    .map((parent) => {
+                                        const children = categories
+                                            .filter(c => c.parent_id === parent.id)
+                                            .filter(child => {
+                                                if (!categorySearch) return true
+                                                return child.name.toLowerCase().includes(categorySearch.toLowerCase())
+                                            })
+
+                                        if (children.length === 0) {
+                                            // Parent with no children - selectable
+                                            return (
+                                                <SelectItem key={parent.id} value={parent.id} className="font-medium">
+                                                    {parent.name}
+                                                </SelectItem>
+                                            )
+                                        }
+
+                                        // Parent with children - use SelectGroup
+                                        return (
+                                            <SelectGroup key={parent.id}>
+                                                <SelectLabel className="text-sm font-semibold text-foreground px-2 py-1.5">
+                                                    {parent.name}
+                                                </SelectLabel>
+                                                {children.map(child => (
+                                                    <SelectItem
+                                                        key={child.id}
+                                                        value={child.id}
+                                                        className="pl-6 text-sm text-muted-foreground"
+                                                    >
+                                                        {child.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        )
+                                    })}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </CardContent>
             </Card>
@@ -178,42 +260,40 @@ export default function ProductsPage() {
                         <div className="text-center py-8 text-[hsl(var(--destructive))]">
                             {error}
                         </div>
-                    ) : products.length === 0 ? (
+                    ) : filteredProducts.length === 0 ? (
                         <div className="text-center py-8 text-[hsl(var(--muted-foreground))]">
-                            No products found. <Link to="/products/create" className="text-[hsl(var(--primary))] underline">Add your first product</Link>
+                            {categoryFilter ? 'No products found in this category.' : 'No products found. '}
+                            {!categoryFilter && <Link to="/products/create" className="text-[hsl(var(--primary))] underline">Add your first product</Link>}
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b">
+                                        <th className="text-left py-3 px-4 font-medium text-[hsl(var(--muted-foreground))] w-16">#</th>
                                         <th className="text-left py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">Product</th>
                                         <th className="text-left py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">SKU</th>
                                         <th className="text-left py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">Category</th>
-                                        <th className="text-right py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">Price</th>
-                                        <th className="text-right py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">Stock</th>
+                                        <th className="text-left py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">Price</th>
+                                        <th className="text-left py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">Stock</th>
                                         <th className="text-left py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">Status</th>
                                         <th className="text-right py-3 px-4 font-medium text-[hsl(var(--muted-foreground))]">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {products.map((product) => {
+                                    {filteredProducts.map((product, index) => {
                                         const stock = getProductStock(product)
                                         const status = getProductStatus(product)
                                         return (
                                             <tr key={product.id} className="border-b hover:bg-[hsl(var(--muted))]/50">
+                                                <td className="py-3 px-4 text-muted-foreground">{index + 1}</td>
                                                 <td className="py-3 px-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-lg bg-[hsl(var(--muted))] flex items-center justify-center">
-                                                            <Package className="h-5 w-5 text-[hsl(var(--muted-foreground))]" />
-                                                        </div>
-                                                        <span className="font-medium">{product.name}</span>
-                                                    </div>
+                                                    <span className="font-medium">{product.name}</span>
                                                 </td>
                                                 <td className="py-3 px-4 text-[hsl(var(--muted-foreground))]">{product.sku || '-'}</td>
                                                 <td className="py-3 px-4">{product.category?.name || 'Uncategorized'}</td>
-                                                <td className="py-3 px-4 text-right font-medium">{formatCurrency(product.selling_price)}</td>
-                                                <td className="py-3 px-4 text-right">{stock}</td>
+                                                <td className="py-3 px-4 font-medium">{formatCurrency(product.selling_price)}</td>
+                                                <td className="py-3 px-4">{stock}</td>
                                                 <td className="py-3 px-4">
                                                     <span
                                                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${status === 'Available'
@@ -226,9 +306,17 @@ export default function ProductsPage() {
                                                         {status}
                                                     </span>
                                                 </td>
-                                                <td className="py-3 px-4">
+                                                <td className="py-3 px-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <Button variant="ghost" size="icon">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]"
+                                                            onClick={() => {
+                                                                setSelectedProduct(product)
+                                                                setIsDetailOpen(true)
+                                                            }}
+                                                        >
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                         <Link to={`/products/edit/${product.id}`}>
@@ -255,6 +343,83 @@ export default function ProductsPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Product Detail Modal */}
+            <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+                <DialogContent className="sm:max-w-[600px] bg-white">
+                    <DialogHeader>
+                        <DialogTitle>Product Details</DialogTitle>
+                        <DialogDescription>
+                            Complete information for {selectedProduct?.name}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedProduct && (
+                        <div className="grid grid-cols-2 gap-4 py-4">
+                            <div className="col-span-2 flex justify-center mb-4">
+                                <div className="w-48 h-48 rounded-lg bg-muted flex items-center justify-center border-2 border-border overflow-hidden">
+                                    {selectedProduct.thumbnail?.slug ? (
+                                        <img
+                                            src={`https://higfoctduijxbszgqhuc.supabase.co/storage/v1/object/public/product-images/${selectedProduct.thumbnail.slug}`}
+                                            alt={selectedProduct.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.src = '/placeholder.svg'
+                                            }}
+                                        />
+                                    ) : (
+                                        <Package className="h-16 w-16 text-muted-foreground" />
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Product Name</span>
+                                <p className="text-sm font-medium">{selectedProduct.name}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Category</span>
+                                <Badge variant="outline">{selectedProduct.category?.name || 'Uncategorized'}</Badge>
+                            </div>
+
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">SKU</span>
+                                <p className="text-sm font-mono">{selectedProduct.sku || '-'}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Barcode</span>
+                                <p className="text-sm font-mono">{selectedProduct.barcode || '-'}</p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Selling Price</span>
+                                <p className="text-sm font-bold text-green-600">{formatCurrency(selectedProduct.selling_price)}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Purchase Price</span>
+                                <p className="text-sm font-medium">{formatCurrency(selectedProduct.purchase_price)}</p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Stock Status</span>
+                                <Badge className={selectedProduct.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                                    {selectedProduct.status}
+                                </Badge>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Stock Management</span>
+                                <p className="text-sm">{selectedProduct.stock_management ? 'Enabled' : 'Disabled'}</p>
+                            </div>
+
+                            {selectedProduct.description && (
+                                <div className="col-span-2 space-y-1 mt-2 p-3 bg-muted/20 rounded-md">
+                                    <span className="text-xs font-medium text-muted-foreground uppercase">Description</span>
+                                    <p className="text-sm text-muted-foreground">{selectedProduct.description}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -123,7 +123,7 @@ export function useCustomers(): UseCustomersReturn {
         try {
             const { data, error: createError } = await supabase
                 .from('customers')
-                .insert(customer as never)
+                .insert(customer)
                 .select()
                 .single()
 
@@ -140,7 +140,7 @@ export function useCustomers(): UseCustomersReturn {
         try {
             const { data, error: updateError } = await supabase
                 .from('customers')
-                .update(customer as never)
+                .update(customer)
                 .eq('id', id)
                 .select()
                 .single()
@@ -174,7 +174,7 @@ export function useCustomers(): UseCustomersReturn {
         try {
             const { data, error: createError } = await supabase
                 .from('customers_groups')
-                .insert(group as never)
+                .insert([group as any]) // Cast to any to allow Partial<T>
                 .select()
                 .single()
 
@@ -191,7 +191,7 @@ export function useCustomers(): UseCustomersReturn {
         try {
             const { data, error: updateError } = await supabase
                 .from('customers_groups')
-                .update(group as never)
+                .update(group)
                 .eq('id', id)
                 .select()
                 .single()

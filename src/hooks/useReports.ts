@@ -77,40 +77,57 @@ export function useReports(): UseReportsReturn {
             const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-            const { data: todayData } = await supabase
+            // Get order IDs for each period
+            const { data: todayOrders } = await supabase
                 .from('orders')
-                .select('total')
+                .select('id')
                 .gte('created_at', todayStart)
                 .neq('payment_status', 'void')
 
-            const { data: weekData } = await supabase
+            const { data: weekOrders } = await supabase
                 .from('orders')
-                .select('total')
+                .select('id')
                 .gte('created_at', weekStart)
                 .neq('payment_status', 'void')
 
-            const { data: monthData } = await supabase
+            const { data: monthOrders } = await supabase
                 .from('orders')
-                .select('total')
+                .select('id')
                 .gte('created_at', monthStart)
                 .neq('payment_status', 'void')
 
-            const todayRows = (todayData || []) as OrderRow[]
-            const weekRows = (weekData || []) as OrderRow[]
-            const monthRows = (monthData || []) as OrderRow[]
+            // Helper to get total payments for order IDs
+            const getPaymentsTotal = async (orderIds: string[]) => {
+                if (orderIds.length === 0) return 0
+                const { data } = await supabase
+                    .from('orders_payments')
+                    .select('value')
+                    .in('order_id', orderIds)
+                return data?.reduce((sum, p) => sum + (p.value || 0), 0) || 0
+            }
+
+            const todayOrderIds = todayOrders?.map(o => o.id) || []
+            const weekOrderIds = weekOrders?.map(o => o.id) || []
+            const monthOrderIds = monthOrders?.map(o => o.id) || []
+
+            const [todaySales, weekSales, monthSales] = await Promise.all([
+                getPaymentsTotal(todayOrderIds),
+                getPaymentsTotal(weekOrderIds),
+                getPaymentsTotal(monthOrderIds)
+            ])
 
             return {
                 today: {
-                    orders: todayRows.length,
-                    sales: todayRows.reduce((sum, o) => sum + (o.total || 0), 0)
+                    orders: todayOrderIds.length,
+                    sales: todaySales
                 },
                 week: {
-                    orders: weekRows.length,
-                    sales: weekRows.reduce((sum, o) => sum + (o.total || 0), 0)
+                    orders: weekOrderIds.length,
+                    sales: weekSales
                 },
                 month: {
-                    orders: monthRows.length,
-                    sales: monthRows.reduce((sum, o) => sum + (o.total || 0), 0)
+                    orders: monthOrderIds.length,
+                    sales: monthSales
                 }
             }
         } catch (err) {
@@ -131,14 +148,33 @@ export function useReports(): UseReportsReturn {
             fromDate.setDate(fromDate.getDate() - days)
             fromDate.setHours(0, 0, 0, 0)
 
+            // Get orders first
             const { data: orders, error: fetchError } = await supabase
                 .from('orders')
-                .select('created_at, total')
+                .select('id, created_at')
                 .gte('created_at', fromDate.toISOString())
                 .neq('payment_status', 'void')
                 .order('created_at', { ascending: true })
 
             if (fetchError) throw fetchError
+
+            // Get all order IDs
+            const orderIds = orders?.map(o => o.id) || []
+
+            // Get payments for all these orders
+            let paymentsMap = new Map<string, number>()
+            if (orderIds.length > 0) {
+                const { data: payments } = await supabase
+                    .from('orders_payments')
+                    .select('order_id, value')
+                    .in('order_id', orderIds)
+
+                // Sum payments per order
+                payments?.forEach(p => {
+                    const current = paymentsMap.get(p.order_id!) || 0
+                    paymentsMap.set(p.order_id!, current + (p.value || 0))
+                })
+            }
 
             // Aggregate by date
             const salesMap = new Map<string, { date: string; sales: number; orders: number }>()
@@ -147,15 +183,19 @@ export function useReports(): UseReportsReturn {
             for (let i = 0; i <= days; i++) {
                 const d = new Date()
                 d.setDate(d.getDate() - (days - i))
-                const dateStr = d.toISOString().split('T')[0]
+                const dateStr = d.toLocaleDateString('en-CA')
                 salesMap.set(dateStr, { date: dateStr, sales: 0, orders: 0 })
             }
 
             orders?.forEach((order: any) => {
-                const dateStr = new Date(order.created_at).toISOString().split('T')[0]
+                const dateObj = new Date(order.created_at)
+                const dateStr = dateObj.toLocaleDateString('en-CA')
+
                 if (salesMap.has(dateStr)) {
                     const current = salesMap.get(dateStr)!
-                    current.sales += order.total || 0
+                    const revenue = paymentsMap.get(order.id) || 0
+
+                    current.sales += revenue
                     current.orders += 1
                 }
             })

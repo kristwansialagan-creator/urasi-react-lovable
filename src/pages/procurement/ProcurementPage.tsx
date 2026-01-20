@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import {
     Truck, Plus, Package, DollarSign, Search,
-    CheckCircle, Clock, XCircle, Eye
+    CheckCircle, Clock, XCircle, Eye, X
 } from 'lucide-react'
 import { useProcurement } from '@/hooks'
+import { useProducts } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
 
 export default function ProcurementPage() {
@@ -16,9 +18,12 @@ export default function ProcurementPage() {
         createProcurement, receiveProcurement,
         createProvider
     } = useProcurement()
+    const { products } = useProducts()
 
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [showProviderModal, setShowProviderModal] = useState(false)
+    const [showViewModal, setShowViewModal] = useState(false)
+    const [selectedProcurement, setSelectedProcurement] = useState<any>(null)
     const [search, setSearch] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
 
@@ -59,18 +64,25 @@ export default function ProcurementPage() {
             return
         }
 
-        await createProcurement({
-            provider_id: selectedProvider,
-            products: procurementProducts.map(p => ({
-                product_id: p.product_id,
-                quantity: p.quantity,
-                purchase_price: p.purchase_price
-            }))
-        })
+        try {
+            const success = await createProcurement({
+                provider_id: selectedProvider,
+                products: procurementProducts.map(p => ({
+                    product_id: p.product_id,
+                    quantity: p.quantity,
+                    purchase_price: p.purchase_price
+                }))
+            })
 
-        setShowCreateModal(false)
-        setSelectedProvider('')
-        setProcurementProducts([])
+            if (success) {
+                setShowCreateModal(false)
+                setSelectedProvider('')
+                setProcurementProducts([])
+            }
+        } catch (error) {
+            console.error(error)
+            alert('Error creating procurement')
+        }
     }
 
     const handleCreateProvider = async () => {
@@ -79,15 +91,41 @@ export default function ProcurementPage() {
             return
         }
 
-        await createProvider(newProvider)
-        setShowProviderModal(false)
-        setNewProvider({ name: '', email: '', phone: '', address: '' })
+        const success = await createProvider(newProvider)
+        if (success) {
+            setShowProviderModal(false)
+            setNewProvider({ name: '', email: '', phone: '', address: '' })
+        }
     }
 
-    const handleReceive = async (id: string) => {
-        if (confirm('Receive this procurement? Stock will be updated automatically.')) {
-            await receiveProcurement(id)
+    const handleView = (procurement: any) => {
+        setSelectedProcurement(procurement)
+        setShowViewModal(true)
+    }
+
+    const handleAddProduct = () => {
+        // For now, using a simple prompt - in real app should use product selector
+        const productId = prompt('Enter product ID:')
+        const quantity = parseInt(prompt('Enter quantity:') || '0')
+        const price = parseFloat(prompt('Enter purchase price:') || '0')
+        
+        if (productId && quantity > 0 && price >= 0) {
+            const product = products.find(p => p.id === productId)
+            if (product) {
+                setProcurementProducts([...procurementProducts, {
+                    product_id: productId,
+                    name: product.name,
+                    quantity,
+                    purchase_price: price
+                }])
+            } else {
+                alert('Product not found')
+            }
         }
+    }
+
+    const handleRemoveProduct = (index: number) => {
+        setProcurementProducts(procurementProducts.filter((_, i) => i !== index))
     }
 
     const getStatusIcon = (status: string) => {
@@ -181,18 +219,19 @@ export default function ProcurementPage() {
             <Card>
                 <CardContent className="pt-6">
                     <div className="flex gap-4">
-                        <div className="flex-1">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                             <Input
                                 placeholder="Search procurements..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                icon={<Search className="h-4 w-4" />}
+                                className="pl-10"
                             />
                         </div>
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            className="px-3 py-2 border rounded"
+                            className="px-3 py-2 border border-gray-300 rounded-md bg-white"
                         >
                             <option value="all">All Status</option>
                             <option value="pending">Pending</option>
@@ -256,14 +295,18 @@ export default function ProcurementPage() {
                                         <td className="p-3 text-sm">{new Date(p.created_at).toLocaleDateString()}</td>
                                         <td className="p-3">
                                             <div className="flex justify-center gap-2">
-                                                <Button size="sm" variant="ghost">
+                                                <Button size="sm" variant="ghost" onClick={() => handleView(p)}>
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                                 {p.status === 'pending' && (
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        onClick={() => handleReceive(p.id)}
+                                                        onClick={() => {
+                                                            if (confirm('Receive this procurement? Stock will be updated automatically.')) {
+                                                                receiveProcurement(p.id)
+                                                            }
+                                                        }}
                                                     >
                                                         Receive
                                                     </Button>
@@ -297,101 +340,215 @@ export default function ProcurementPage() {
             </Card>
 
             {/* Create Procurement Modal */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <Card className="w-full max-w-lg mx-4">
-                        <CardHeader>
-                            <CardTitle>New Procurement Order</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <Label>Provider</Label>
-                                <select
-                                    value={selectedProvider}
-                                    onChange={(e) => setSelectedProvider(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded mt-1"
-                                >
-                                    <option value="">Select provider...</option>
-                                    {providers.map((p: any) => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+            <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+                <DialogContent className="bg-white border border-gray-200 shadow-xl max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>New Procurement Order</DialogTitle>
+                        <DialogDescription>Create a new procurement order by selecting provider and adding products</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Provider</Label>
+                            <select
+                                value={selectedProvider}
+                                onChange={(e) => setSelectedProvider(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white mt-1"
+                            >
+                                <option value="">Select provider...</option>
+                                {providers.map((p: any) => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                            <div>
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
                                 <Label>Products ({procurementProducts.length})</Label>
-                                <div className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
-                                    Add products via database or extend this form
+                                <Button type="button" size="sm" onClick={handleAddProduct}>
+                                    <Plus className="h-4 w-4 mr-1" />Add Product
+                                </Button>
+                            </div>
+                            {procurementProducts.length > 0 && (
+                                <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                                    {procurementProducts.map((product, index) => (
+                                        <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <div>
+                                                <div className="font-medium">{product.name}</div>
+                                                <div className="text-sm text-gray-600">
+                                                    Qty: {product.quantity} × {formatCurrency(product.purchase_price)} = {formatCurrency(product.quantity * product.purchase_price)}
+                                                </div>
+                                            </div>
+                                            <Button size="sm" variant="ghost" onClick={() => handleRemoveProduct(index)}>
+                                                <X className="h-4 w-4 text-red-500" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <div className="pt-2 border-t font-bold text-right">
+                                        Total: {formatCurrency(procurementProducts.reduce((sum, p) => sum + (p.quantity * p.purchase_price), 0))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+                            {procurementProducts.length === 0 && (
+                                <div className="text-center py-4 text-gray-500 border-2 border-dashed rounded-lg">
+                                    No products added. Click "Add Product" to start.
+                                </div>
+                            )}
+                        </div>
 
-                            <div className="flex gap-2 pt-4">
-                                <Button variant="outline" onClick={() => setShowCreateModal(false)} className="flex-1">
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleCreateProcurement} className="flex-1">
-                                    Create Order
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
+                        <div className="flex gap-2 pt-4">
+                            <Button variant="outline" onClick={() => setShowCreateModal(false)} className="flex-1">
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreateProcurement} className="flex-1" disabled={!selectedProvider || procurementProducts.length === 0}>
+                                Create Order
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Create Provider Modal */}
-            {showProviderModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <Card className="w-full max-w-lg mx-4">
-                        <CardHeader>
-                            <CardTitle>New Provider</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <Label>Name *</Label>
-                                <Input
-                                    value={newProvider.name}
-                                    onChange={(e) => setNewProvider({ ...newProvider, name: e.target.value })}
-                                    placeholder="Provider name"
-                                />
-                            </div>
-                            <div>
-                                <Label>Email</Label>
-                                <Input
-                                    type="email"
-                                    value={newProvider.email}
-                                    onChange={(e) => setNewProvider({ ...newProvider, email: e.target.value })}
-                                    placeholder="provider@example.com"
-                                />
-                            </div>
-                            <div>
-                                <Label>Phone</Label>
-                                <Input
-                                    value={newProvider.phone}
-                                    onChange={(e) => setNewProvider({ ...newProvider, phone: e.target.value })}
-                                    placeholder="+62..."
-                                />
-                            </div>
-                            <div>
-                                <Label>Address</Label>
-                                <Input
-                                    value={newProvider.address}
-                                    onChange={(e) => setNewProvider({ ...newProvider, address: e.target.value })}
-                                    placeholder="Full address"
-                                />
-                            </div>
+            <Dialog open={showProviderModal} onOpenChange={setShowProviderModal}>
+                <DialogContent className="bg-white border border-gray-200 shadow-xl">
+                    <DialogHeader>
+                        <DialogTitle>New Provider</DialogTitle>
+                        <DialogDescription>Add a new provider/supplier to the system</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Name *</Label>
+                            <Input
+                                value={newProvider.name}
+                                onChange={(e) => setNewProvider({ ...newProvider, name: e.target.value })}
+                                placeholder="Provider name"
+                                className="bg-white border-gray-300"
+                            />
+                        </div>
+                        <div>
+                            <Label>Email</Label>
+                            <Input
+                                type="email"
+                                value={newProvider.email}
+                                onChange={(e) => setNewProvider({ ...newProvider, email: e.target.value })}
+                                placeholder="provider@example.com"
+                                className="bg-white border-gray-300"
+                            />
+                        </div>
+                        <div>
+                            <Label>Phone</Label>
+                            <Input
+                                value={newProvider.phone}
+                                onChange={(e) => setNewProvider({ ...newProvider, phone: e.target.value })}
+                                placeholder="+62..."
+                                className="bg-white border-gray-300"
+                            />
+                        </div>
+                        <div>
+                            <Label>Address</Label>
+                            <Input
+                                value={newProvider.address}
+                                onChange={(e) => setNewProvider({ ...newProvider, address: e.target.value })}
+                                placeholder="Full address"
+                                className="bg-white border-gray-300"
+                            />
+                        </div>
 
-                            <div className="flex gap-2 pt-4">
-                                <Button variant="outline" onClick={() => setShowProviderModal(false)} className="flex-1">
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleCreateProvider} className="flex-1">
-                                    Create Provider
-                                </Button>
+                        <div className="flex gap-2 pt-4">
+                            <Button variant="outline" onClick={() => setShowProviderModal(false)} className="flex-1">
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreateProvider} className="flex-1">
+                                Create Provider
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* View Procurement Modal */}
+            <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
+                <DialogContent className="bg-white border border-gray-200 shadow-xl max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Procurement Details</DialogTitle>
+                        <DialogDescription>View detailed information about this procurement order</DialogDescription>
+                    </DialogHeader>
+                    {selectedProcurement && (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600">Order ID</Label>
+                                    <p className="font-mono">{selectedProcurement.id?.slice(0, 8)}</p>
+                                </div>
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600">Provider</Label>
+                                    <p className="font-medium">{selectedProcurement.provider?.name || '-'}</p>
+                                </div>
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600">Status</Label>
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${getStatusColor(selectedProcurement.status)}`}>
+                                        {getStatusIcon(selectedProcurement.status)}
+                                        {selectedProcurement.status?.toUpperCase()}
+                                    </span>
+                                </div>
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600">Payment</Label>
+                                    <span className={`px-2 py-1 rounded text-xs ${selectedProcurement.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        {selectedProcurement.payment_status}
+                                    </span>
+                                </div>
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600">Delivery</Label>
+                                    <span className={`px-2 py-1 rounded text-xs ${selectedProcurement.delivery_status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        {selectedProcurement.delivery_status}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600">Total Price</Label>
+                                    <p className="text-xl font-bold">{formatCurrency(selectedProcurement.total_price)}</p>
+                                </div>
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600">Order Date</Label>
+                                    <p>{new Date(selectedProcurement.created_at).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            {selectedProcurement.products && selectedProcurement.products.length > 0 && (
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600 mb-2 block">Products</Label>
+                                    <div className="border rounded-lg overflow-hidden">
+                                        <table className="w-full">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="text-left p-3 text-sm font-medium">Product</th>
+                                                    <th className="text-right p-3 text-sm font-medium">Qty</th>
+                                                    <th className="text-right p-3 text-sm font-medium">Price</th>
+                                                    <th className="text-right p-3 text-sm font-medium">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {selectedProcurement.products.map((product: any, index: number) => (
+                                                    <tr key={index} className="border-t">
+                                                        <td className="p-3">{product.product_name || 'Unknown Product'}</td>
+                                                        <td className="p-3 text-right">{product.quantity}</td>
+                                                        <td className="p-3 text-right">{formatCurrency(product.purchase_price)}</td>
+                                                        <td className="p-3 text-right font-medium">{formatCurrency(product.total_price)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button onClick={() => setShowViewModal(false)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

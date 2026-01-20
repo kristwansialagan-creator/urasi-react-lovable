@@ -52,10 +52,7 @@ export default function POSPaymentPopup({ open, onClose, total, onConfirm }: POS
     const change = tendered - total
 
     const handleConfirm = () => {
-        if (tendered < total) {
-            alert('Tendered amount must be at least equal to total')
-            return
-        }
+        // Validation removed to allow partial/unpaid payments
         onConfirm(selectedMethod, tendered)
         onClose()
     }
@@ -152,8 +149,8 @@ export default function POSPaymentPopup({ open, onClose, total, onConfirm }: POS
 
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleConfirm} disabled={tendered < total}>
-                        Confirm Payment
+                    <Button onClick={handleConfirm}>
+                        {tendered >= total ? 'Confirm Payment' : tendered > 0 ? 'Confirm (Partial)' : 'Confirm (Unpaid)'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -61,30 +61,30 @@ export function BestCustomers() {
     }
 
     return (
-        <Card>
+        <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Top Customers</CardTitle>
                 <Users className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-3">
                 {customers.length === 0 ? (
                     <p className="text-sm text-[hsl(var(--muted-foreground))]">No customer data yet</p>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {customers.map((customer, index) => (
-                            <div key={customer.id} className="flex items-start justify-between">
-                                <div className="flex items-start gap-3">
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10 text-sm font-medium">
+                            <div key={customer.id} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10 text-xs font-medium">
                                         {index + 1}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium">{customer.name}</p>
+                                        <p className="text-xs font-medium">{customer.name}</p>
                                         <p className="text-xs text-[hsl(var(--muted-foreground))]">
                                             {customer.order_count} order{customer.order_count !== 1 ? 's' : ''}
                                         </p>
                                     </div>
                                 </div>
-                                <span className="text-sm font-bold">{formatCurrency(customer.total_spent)}</span>
+                                <span className="text-xs font-bold">{formatCurrency(customer.total_spent)}</span>
                             </div>
                         ))}
                     </div>

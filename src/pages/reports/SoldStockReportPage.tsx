@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input'
 import { FileText, Table as TableIcon, ShoppingBag } from 'lucide-react'
 import { useOrders } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js'
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, Filler } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, Filler)
 
 interface SoldProduct { id: string; name: string; sku: string | null; quantity: number; revenue: number; orders: number }
 

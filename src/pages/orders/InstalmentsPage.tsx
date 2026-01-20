@@ -19,13 +19,13 @@ export default function InstalmentsPage() {
 
     const fetchInstalments = async () => {
         setLoading(true)
-        const { data } = await (supabase.from('orders_instalments').select('*, order:orders(id, code, total, customer:customers(first_name, last_name))').order('date') as any)
+        const { data } = await supabase.from('orders_instalments').select('*, order:orders(id, code, total, customer:customers(first_name, last_name))').order('date')
         setInstalments(data || [])
         setLoading(false)
     }
 
     const markAsPaid = async (id: string) => {
-        await supabase.from('orders_instalments').update({ paid: true, paid_date: new Date().toISOString() } as never).eq('id', id)
+        await supabase.from('orders_instalments').update({ paid: true, paid_date: new Date().toISOString() }).eq('id', id)
         fetchInstalments()
     }
 

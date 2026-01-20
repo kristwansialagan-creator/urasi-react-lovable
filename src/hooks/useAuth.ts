@@ -9,14 +9,34 @@ export function useAuth() {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+            if (error) {
+                console.error('Initial session fetch error:', error)
+                if (error.message.includes('Refresh Token Not Found')) {
+                    supabase.auth.signOut()
+                    setSession(null)
+                    setUser(null)
+                    setLoading(false)
+                    return
+                }
+            }
             setSession(session)
             setUser(session?.user ?? null)
+            setLoading(false)
+        }).catch(err => {
+            console.error('Unexpected session fetch error:', err)
             setLoading(false)
         })
 
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if ((_event as string) === 'TOKEN_REFRESH_FAILED') {
+                supabase.auth.signOut()
+                setSession(null)
+                setUser(null)
+                setLoading(false)
+                return
+            }
             setSession(session)
             setUser(session?.user ?? null)
             setLoading(false)

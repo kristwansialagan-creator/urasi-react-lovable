@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSettings } from '@/hooks'
 import {
     LayoutDashboard,
     ShoppingCart,
@@ -17,6 +18,7 @@ import {
     Calculator,
     ChevronDown,
     LogOut,
+    Calendar,
 } from 'lucide-react'
 import { useState } from 'react'
 import logoFull from '@/assets/logo-full.png'
@@ -95,6 +97,7 @@ function NavItem({ to, icon, label, children }: NavItemProps) {
 
 export function Sidebar() {
     const { profile, signOut } = useAuth()
+    const { settings } = useSettings()
 
     const navigation = [
         { to: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" />, label: 'Dashboard' },
@@ -116,7 +119,7 @@ export function Sidebar() {
             label: 'Orders',
             children: [
                 { to: '/orders', label: 'All Orders' },
-                { to: '/orders/instalments', label: 'Instalments' },
+                { to: '/installments', label: 'Installments' },
             ],
         },
         {
@@ -174,9 +177,9 @@ export function Sidebar() {
             <div className="flex flex-col h-full">
                 {/* Logo */}
                 <div className="flex items-center justify-center px-4 py-5 border-b border-[hsl(var(--sidebar-accent))]">
-                    <img 
-                        src={logoFull} 
-                        alt="URASI" 
+                    <img
+                        src={settings?.logo_url || logoFull}
+                        alt={settings?.store_name || "URASI"}
                         className="h-10 w-auto brightness-0 invert"
                     />
                 </div>
