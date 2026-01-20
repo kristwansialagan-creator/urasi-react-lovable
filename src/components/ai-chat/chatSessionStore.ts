@@ -6,7 +6,7 @@ const LOCAL_PREFIX = 'urasi_local_'
 
 interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'scraper';
+  role: 'user' | 'assistant' | 'scraper' | 'product';
   content: string;
   createdAt: number;
   attachments?: Array<{ name: string; size: number; type: string }>;
@@ -14,6 +14,9 @@ interface ChatMessage {
     url?: string;
     title?: string;
     sourceUrl?: string;
+    extractedProduct?: Record<string, any>;
+    fieldsExtracted?: number;
+    totalFields?: number;
   };
 }
 
