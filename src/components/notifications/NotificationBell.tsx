@@ -39,9 +39,9 @@ export default function NotificationBell() {
                                 <div className="flex items-start gap-2">
                                     <div className="flex-1">
                                         <p className="font-medium text-sm">{notification.title}</p>
-                                        <p className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-2">{notification.message}</p>
+                                        <p className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-2">{notification.description || ''}</p>
                                         <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                                            {new Date(notification.created_at).toLocaleDateString()}
+                                            {notification.created_at ? new Date(notification.created_at).toLocaleDateString() : ''}
                                         </p>
                                     </div>
                                     {!notification.read && (

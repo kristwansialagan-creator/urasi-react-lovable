@@ -47,16 +47,18 @@ export default function UsersPage() {
 
     const filteredUsers = users.filter(u =>
         u.username?.toLowerCase().includes(search.toLowerCase()) ||
-        u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+        (u.first_name?.toLowerCase().includes(search.toLowerCase())) ||
+        (u.second_name?.toLowerCase().includes(search.toLowerCase())) ||
         u.role?.toLowerCase().includes(search.toLowerCase())
     )
 
     const handleUpdateUser = async () => {
         if (!selectedUser) return
 
-        // Update simple role column (legacy/simple auth)
+        // Update user profile
         await updateUser(selectedUser.id, {
-            full_name: selectedUser.full_name,
+            first_name: selectedUser.first_name,
+            second_name: selectedUser.second_name,
             role: selectedUser.role
         })
 
@@ -128,7 +130,7 @@ export default function UsersPage() {
                                                     <AvatarFallback>{user.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="font-medium">{user.full_name || user.username}</p>
+                                                    <p className="font-medium">{user.first_name || user.username} {user.second_name || ''}</p>
                                                     <p className="text-xs text-[hsl(var(--muted-foreground))]">{user.username}</p>
                                                 </div>
                                             </div>
@@ -148,7 +150,7 @@ export default function UsersPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {new Date(user.created_at).toLocaleDateString()}
+                                            {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Button
@@ -179,14 +181,23 @@ export default function UsersPage() {
                         </DialogDescription>
                     </DialogHeader>
                     {selectedUser && (
-                        <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                                <Label>Full Name</Label>
-                                <Input
-                                    value={selectedUser.full_name || ''}
-                                    onChange={(e) => setSelectedUser({ ...selectedUser, full_name: e.target.value })}
-                                />
-                            </div>
+                            <div className="space-y-4 py-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>First Name</Label>
+                                        <Input
+                                            value={selectedUser.first_name || ''}
+                                            onChange={(e) => setSelectedUser({ ...selectedUser, first_name: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Second Name</Label>
+                                        <Input
+                                            value={selectedUser.second_name || ''}
+                                            onChange={(e) => setSelectedUser({ ...selectedUser, second_name: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
                             <div className="space-y-2">
                                 <Label>Primary Role (System)</Label>
                                 <Select
