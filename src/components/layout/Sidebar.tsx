@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/hooks'
+import { useLanguage } from '@/contexts/LanguageContext'
 import {
     LayoutDashboard,
     ShoppingCart,
@@ -98,126 +99,126 @@ function NavItem({ to, icon, label, children, permission }: NavItemProps) {
 export function Sidebar() {
     const { profile, signOut, isAdmin, hasPermission, can } = useAuth()
     const { settings } = useSettings()
+    const { t } = useLanguage()
 
-    // Define navigation with permissions
-    const fullNavigation: {
-        to: string
-        icon: React.ReactNode
-        label: string
-        permission?: string
-        children?: { to: string; label: string; permission?: string }[]
-    }[] = [
-        { 
-            to: '/dashboard', 
-            icon: <LayoutDashboard className="h-5 w-5" />, 
-            label: 'Dashboard',
-            // no permission = accessible to all
-        },
-        { 
-            to: '/pos', 
-            icon: <ShoppingCart className="h-5 w-5" />, 
-            label: 'POS',
-            permission: 'pos.access'
-        },
-        {
-            to: '/products',
-            icon: <Package className="h-5 w-5" />,
-            label: 'Produk',
-            permission: 'products.read',
-            children: [
-                { to: '/products', label: 'Semua Produk', permission: 'products.read' },
-                { to: '/products/create', label: 'Tambah Produk', permission: 'products.create' },
-                { to: '/products/categories', label: 'Kategori', permission: 'categories.read' },
-                { to: '/products/stock-adjustment', label: 'Penyesuaian Stok', permission: 'products.update' },
-            ],
-        },
-        {
-            to: '/orders',
-            icon: <Receipt className="h-5 w-5" />,
-            label: 'Pesanan',
-            permission: 'orders.read',
-            children: [
-                { to: '/orders', label: 'Semua Pesanan', permission: 'orders.read' },
-                { to: '/installments', label: 'Cicilan', permission: 'orders.read' },
-            ],
-        },
-        {
-            to: '/customers',
-            icon: <Users className="h-5 w-5" />,
-            label: 'Pelanggan',
-            permission: 'customers.read',
-            children: [
-                { to: '/customers', label: 'Semua Pelanggan', permission: 'customers.read' },
-                { to: '/customers/groups', label: 'Grup Pelanggan', permission: 'customers.read' },
-            ],
-        },
-        {
-            to: '/procurements',
-            icon: <Truck className="h-5 w-5" />,
-            label: 'Pengadaan',
-            permission: 'procurements.read',
-            children: [
-                { to: '/procurements', label: 'Semua Pengadaan', permission: 'procurements.read' },
-                { to: '/procurements/providers', label: 'Pemasok', permission: 'procurements.read' },
-            ],
-        },
-        {
-            to: '/registers',
-            icon: <Calculator className="h-5 w-5" />,
-            label: 'Kasir',
-            permission: 'registers.read',
-        },
-        {
-            to: '/transactions',
-            icon: <Wallet className="h-5 w-5" />,
-            label: 'Transaksi',
-            permission: 'transactions.read',
-        },
-        {
-            to: '/reports',
-            icon: <BarChart3 className="h-5 w-5" />,
-            label: 'Laporan',
-            permission: 'reports.read',
-            children: [
-                { to: '/reports/sales', label: 'Penjualan', permission: 'reports.read' },
-                { to: '/reports/inventory', label: 'Inventori', permission: 'reports.read' },
-                { to: '/reports/customers', label: 'Pelanggan', permission: 'reports.read' },
-                { to: '/reports/cashflow', label: 'Arus Kas', permission: 'reports.read' },
-                { to: '/reports/profit', label: 'Laba', permission: 'reports.read' },
-                { to: '/reports/payment-types', label: 'Tipe Pembayaran', permission: 'reports.read' },
-                { to: '/reports/low-stock', label: 'Stok Rendah', permission: 'reports.read' },
-                { to: '/reports/best-products', label: 'Produk Terlaris', permission: 'reports.read' },
-                { to: '/reports/yearly', label: 'Tahunan', permission: 'reports.read' },
-            ],
-        },
-        { 
-            to: '/coupons', 
-            icon: <Tag className="h-5 w-5" />, 
-            label: 'Kupon',
-            permission: 'coupons.read'
-        },
-        { 
-            to: '/rewards', 
-            icon: <Gift className="h-5 w-5" />, 
-            label: 'Reward',
-            permission: 'rewards.read'
-        },
-        { 
-            to: '/media', 
-            icon: <FileText className="h-5 w-5" />, 
-            label: 'Media',
-            permission: 'media.read'
-        },
-        { 
-            to: '/settings', 
-            icon: <Settings className="h-5 w-5" />, 
-            label: 'Pengaturan',
-            permission: 'admin' // admin only
-        },
-    ]
-
-    // Filter navigation based on permissions
+    // Filter navigation based on permissions - memoized with language dependency
     const navigation = useMemo(() => {
+        // Define navigation with permissions inside useMemo so it updates when language changes
+        const fullNavigation: {
+            to: string
+            icon: React.ReactNode
+            label: string
+            permission?: string
+            children?: { to: string; label: string; permission?: string }[]
+        }[] = [
+            { 
+                to: '/dashboard', 
+                icon: <LayoutDashboard className="h-5 w-5" />, 
+                label: t('nav.dashboard'),
+            },
+            { 
+                to: '/pos', 
+                icon: <ShoppingCart className="h-5 w-5" />, 
+                label: t('nav.pos'),
+                permission: 'pos.access'
+            },
+            {
+                to: '/products',
+                icon: <Package className="h-5 w-5" />,
+                label: t('nav.products'),
+                permission: 'products.read',
+                children: [
+                    { to: '/products', label: t('nav.allProducts'), permission: 'products.read' },
+                    { to: '/products/create', label: t('nav.addProduct'), permission: 'products.create' },
+                    { to: '/products/categories', label: t('nav.categories'), permission: 'categories.read' },
+                    { to: '/products/stock-adjustment', label: t('nav.stockAdjustment'), permission: 'products.update' },
+                ],
+            },
+            {
+                to: '/orders',
+                icon: <Receipt className="h-5 w-5" />,
+                label: t('nav.orders'),
+                permission: 'orders.read',
+                children: [
+                    { to: '/orders', label: t('nav.allOrders'), permission: 'orders.read' },
+                    { to: '/installments', label: t('nav.instalments'), permission: 'orders.read' },
+                ],
+            },
+            {
+                to: '/customers',
+                icon: <Users className="h-5 w-5" />,
+                label: t('nav.customers'),
+                permission: 'customers.read',
+                children: [
+                    { to: '/customers', label: t('nav.allCustomers'), permission: 'customers.read' },
+                    { to: '/customers/groups', label: t('nav.customerGroups'), permission: 'customers.read' },
+                ],
+            },
+            {
+                to: '/procurements',
+                icon: <Truck className="h-5 w-5" />,
+                label: t('nav.procurements'),
+                permission: 'procurements.read',
+                children: [
+                    { to: '/procurements', label: t('nav.allProcurements'), permission: 'procurements.read' },
+                    { to: '/procurements/providers', label: t('nav.providers'), permission: 'procurements.read' },
+                ],
+            },
+            {
+                to: '/registers',
+                icon: <Calculator className="h-5 w-5" />,
+                label: t('nav.registers'),
+                permission: 'registers.read',
+            },
+            {
+                to: '/transactions',
+                icon: <Wallet className="h-5 w-5" />,
+                label: t('nav.transactions'),
+                permission: 'transactions.read',
+            },
+            {
+                to: '/reports',
+                icon: <BarChart3 className="h-5 w-5" />,
+                label: t('nav.reports'),
+                permission: 'reports.read',
+                children: [
+                    { to: '/reports/sales', label: t('nav.sales'), permission: 'reports.read' },
+                    { to: '/reports/inventory', label: t('nav.inventory'), permission: 'reports.read' },
+                    { to: '/reports/customers', label: t('nav.customers'), permission: 'reports.read' },
+                    { to: '/reports/cashflow', label: t('nav.cashFlow'), permission: 'reports.read' },
+                    { to: '/reports/profit', label: t('nav.profit'), permission: 'reports.read' },
+                    { to: '/reports/payment-types', label: t('nav.paymentTypes'), permission: 'reports.read' },
+                    { to: '/reports/low-stock', label: t('nav.lowStock'), permission: 'reports.read' },
+                    { to: '/reports/best-products', label: t('nav.bestProducts'), permission: 'reports.read' },
+                    { to: '/reports/yearly', label: t('nav.yearly'), permission: 'reports.read' },
+                ],
+            },
+            { 
+                to: '/coupons', 
+                icon: <Tag className="h-5 w-5" />, 
+                label: t('nav.coupons'),
+                permission: 'coupons.read'
+            },
+            { 
+                to: '/rewards', 
+                icon: <Gift className="h-5 w-5" />, 
+                label: t('nav.rewards'),
+                permission: 'rewards.read'
+            },
+            { 
+                to: '/media', 
+                icon: <FileText className="h-5 w-5" />, 
+                label: t('nav.mediaLibrary'),
+                permission: 'media.read'
+            },
+            { 
+                to: '/settings', 
+                icon: <Settings className="h-5 w-5" />, 
+                label: t('nav.settings'),
+                permission: 'admin'
+            },
+        ]
+
         return fullNavigation.filter(item => {
             // If no permission required, show to everyone
             if (!item.permission) return true
@@ -242,7 +243,7 @@ export function Sidebar() {
             }
             return item
         })
-    }, [isAdmin, hasPermission])
+    }, [isAdmin, hasPermission, t])
 
     return (
         <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-[hsl(var(--sidebar-background))] border-r border-[hsl(var(--sidebar-accent))]">
@@ -283,7 +284,7 @@ export function Sidebar() {
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10 transition-colors"
                     >
                         <LogOut className="h-4 w-4" />
-                        Keluar
+                        {t('auth.signOut')}
                     </button>
                 </div>
             </div>

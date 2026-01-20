@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Users } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface TopCustomer {
     id: string
@@ -12,6 +13,7 @@ interface TopCustomer {
 }
 
 export function BestCustomers() {
+    const { t } = useLanguage()
     const [customers, setCustomers] = useState<TopCustomer[]>([])
 
     useEffect(() => {
@@ -63,12 +65,12 @@ export function BestCustomers() {
     return (
         <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Top Customers</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('dashboard.topCustomers')}</CardTitle>
                 <Users className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             </CardHeader>
             <CardContent className="pb-3">
                 {customers.length === 0 ? (
-                    <p className="text-sm text-[hsl(var(--muted-foreground))]">No customer data yet</p>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('dashboard.noCustomerData')}</p>
                 ) : (
                     <div className="space-y-2">
                         {customers.map((customer, index) => (
@@ -80,7 +82,7 @@ export function BestCustomers() {
                                     <div>
                                         <p className="text-xs font-medium">{customer.name}</p>
                                         <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                                            {customer.order_count} order{customer.order_count !== 1 ? 's' : ''}
+                                            {customer.order_count} {t('orders.items').toLowerCase()}
                                         </p>
                                     </div>
                                 </div>

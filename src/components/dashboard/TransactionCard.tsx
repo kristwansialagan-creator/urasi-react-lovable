@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function TransactionCard() {
+    const { t } = useLanguage()
     const [data, setData] = useState({
         today: 0,
         yesterday: 0,
@@ -86,7 +88,7 @@ export function TransactionCard() {
     return (
         <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Today's Transactions</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('dashboard.todayTransactions')}</CardTitle>
                 <DollarSign className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             </CardHeader>
             <CardContent className="pb-3">
@@ -100,10 +102,10 @@ export function TransactionCard() {
                     <span className={data.percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}>
                         {Math.abs(data.percentageChange).toFixed(1)}%
                     </span>
-                    <span className="ml-1">from yesterday</span>
+                    <span className="ml-1">{t('dashboard.fromYesterday')}</span>
                 </div>
                 <div className="text-sm font-medium text-[hsl(var(--muted-foreground))] mt-2">
-                    {data.todayOrders} Orders
+                    {data.todayOrders} {t('dashboard.totalOrders')}
                 </div>
             </CardContent>
         </Card>

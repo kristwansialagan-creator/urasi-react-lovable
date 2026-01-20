@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { BarChart3 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function OrdersChart() {
+    const { t, language } = useLanguage()
     const [data, setData] = useState<{ date: string; total: number; count: number }[]>([])
 
     useEffect(() => {
         fetchData()
-    }, [])
+    }, [language])
 
     const fetchData = async () => {
         try {
@@ -68,7 +70,7 @@ export function OrdersChart() {
             })
 
             const chartData = Object.entries(groupedData).map(([date, data]) => ({
-                date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                date: new Date(date).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric' }),
                 total: data.total,
                 count: data.count
             }))
@@ -84,7 +86,7 @@ export function OrdersChart() {
     return (
         <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sales Last 7 Days</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('dashboard.salesLast7Days')}</CardTitle>
                 <BarChart3 className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             </CardHeader>
             <CardContent className="pb-3">
@@ -101,7 +103,7 @@ export function OrdersChart() {
                                     style={{ width: `${(item.total / maxValue) * 100}%` }}
                                 />
                             </div>
-                            <p className="text-xs text-[hsl(var(--muted-foreground))]">{item.count} orders</p>
+                            <p className="text-xs text-[hsl(var(--muted-foreground))]">{item.count} {t('orders.items').toLowerCase()}</p>
                         </div>
                     ))}
                 </div>
