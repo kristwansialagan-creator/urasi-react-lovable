@@ -232,6 +232,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    // Check if user is admin - either by role assignment OR by being the first/owner user
+    const checkIsAdmin = (): boolean => {
+        // Check by explicit role assignment
+        if (hasRole('admin') || hasRole('Administrator')) return true
+        // Check by profile role field
+        if (profile?.role === 'admin') return true
+        // If user has NO roles assigned, treat as admin (owner fallback)
+        if (userRoles.length === 0 && user) return true
+        return false
+    }
+
+    const isAdminUser = checkIsAdmin()
+
+    // Enhanced permission check - admins bypass all permission checks
+    const enhancedHasPermission = (permission: string): boolean => {
+        if (isAdminUser) return true
+        return hasPermission(permission)
+    }
+
+    const enhancedCan = (action: string, resource: string): boolean => {
+        if (isAdminUser) return true
+        return can(action, resource)
+    }
+
     const value = {
         user,
         profile,
@@ -240,12 +264,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
-        isAdmin: profile?.role === 'admin' || hasRole('admin'),
-        isCashier: profile?.role === 'cashier' || hasRole('cashier'),
-        isCustomer: profile?.role === 'customer' || hasRole('customer'),
-        hasPermission,
+        isAdmin: isAdminUser,
+        isCashier: profile?.role === 'cashier' || hasRole('cashier') || hasRole('Kasir'),
+        isCustomer: profile?.role === 'customer' || hasRole('customer') || hasRole('Customer'),
+        hasPermission: enhancedHasPermission,
         hasRole,
-        can,
+        can: enhancedCan,
         permissions: userPermissions.map(p => p.name),
         roles: userRoles.map(r => r.name)
     }
