@@ -153,8 +153,14 @@ export function useTransactions() {
 
     const executeTransaction = useCallback(async (transactionId: string, value?: number) => {
         try {
-            const transaction = transactions.find(t => t.id === transactionId)
-            if (!transaction) throw new Error('Transaction not found')
+            // Fetch transaction directly from DB to avoid stale state issues
+            const { data: transaction, error: fetchErr } = await supabase
+                .from('transactions')
+                .select('*')
+                .eq('id', transactionId)
+                .single()
+
+            if (fetchErr || !transaction) throw new Error('Transaction not found')
 
             const { error: err } = await supabase
                 .from('transactions_history')
@@ -174,7 +180,7 @@ export function useTransactions() {
             setError(err.message)
             return false
         }
-    }, [transactions, fetchHistory])
+    }, [fetchHistory])
 
     const createAccount = useCallback(async (data: Partial<TransactionAccount>) => {
         try {
