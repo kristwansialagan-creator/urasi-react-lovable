@@ -28,22 +28,24 @@ export function useMedia() {
             if (err) throw err
 
             // Generate URL from slug for each media item
-            // Use the same URL construction pattern as POSPage.tsx
+            // Storage base URL
             const STORAGE_BASE = 'https://higfoctduijxbszgqhuc.supabase.co/storage/v1/object/public'
             
             const mediaWithUrls = (data || []).map((item: any) => {
                 let url: string | null = null
                 if (item.slug) {
-                    // Check if slug already contains bucket name
+                    // Check if slug starts with bucket name (legacy format)
                     const knownBuckets = ['product-images', 'media', 'uploads']
                     const parts = item.slug.split('/')
                     const firstPart = parts[0]
                     
                     if (knownBuckets.includes(firstPart)) {
-                        // Slug format: "bucket-name/path/file.jpg" - use as-is
+                        // Slug already contains bucket name - use directly
+                        // e.g., "product-images/uploads/file.jpg" → use as-is
                         url = `${STORAGE_BASE}/${item.slug}`
                     } else {
-                        // Slug is just the path, prepend bucket
+                        // Slug is just the file path, prepend default bucket
+                        // e.g., "uploads/file.jpg" → "product-images/uploads/file.jpg"
                         url = `${STORAGE_BASE}/product-images/${item.slug}`
                     }
                 }
@@ -75,8 +77,10 @@ export function useMedia() {
 
             if (uploadErr) throw uploadErr
 
-            // Save path as "bucket-name/path" format for consistency
-            const slug = `${bucketName}/${path}`
+            // Save path WITHOUT bucket name (to match POSPage pattern)
+            // POSPage builds URL as: product-images/${slug}
+            // So slug should be just the path: "uploads/filename.jpg"
+            const slug = path
 
             const { error: dbErr } = await supabase
                 .from('medias')
