@@ -11,6 +11,7 @@ import { productLookupService } from '@/services/productLookup'
 import { useToast } from '@/hooks/use-toast'
 import { useProducts } from '@/hooks'
 import { useCategories } from '@/hooks'
+import { useProductExtraction } from '@/contexts/ProductExtractionContext'
 import { supabase } from '@/lib/supabase'
 import { Select, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -21,6 +22,7 @@ export default function ProductCreatePage() {
     const { toast } = useToast()
     const { createProduct, updateProduct } = useProducts()
     const { categories, createCategory } = useCategories()
+    const { extractedData, clearExtractedData, metadata } = useProductExtraction()
     const [loading, setLoading] = useState(false)
     const [lookupLoading, setLookupLoading] = useState(false)
     const [categorySearch, setCategorySearch] = useState('')
@@ -48,6 +50,27 @@ export default function ProductCreatePage() {
     const [newCategoryName, setNewCategoryName] = useState('')
     const [newCategoryParent, setNewCategoryParent] = useState('none')
     const [isCreatingCategory, setIsCreatingCategory] = useState(false)
+
+    // Auto-fill from extracted product data (from AI Chat)
+    useEffect(() => {
+        if (extractedData && !isEditMode) {
+            if (extractedData.name) setName(extractedData.name)
+            if (extractedData.sku) setSku(extractedData.sku)
+            if (extractedData.barcode) setBarcode(extractedData.barcode)
+            if (extractedData.description) setDescription(extractedData.description)
+            if (extractedData.selling_price) setSellingPrice(extractedData.selling_price.toString())
+            if (extractedData.purchase_price) setPurchasePrice(extractedData.purchase_price.toString())
+            if (extractedData.stock_quantity) setStock(extractedData.stock_quantity.toString())
+            
+            toast({
+                title: "Data Auto-Filled",
+                description: `Product data extracted from ${metadata?.sourceUrl || 'URL'}`,
+            })
+            
+            // Clear the context after use
+            clearExtractedData()
+        }
+    }, [extractedData, isEditMode, metadata, clearExtractedData, toast])
 
     // Load product data if in edit mode
     useEffect(() => {

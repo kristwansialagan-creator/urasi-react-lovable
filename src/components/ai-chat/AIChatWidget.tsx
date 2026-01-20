@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bot, Globe, Loader2, MessageSquare, Paperclip, Send, Terminal, Trash2, User, X, Plus, History, LogIn, LogOut, ExternalLink } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bot, Globe, Loader2, MessageSquare, Package, Paperclip, Send, Terminal, Trash2, User, X, Plus, History, LogIn, LogOut, ExternalLink, Copy, Check } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSanitize from 'rehype-sanitize'
@@ -22,6 +23,7 @@ import {
 } from './chatSessionStore'
 import { chatStream, deletePath, listModels, uploadFiles, signOut } from './puterClient'
 import { firecrawlApi, isValidUrl } from '@/lib/api/firecrawl'
+import { useProductExtraction, type ExtractedProductData } from '@/contexts/ProductExtractionContext'
 
 // Known Vision Models
 const VISION_MODELS = [
@@ -37,7 +39,7 @@ const VISION_MODELS = [
 ]
 
 type ConnectionStatus = 'loading' | 'ready' | 'error'
-type ChatMode = 'ai' | 'scraper'
+type ChatMode = 'ai' | 'scraper' | 'product'
 
 type ChatAttachment = {
   name: string
@@ -47,7 +49,7 @@ type ChatAttachment = {
 
 type ChatMessage = {
   id: string
-  role: 'user' | 'assistant' | 'scraper'
+  role: 'user' | 'assistant' | 'scraper' | 'product'
   content: string
   createdAt: number
   attachments?: ChatAttachment[]
@@ -55,6 +57,9 @@ type ChatMessage = {
     url?: string
     title?: string
     sourceUrl?: string
+    extractedProduct?: ExtractedProductData
+    fieldsExtracted?: number
+    totalFields?: number
   }
 }
 
@@ -104,11 +109,15 @@ function classNames(...values: Array<string | false | null | undefined>) {
 }
 
 export default function AIChatWidget() {
+  const navigate = useNavigate()
+  const { setExtractedData, clearExtractedData } = useProductExtraction()
+
   // UI State
   const [isOpen, setIsOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [chatMode, setChatMode] = useState<ChatMode>('ai')
+  const [copiedProductId, setCopiedProductId] = useState<string | null>(null)
 
   // Data State
   const [user, setUser] = useState<any>(null)
@@ -399,11 +408,143 @@ export default function AIChatWidget() {
     }
   }
 
+  // Handle Product Lookup Mode
+  async function handleProductLookupSend() {
+    const trimmed = prompt.trim()
+    if (!trimmed) return
+    if (isSending) return
+
+    // Must be a URL for product lookup
+    if (!isValidUrl(trimmed)) {
+      setMessages(prev => [...prev, {
+        id: uid(),
+        role: 'product' as const,
+        content: '**Error:** Please enter a valid product URL (e.g., https://tokopedia.com/product/...)',
+        createdAt: Date.now()
+      }])
+      return
+    }
+
+    setIsSending(true)
+    setShowWelcome(false)
+
+    // Create user message
+    const userMessage: ChatMessage = {
+      id: uid(),
+      role: 'user',
+      content: trimmed,
+      createdAt: Date.now(),
+    }
+
+    const productMessageId = uid()
+    const productMessage: ChatMessage = {
+      id: productMessageId,
+      role: 'product',
+      content: '🔍 Extracting product data...',
+      createdAt: Date.now(),
+      metadata: { url: trimmed }
+    }
+
+    const newMessages = [...messages, userMessage, productMessage]
+    setMessages(newMessages)
+    setPrompt('')
+
+    try {
+      const response = await firecrawlApi.extractProduct(trimmed)
+      
+      if (response.success && response.data) {
+        const { extracted, metadata: extractionMeta } = response.data
+        
+        // Build result content as markdown table
+        let resultContent = '## 📦 Product Data Extracted\n\n'
+        resultContent += `| Field | Value |\n|-------|-------|\n`
+        
+        const fieldLabels: Record<string, string> = {
+          name: 'Product Name',
+          sku: 'SKU',
+          barcode: 'Barcode',
+          description: 'Description',
+          selling_price: 'Selling Price',
+          purchase_price: 'Purchase Price',
+          wholesale_price: 'Wholesale Price',
+          stock_quantity: 'Stock Quantity',
+          category: 'Category',
+          brand: 'Brand',
+          weight: 'Weight',
+          dimensions: 'Dimensions',
+          image_url: 'Image URL'
+        }
+        
+        Object.entries(fieldLabels).forEach(([key, label]) => {
+          const value = extracted[key as keyof typeof extracted]
+          const displayValue = value !== null && value !== undefined && value !== '' 
+            ? String(value).slice(0, 50) + (String(value).length > 50 ? '...' : '')
+            : '—'
+          resultContent += `| ${label} | ${displayValue} |\n`
+        })
+        
+        resultContent += `\n---\n**${extractionMeta.fieldsExtracted} of ${extractionMeta.totalFields} fields extracted**`
+        resultContent += `\n\n*Source: [${new URL(trimmed).hostname}](${trimmed})*`
+        
+        // Update message with result
+        setMessages(prev => prev.map(m => 
+          m.id === productMessageId 
+            ? { 
+                ...m, 
+                content: resultContent, 
+                metadata: { 
+                  ...m.metadata,
+                  extractedProduct: extracted,
+                  fieldsExtracted: extractionMeta.fieldsExtracted,
+                  totalFields: extractionMeta.totalFields,
+                  sourceUrl: trimmed
+                } 
+              } 
+            : m
+        ))
+        
+      } else {
+        setMessages(prev => prev.map(m => 
+          m.id === productMessageId 
+            ? { ...m, content: `**Error:** ${response.error || 'Failed to extract product data.'}` } 
+            : m
+        ))
+      }
+    } catch (error: any) {
+      console.error('Product lookup error:', error)
+      setMessages(prev => prev.map(m => 
+        m.id === productMessageId 
+          ? { ...m, content: `**Error:** ${error?.message || 'An unexpected error occurred.'}` } 
+          : m
+      ))
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  // Handle "Use This Data" button click
+  function handleUseProductData(extracted: ExtractedProductData) {
+    setExtractedData(extracted, {
+      sourceUrl: '',
+      extractedAt: new Date().toISOString(),
+      fieldsExtracted: Object.keys(extracted).filter(k => extracted[k as keyof ExtractedProductData]).length,
+      totalFields: 14,
+      filledFields: Object.keys(extracted).filter(k => extracted[k as keyof ExtractedProductData])
+    })
+    navigate('/products/create')
+    setIsOpen(false)
+  }
+
   // Handle AI Chat Mode (Original)
   async function onSend() {
     // Route to scraper if in scraper mode
     if (chatMode === 'scraper') {
       return handleScraperSend()
+    }
+    
+    // Route to product lookup if in product mode
+    if (chatMode === 'product') {
+      return handleProductLookupSend()
     }
 
     const trimmed = prompt.trim()
@@ -616,7 +757,7 @@ export default function AIChatWidget() {
             
             <div className="flex flex-col ml-0.5">
               <span className="font-semibold text-[hsl(var(--primary))] tracking-tight text-xs">
-                {chatMode === 'ai' ? 'AI Assistant' : 'Web Scraper'}
+                {chatMode === 'ai' ? 'AI Assistant' : chatMode === 'product' ? 'Product Lookup' : 'Web Scraper'}
               </span>
               <div className="flex items-center gap-1">
                 <span className={classNames("h-1 w-1 rounded-full", status === 'ready' ? "bg-green-500" : "bg-gray-400")}></span>
@@ -640,11 +781,15 @@ export default function AIChatWidget() {
             <TabsList className="w-full h-7 bg-[hsl(var(--muted))]">
               <TabsTrigger value="ai" className="flex-1 h-5 text-[10px] data-[state=active]:bg-[hsl(var(--card))]">
                 <Bot className="h-3 w-3 mr-1" />
-                AI Chat
+                AI
+              </TabsTrigger>
+              <TabsTrigger value="product" className="flex-1 h-5 text-[10px] data-[state=active]:bg-[hsl(var(--card))]">
+                <Package className="h-3 w-3 mr-1" />
+                Product
               </TabsTrigger>
               <TabsTrigger value="scraper" className="flex-1 h-5 text-[10px] data-[state=active]:bg-[hsl(var(--card))]">
                 <Globe className="h-3 w-3 mr-1" />
-                Web Scraper
+                Scraper
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -659,18 +804,22 @@ export default function AIChatWidget() {
                 <div className="h-10 w-10 bg-[hsl(var(--muted))] rounded-xl flex items-center justify-center">
                   {chatMode === 'ai' ? (
                     <Terminal className="h-5 w-5 text-[hsl(var(--primary))]" />
+                  ) : chatMode === 'product' ? (
+                    <Package className="h-5 w-5 text-[hsl(var(--primary))]" />
                   ) : (
                     <Globe className="h-5 w-5 text-[hsl(var(--primary))]" />
                   )}
                 </div>
                 <div className="space-y-0.5">
                   <h3 className="text-sm font-medium text-[hsl(var(--foreground))]">
-                    {chatMode === 'ai' ? 'AI Assistant' : 'Web Scraper'}
+                    {chatMode === 'ai' ? 'AI Assistant' : chatMode === 'product' ? 'Product Lookup' : 'Web Scraper'}
                   </h3>
                   <p className="text-xs text-gray-500">
                     {chatMode === 'ai' 
                       ? (user ? `Logged in as ${user.username}` : `Temporary Session`)
-                      : 'Enter URL to scrape or text to search'
+                      : chatMode === 'product'
+                        ? 'Paste product URL to extract data'
+                        : 'Enter URL to scrape or text to search'
                     }
                   </p>
                 </div>
@@ -686,6 +835,7 @@ export default function AIChatWidget() {
             {!isLoadingHistory && messages.map((m) => {
               const isUser = m.role === 'user'
               const isScraper = m.role === 'scraper'
+              const isProduct = m.role === 'product'
               return (
                 <div key={m.id} className={classNames(
                   "group relative flex gap-2 w-full",
@@ -699,12 +849,16 @@ export default function AIChatWidget() {
                         ? "bg-[hsl(var(--muted))] border-[hsl(var(--border))]"
                         : isScraper
                           ? "bg-blue-500 border-transparent"
-                          : "bg-[hsl(var(--primary))] border-transparent"
+                          : isProduct
+                            ? "bg-green-500 border-transparent"
+                            : "bg-[hsl(var(--primary))] border-transparent"
                     )}>
                       {isUser ? (
                         <User className="h-3 w-3 text-[hsl(var(--muted-foreground))]" />
                       ) : isScraper ? (
                         <Globe className="h-3 w-3 text-white" />
+                      ) : isProduct ? (
+                        <Package className="h-3 w-3 text-white" />
                       ) : (
                         <Bot className="h-3 w-3 text-[hsl(var(--primary-foreground))]" />
                       )}
@@ -719,12 +873,12 @@ export default function AIChatWidget() {
 
                     <div className={classNames("flex items-center gap-1.5", isUser ? "flex-row-reverse" : "flex-row")}>
                       <span className="text-xs font-semibold text-[hsl(var(--foreground))]">
-                        {isUser ? 'You' : isScraper ? 'Scraper' : 'AI'}
+                        {isUser ? 'You' : isScraper ? 'Scraper' : isProduct ? 'Product' : 'AI'}
                       </span>
                       <span className="text-[9px] text-[hsl(var(--muted-foreground))]">
                         {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      {isScraper && m.metadata?.sourceUrl && (
+                      {(isScraper || isProduct) && m.metadata?.sourceUrl && (
                         <a 
                           href={m.metadata.sourceUrl} 
                           target="_blank" 
@@ -754,11 +908,26 @@ export default function AIChatWidget() {
                       "prose prose-xs max-w-none text-[hsl(var(--foreground))] break-words prose-p:leading-5 prose-p:text-xs prose-pre:bg-[hsl(var(--muted))] prose-pre:border prose-pre:border-[hsl(var(--border))] prose-pre:text-[hsl(var(--foreground))] prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:text-[10px] prose-code:bg-[hsl(var(--muted))] prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[10px] prose-code:before:content-none prose-code:after:content-none min-w-0 w-full overflow-hidden",
                       isUser ? "text-right items-end" : "text-left items-start"
                     )}>
-                      {(m.role === 'assistant' || m.role === 'scraper') ? (
+                      {(m.role === 'assistant' || m.role === 'scraper' || m.role === 'product') ? (
                         <div className="text-left text-xs">
                           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
                             {m.content || (isSending ? 'Thinking...' : '')}
                           </ReactMarkdown>
+                          
+                          {/* Use This Data Button for Product Lookup */}
+                          {isProduct && m.metadata?.extractedProduct && (
+                            <div className="mt-2 flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="h-6 text-[10px] bg-green-600 hover:bg-green-700"
+                                onClick={() => handleUseProductData(m.metadata!.extractedProduct!)}
+                              >
+                                <Copy className="h-3 w-3 mr-1" />
+                                Use in Add Product
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="whitespace-pre-wrap break-words text-xs">{m.content}</div>
@@ -851,9 +1020,9 @@ export default function AIChatWidget() {
                   </>
                 )}
 
-                {chatMode === 'scraper' && (
+                {(chatMode === 'scraper' || chatMode === 'product') && (
                   <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--muted-foreground))] px-1">
-                    <Globe className="h-3 w-3" />
+                    {chatMode === 'product' ? <Package className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
                     <span>Firecrawl</span>
                   </div>
                 )}

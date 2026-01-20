@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { ExtractedProductData, ExtractionMetadata } from '@/contexts/ProductExtractionContext';
 
 type FirecrawlResponse<T = any> = {
   success: boolean;
@@ -21,6 +22,18 @@ type SearchOptions = {
   scrapeOptions?: { formats?: ('markdown' | 'html')[] };
 };
 
+export type ProductExtractionResponse = {
+  success: boolean;
+  error?: string;
+  data?: {
+    extracted: ExtractedProductData;
+    markdown: string;
+    metadata: ExtractionMetadata & {
+      schema: Record<string, any>;
+    };
+  };
+};
+
 export const firecrawlApi = {
   // Scrape a single URL
   async scrape(url: string, options?: ScrapeOptions): Promise<FirecrawlResponse> {
@@ -38,6 +51,18 @@ export const firecrawlApi = {
   async search(query: string, options?: SearchOptions): Promise<FirecrawlResponse> {
     const { data, error } = await supabase.functions.invoke('firecrawl-search', {
       body: { query, options },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
+
+  // Extract product data from URL using dynamic schema
+  async extractProduct(url: string): Promise<ProductExtractionResponse> {
+    const { data, error } = await supabase.functions.invoke('firecrawl-product-extract', {
+      body: { url },
     });
 
     if (error) {
