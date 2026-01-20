@@ -492,7 +492,7 @@ export default function POSPage() {
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center">
-                                                            <Package className="h-5 w-5 sm:h-8 sm:w-8 text-gray-400" />
+                                                            <Package className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
                                                         </div>
                                                     )}
                                                 </div>
