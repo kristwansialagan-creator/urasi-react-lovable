@@ -53,7 +53,7 @@ export function DashboardLayout() {
     }
 
     return (
-        <div className="flex h-screen overflow-hidden bg-[hsl(var(--background))]">
+        <div className="flex h-screen bg-[hsl(var(--background))]">
             {/* Sidebar */}
             <aside className={cn(
                 'fixed inset-y-0 left-0 z-40 w-64 transition-transform duration-300',
