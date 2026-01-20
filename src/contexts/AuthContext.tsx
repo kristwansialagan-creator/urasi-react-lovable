@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { usePermissions } from '@/hooks/usePermissions'
+import { createSystemNotification, getBrowserInfo, NotificationTypes } from '@/services/notificationService'
 
 interface Profile {
     id: string
@@ -172,6 +173,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false)
             // Fetch profile non-blocking
             fetchProfile(data.user.id)
+            
+            // Create login notification (non-blocking)
+            setTimeout(async () => {
+                try {
+                    await createSystemNotification({
+                        userId: data.user.id,
+                        title: 'Login Successful',
+                        description: `You logged in from ${getBrowserInfo()} at ${new Date().toLocaleString('id-ID')}`,
+                        type: NotificationTypes.LOGIN_SUCCESS,
+                        source: 'auth',
+                        identifier: `login_${data.user.id}_${new Date().toISOString().split('T')[0]}`
+                    })
+                } catch (err) {
+                    console.error('Failed to create login notification:', err)
+                }
+            }, 0)
         }
         
         return { error }

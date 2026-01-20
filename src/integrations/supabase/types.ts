@@ -930,11 +930,14 @@ export type Database = {
           created_at: string | null
           description: string | null
           dismissable: boolean | null
+          entity_id: string | null
+          entity_type: string | null
           id: string
           identifier: string | null
           read: boolean | null
           source: string | null
           title: string
+          type: string | null
           url: string | null
           user_id: string | null
         }
@@ -942,11 +945,14 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           dismissable?: boolean | null
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           identifier?: string | null
           read?: boolean | null
           source?: string | null
           title: string
+          type?: string | null
           url?: string | null
           user_id?: string | null
         }
@@ -954,11 +960,14 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           dismissable?: boolean | null
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           identifier?: string | null
           read?: boolean | null
           source?: string | null
           title?: string
+          type?: string | null
           url?: string | null
           user_id?: string | null
         }

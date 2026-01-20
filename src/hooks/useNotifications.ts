@@ -8,7 +8,11 @@ interface Notification {
     description: string | null
     type?: string | null
     read: boolean | null
-    data?: any
+    url?: string | null
+    source?: string | null
+    identifier?: string | null
+    entity_type?: string | null
+    entity_id?: string | null
     created_at: string | null
 }
 
