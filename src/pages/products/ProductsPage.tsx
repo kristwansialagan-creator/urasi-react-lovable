@@ -15,7 +15,7 @@ import {
     Upload,
     Loader2,
 } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, getStorageUrl } from '@/lib/utils'
 import { useProducts, useCategories } from '@/hooks'
 import { Select, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
@@ -359,7 +359,7 @@ export default function ProductsPage() {
                                 <div className="w-48 h-48 rounded-lg bg-muted flex items-center justify-center border-2 border-border overflow-hidden">
                                     {selectedProduct.thumbnail?.slug ? (
                                         <img
-                                            src={`https://higfoctduijxbszgqhuc.supabase.co/storage/v1/object/public/product-images/${selectedProduct.thumbnail.slug}`}
+                                            src={getStorageUrl(selectedProduct.thumbnail.slug) || '/placeholder.svg'}
                                             alt={selectedProduct.name}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {

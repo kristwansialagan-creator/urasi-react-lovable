@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, Plus, Minus, Trash2, ShoppingCart, CreditCard, Check, PackageSearch, Smartphone, Package, X, Banknote, Building2, QrCode, Wallet as WalletIcon, Coins } from 'lucide-react'
 import { useProducts, useOrders, useCustomers, useRegisters, useCoupons, useSettings } from '@/hooks'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, getStorageUrl } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner'
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
@@ -420,7 +420,7 @@ export default function POSPage() {
                                                 <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
                                                     {hasImage ? (
                                                         <img
-                                                            src={`https://higfoctduijxbszgqhuc.supabase.co/storage/v1/object/public/product-images/${product.thumbnail?.slug ?? ''}`}
+                                                            src={getStorageUrl(product.thumbnail?.slug) || '/placeholder.svg'}
                                                             alt={product.name}
                                                             className="w-full h-full object-cover"
                                                             onError={(e) => { e.currentTarget.src = '/placeholder.svg' }}

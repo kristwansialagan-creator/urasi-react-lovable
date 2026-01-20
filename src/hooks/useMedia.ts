@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getStorageUrl, parseStorageSlug } from '@/lib/utils'
 
 interface Media {
     id: string
@@ -27,30 +28,11 @@ export function useMedia() {
 
             if (err) throw err
 
-            // Generate URL from slug for each media item
-            // Storage base URL
-            const STORAGE_BASE = 'https://higfoctduijxbszgqhuc.supabase.co/storage/v1/object/public'
-            
-            const mediaWithUrls = (data || []).map((item: any) => {
-                let url: string | null = null
-                if (item.slug) {
-                    // Check if slug starts with bucket name (legacy format)
-                    const knownBuckets = ['product-images', 'media', 'uploads']
-                    const parts = item.slug.split('/')
-                    const firstPart = parts[0]
-                    
-                    if (knownBuckets.includes(firstPart)) {
-                        // Slug already contains bucket name - use directly
-                        // e.g., "product-images/uploads/file.jpg" → use as-is
-                        url = `${STORAGE_BASE}/${item.slug}`
-                    } else {
-                        // Slug is just the file path, prepend default bucket
-                        // e.g., "uploads/file.jpg" → "product-images/uploads/file.jpg"
-                        url = `${STORAGE_BASE}/product-images/${item.slug}`
-                    }
-                }
-                return { ...item, url } as Media
-            })
+            // Generate URL from slug for each media item using utility function
+            const mediaWithUrls = (data || []).map((item: any) => ({
+                ...item,
+                url: getStorageUrl(item.slug)
+            } as Media))
 
             setMedia(mediaWithUrls)
         } catch (err: any) {
@@ -115,13 +97,10 @@ export function useMedia() {
 
             // Delete from storage using slug
             if (item.slug) {
-                const parts = item.slug.split('/')
-                const bucketName = parts[0]
-                const filePath = parts.slice(1).join('/')
-
-                if (bucketName && filePath) {
+                const { bucket, filePath } = parseStorageSlug(item.slug)
+                if (filePath) {
                     await supabase.storage
-                        .from(bucketName)
+                        .from(bucket)
                         .remove([filePath])
                 }
             }

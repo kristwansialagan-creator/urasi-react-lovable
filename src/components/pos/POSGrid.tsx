@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Search, Grid3x3 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, getStorageUrl } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 
 export interface Product {
@@ -69,7 +69,7 @@ export default function POSGrid({ onProductSelect }: POSGridProps) {
                 sale_price: p.sale_price ?? 0,
                 stock_quantity: p.stock_quantity ?? 0,
                 category_id: p.category_id || undefined,
-                image_url: p.thumbnail?.slug ? `https://higfoctduijxbszgqhuc.supabase.co/storage/v1/object/public/product-images/${p.thumbnail.slug}` : undefined
+                image_url: getStorageUrl(p.thumbnail?.slug) || undefined
             }))
             
             setProducts(mappedProducts)

@@ -15,6 +15,7 @@ import { useCategories } from '@/hooks'
 import { useSkuParents } from '@/hooks/useSkuParents'
 import { useProductExtraction } from '@/contexts/ProductExtractionContext'
 import { supabase } from '@/lib/supabase'
+import { getStorageUrl } from '@/lib/utils'
 import { Select, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
@@ -161,10 +162,8 @@ export default function ProductCreatePage() {
 
                     // Set image URL if thumbnail exists
                     if (product.thumbnail?.slug) {
-                        const { data: urlData } = supabase.storage
-                            .from('product-images')
-                            .getPublicUrl(product.thumbnail.slug)
-                        setImageUrl(urlData.publicUrl)
+                        const url = getStorageUrl(product.thumbnail.slug)
+                        if (url) setImageUrl(url)
                     }
 
                     if (product.stock && product.stock.length > 0) {

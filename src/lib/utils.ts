@@ -120,3 +120,47 @@ export function isEmpty(value: unknown): boolean {
     if (typeof value === 'object') return Object.keys(value).length === 0
     return false
 }
+
+// Supabase Storage Configuration
+const SUPABASE_PROJECT_ID = 'higfoctduijxbszgqhuc'
+const STORAGE_BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public`
+const DEFAULT_BUCKET = 'product-images'
+const KNOWN_BUCKETS = ['product-images', 'media', 'uploads']
+
+// Build storage URL from slug
+export function getStorageUrl(slug: string | null | undefined): string | null {
+    if (!slug) return null
+    
+    const parts = slug.split('/')
+    const firstPart = parts[0]
+    
+    if (KNOWN_BUCKETS.includes(firstPart)) {
+        // Slug already contains bucket name
+        return `${STORAGE_BASE_URL}/${slug}`
+    } else {
+        // Slug is just the file path, prepend default bucket
+        // Log warning for potential debugging if something goes wrong
+        if (process.env.NODE_ENV === 'development' && parts.length === 1) {
+            console.warn(`[Storage] Slug "${slug}" has unusual format - using default bucket "${DEFAULT_BUCKET}"`)
+        }
+        return `${STORAGE_BASE_URL}/${DEFAULT_BUCKET}/${slug}`
+    }
+}
+
+// Parse slug to get bucket and file path
+export function parseStorageSlug(slug: string): { bucket: string; filePath: string } {
+    const parts = slug.split('/')
+    const firstPart = parts[0]
+    
+    if (KNOWN_BUCKETS.includes(firstPart)) {
+        return {
+            bucket: firstPart,
+            filePath: parts.slice(1).join('/')
+        }
+    } else {
+        return {
+            bucket: DEFAULT_BUCKET,
+            filePath: slug
+        }
+    }
+}
