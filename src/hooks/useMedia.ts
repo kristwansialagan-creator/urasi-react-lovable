@@ -28,22 +28,39 @@ export function useMedia() {
             if (err) throw err
 
             // Generate URL from slug for each media item
-            const mediaWithUrls = (data || []).map(item => {
-                let url = null
+            const mediaWithUrls = (data || []).map((item: any) => {
+                let url: string | null = null
                 if (item.slug) {
-                    // Extract bucket name from slug (e.g., "product-images/xxx.jpg")
+                    // Check if slug contains bucket name or is just a path
+                    // Format could be: "bucket-name/path/to/file.jpg" or just "path/to/file.jpg"
                     const parts = item.slug.split('/')
-                    const bucketName = parts[0]
-                    const filePath = parts.slice(1).join('/')
+                    
+                    // Known bucket names
+                    const knownBuckets = ['product-images', 'media', 'uploads']
+                    const firstPart = parts[0]
+                    
+                    let bucketName: string
+                    let filePath: string
+                    
+                    if (knownBuckets.includes(firstPart)) {
+                        // Slug format: "bucket-name/path/to/file.jpg"
+                        bucketName = firstPart
+                        filePath = parts.slice(1).join('/')
+                    } else {
+                        // Slug is just the path, assume product-images bucket
+                        bucketName = 'product-images'
+                        filePath = item.slug
+                    }
 
-                    if (bucketName && filePath) {
+                    if (filePath) {
                         const { data: urlData } = supabase.storage
                             .from(bucketName)
                             .getPublicUrl(filePath)
-                        url = urlData?.publicUrl
+                        url = urlData?.publicUrl || null
+                        console.log('Generated URL for', item.name, ':', url)
                     }
                 }
-                return { ...item, url }
+                return { ...item, url } as Media
             })
 
             setMedia(mediaWithUrls)
