@@ -142,10 +142,11 @@ export default function AIChatWidget() {
           const u = await getUser()
           setUser(u)
         }
-      } catch (e) { 
+      } catch (e: unknown) { 
         console.error('Auth check failed', e)
         // Don't throw error to prevent console spam
-        if (e.message && !e.message.includes('401')) {
+        const errorMessage = e instanceof Error ? e.message : ''
+        if (errorMessage && !errorMessage.includes('401')) {
           console.warn('Authentication service unavailable')
         }
       }
@@ -286,10 +287,11 @@ export default function AIChatWidget() {
         setUser(u)
         await refreshHistory() // Reload history as it might merge with cloud
       }
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Sign in failed', e)
       // Don't throw error to prevent console spam
-      if (e.message && !e.message.includes('401')) {
+      const errorMessage = e instanceof Error ? e.message : ''
+      if (errorMessage && !errorMessage.includes('401')) {
         console.warn('Authentication service unavailable')
       }
     }
