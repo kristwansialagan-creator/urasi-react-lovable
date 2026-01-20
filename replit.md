@@ -36,3 +36,20 @@ The Vite dev server is configured to:
 Static deployment configured with:
 - Build command: `npm run build`
 - Public directory: `dist`
+
+## Recent Changes (January 2026)
+
+### Bug Fixes
+- **Fixed thumbnail/image URL bug**: Created standardized `getStorageUrl` and `parseStorageSlug` utilities in `src/lib/utils.ts` to handle consistent URL generation for Supabase storage
+- **Fixed useToast hook**: Corrected dependency array issue that was causing unnecessary re-renders
+- **Fixed useTransactions**: `executeTransaction` now fetches transaction from database directly to prevent stale state issues
+
+### Code Improvements
+- Updated all components using storage URLs (POSGrid, POSPage, ProductsPage, ProductCreatePage, useMedia) to use centralized utilities
+- Removed unused type files (`database.types.ts`, `database.ts`) - only `integrations/supabase/types.ts` is used
+- Added documentation for POSPermissionsPopup placeholder implementation
+
+### Architecture Notes
+- Storage URL utilities support both legacy (with bucket prefix) and new (without prefix) slug formats for backwards compatibility
+- Default bucket: `product-images`
+- Known buckets: `product-images`, `media`, `uploads`
