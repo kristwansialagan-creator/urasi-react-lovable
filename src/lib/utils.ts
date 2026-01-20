@@ -138,11 +138,7 @@ export function getStorageUrl(slug: string | null | undefined): string | null {
         // Slug already contains bucket name
         return `${STORAGE_BASE_URL}/${slug}`
     } else {
-        // Slug is just the file path, prepend default bucket
-        // Log warning for potential debugging if something goes wrong
-        if (process.env.NODE_ENV === 'development' && parts.length === 1) {
-            console.warn(`[Storage] Slug "${slug}" has unusual format - using default bucket "${DEFAULT_BUCKET}"`)
-        }
+        // Slug is just the file path (e.g., "filename.jpg" or "uploads/filename.jpg"), prepend default bucket
         return `${STORAGE_BASE_URL}/${DEFAULT_BUCKET}/${slug}`
     }
 }
