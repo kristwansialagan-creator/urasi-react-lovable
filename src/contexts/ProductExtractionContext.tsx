@@ -38,6 +38,12 @@ export interface ExtractedProductData {
   dimensions?: string;
   image_url?: string;
   specifications?: Record<string, string>;
+  // New regulatory fields
+  shelf_life?: string;
+  bpom_number?: string;
+  registration_number?: string;
+  halal_number?: string;
+  composition?: string;
 }
 
 export interface ExtractionMetadata {

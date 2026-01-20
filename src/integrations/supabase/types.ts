@@ -2462,22 +2462,29 @@ export type Database = {
           accurate_tracking: boolean | null
           author: string | null
           barcode: string | null
+          bpom_number: string | null
+          brand: string | null
           category_id: string | null
+          composition: string | null
           created_at: string | null
           description: string | null
           expires: boolean | null
           gross_sale_price: number | null
+          halal_number: string | null
           id: string
           name: string
           net_sale_price: number | null
           on_expiration: string | null
           parent_id: string | null
           purchase_price: number | null
+          registration_number: string | null
           sale_price: number | null
           sale_price_edit: boolean | null
           searchable: boolean | null
           selling_price: number | null
+          shelf_life: string | null
           sku: string | null
+          sku_parent_id: string | null
           status: string | null
           stock_management: boolean | null
           stock_quantity: number | null
@@ -2493,22 +2500,29 @@ export type Database = {
           accurate_tracking?: boolean | null
           author?: string | null
           barcode?: string | null
+          bpom_number?: string | null
+          brand?: string | null
           category_id?: string | null
+          composition?: string | null
           created_at?: string | null
           description?: string | null
           expires?: boolean | null
           gross_sale_price?: number | null
+          halal_number?: string | null
           id?: string
           name: string
           net_sale_price?: number | null
           on_expiration?: string | null
           parent_id?: string | null
           purchase_price?: number | null
+          registration_number?: string | null
           sale_price?: number | null
           sale_price_edit?: boolean | null
           searchable?: boolean | null
           selling_price?: number | null
+          shelf_life?: string | null
           sku?: string | null
+          sku_parent_id?: string | null
           status?: string | null
           stock_management?: boolean | null
           stock_quantity?: number | null
@@ -2524,22 +2538,29 @@ export type Database = {
           accurate_tracking?: boolean | null
           author?: string | null
           barcode?: string | null
+          bpom_number?: string | null
+          brand?: string | null
           category_id?: string | null
+          composition?: string | null
           created_at?: string | null
           description?: string | null
           expires?: boolean | null
           gross_sale_price?: number | null
+          halal_number?: string | null
           id?: string
           name?: string
           net_sale_price?: number | null
           on_expiration?: string | null
           parent_id?: string | null
           purchase_price?: number | null
+          registration_number?: string | null
           sale_price?: number | null
           sale_price_edit?: boolean | null
           searchable?: boolean | null
           selling_price?: number | null
+          shelf_life?: string | null
           sku?: string | null
+          sku_parent_id?: string | null
           status?: string | null
           stock_management?: boolean | null
           stock_quantity?: number | null
@@ -2571,6 +2592,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_sku_parent_id_fkey"
+            columns: ["sku_parent_id"]
+            isOneToOne: false
+            referencedRelation: "sku_parents"
             referencedColumns: ["id"]
           },
           {
@@ -3326,6 +3354,44 @@ export type Database = {
           value?: Json | null
         }
         Relationships: []
+      }
+      sku_parents: {
+        Row: {
+          author: string | null
+          code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sku_parents_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_audit_logs: {
         Row: {
