@@ -379,14 +379,14 @@ export function UnitSelector({
                             <div className="space-y-2">
                                 <Label>Group</Label>
                                 <Select
-                                    value={unitFormData.group_id}
-                                    onValueChange={(value) => setUnitFormData({ ...unitFormData, group_id: value })}
+                                    value={unitFormData.group_id || "none"}
+                                    onValueChange={(value) => setUnitFormData({ ...unitFormData, group_id: value === "none" ? "" : value })}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select group..." />
                                     </SelectTrigger>
                                     <SelectContent className="bg-popover z-[150]">
-                                        <SelectItem value="">No group</SelectItem>
+                                        <SelectItem value="none">No group</SelectItem>
                                         {groups.map((g) => (
                                             <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                                         ))}
