@@ -1,20 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Save, Package, Search, ScanLine, Plus, Loader2 } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { ArrowLeft, Save, Search, ScanLine, Plus, Loader2, Trash2 } from 'lucide-react'
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { productLookupService } from '@/services/productLookup'
 import { useToast } from '@/hooks/use-toast'
 import { useProducts } from '@/hooks'
 import { useCategories } from '@/hooks'
+import { useSkuParents } from '@/hooks/useSkuParents'
 import { useProductExtraction } from '@/contexts/ProductExtractionContext'
 import { supabase } from '@/lib/supabase'
 import { Select, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 
 export default function ProductCreatePage() {
     const navigate = useNavigate()
@@ -22,16 +25,15 @@ export default function ProductCreatePage() {
     const { toast } = useToast()
     const { createProduct, updateProduct } = useProducts()
     const { categories, createCategory } = useCategories()
+    const { skuParents, createSkuParent, deleteSkuParent } = useSkuParents()
     const { extractedData, clearExtractedData, metadata } = useProductExtraction()
     const [loading, setLoading] = useState(false)
     const [lookupLoading, setLookupLoading] = useState(false)
     const [categorySearch, setCategorySearch] = useState('')
-    const [isCategorySearching, setIsCategorySearching] = useState(false)
     const isEditMode = !!id
 
     // Form states
     const [name, setName] = useState('')
-    const [sku, setSku] = useState('')
     const [barcode, setBarcode] = useState('')
     const [categoryId, setCategoryId] = useState('none')
     const [description, setDescription] = useState('')
@@ -45,29 +47,66 @@ export default function ProductCreatePage() {
     const [imageUrl, setImageUrl] = useState('')
     const [thumbnailId, setThumbnailId] = useState('')
 
+    // SKU Parent-Child states
+    const [skuParentId, setSkuParentId] = useState<string>('none')
+    const [skuSuffix, setSkuSuffix] = useState('')
+
+    // New optional fields
+    const [brand, setBrand] = useState('')
+    const [shelfLife, setShelfLife] = useState('')
+    const [bpomNumber, setBpomNumber] = useState('')
+    const [registrationNumber, setRegistrationNumber] = useState('')
+    const [halalNumber, setHalalNumber] = useState('')
+    const [composition, setComposition] = useState('')
+
     // Category creation dialog state
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
     const [newCategoryName, setNewCategoryName] = useState('')
     const [newCategoryParent, setNewCategoryParent] = useState('none')
     const [isCreatingCategory, setIsCreatingCategory] = useState(false)
 
+    // SKU Parent dialog states
+    const [isSkuParentDialogOpen, setIsSkuParentDialogOpen] = useState(false)
+    const [newSkuParentCode, setNewSkuParentCode] = useState('')
+    const [newSkuParentName, setNewSkuParentName] = useState('')
+    const [newSkuParentDescription, setNewSkuParentDescription] = useState('')
+    const [isCreatingSkuParent, setIsCreatingSkuParent] = useState(false)
+
+    // SKU Parent delete confirmation
+    const [skuParentToDelete, setSkuParentToDelete] = useState<string | null>(null)
+    const [isDeletingSkuParent, setIsDeletingSkuParent] = useState(false)
+
+    // Computed SKU
+    const computedSku = useMemo(() => {
+        const parent = skuParents.find(p => p.id === skuParentId)
+        if (parent && skuSuffix) {
+            return `${parent.code}${skuSuffix}`
+        }
+        return skuSuffix || ''
+    }, [skuParentId, skuSuffix, skuParents])
+
     // Auto-fill from extracted product data (from AI Chat)
     useEffect(() => {
         if (extractedData && !isEditMode) {
             if (extractedData.name) setName(extractedData.name)
-            if (extractedData.sku) setSku(extractedData.sku)
+            if (extractedData.sku) setSkuSuffix(extractedData.sku)
             if (extractedData.barcode) setBarcode(extractedData.barcode)
             if (extractedData.description) setDescription(extractedData.description)
             if (extractedData.selling_price) setSellingPrice(extractedData.selling_price.toString())
             if (extractedData.purchase_price) setPurchasePrice(extractedData.purchase_price.toString())
             if (extractedData.stock_quantity) setStock(extractedData.stock_quantity.toString())
+            if (extractedData.brand) setBrand(extractedData.brand)
+            if (extractedData.shelf_life) setShelfLife(extractedData.shelf_life)
+            if (extractedData.bpom_number) setBpomNumber(extractedData.bpom_number)
+            if (extractedData.registration_number) setRegistrationNumber(extractedData.registration_number)
+            if (extractedData.halal_number) setHalalNumber(extractedData.halal_number)
+            if (extractedData.composition) setComposition(extractedData.composition)
             
             toast({
                 title: "Data Auto-Filled",
                 description: `Product data extracted from ${metadata?.sourceUrl || 'URL'}`,
             })
             
-            // Clear the context after use
             clearExtractedData()
         }
     }, [extractedData, isEditMode, metadata, clearExtractedData, toast])
@@ -88,7 +127,6 @@ export default function ProductCreatePage() {
                 if (error) throw error
                 if (product) {
                     setName(product.name)
-                    setSku(product.sku || '')
                     setBarcode(product.barcode || '')
                     setCategoryId(product.category_id || 'none')
                     setDescription(product.description || '')
@@ -97,6 +135,28 @@ export default function ProductCreatePage() {
                     setStatus(product.status || 'available')
                     setStockManagement(product.stock_management ?? true)
                     setThumbnailId(product.thumbnail_id || '')
+
+                    // SKU Parent-Child handling
+                    if (product.sku_parent_id) {
+                        setSkuParentId(product.sku_parent_id)
+                        // Extract suffix from full SKU
+                        const parent = skuParents.find(p => p.id === product.sku_parent_id)
+                        if (parent && product.sku?.startsWith(parent.code)) {
+                            setSkuSuffix(product.sku.slice(parent.code.length))
+                        } else {
+                            setSkuSuffix(product.sku || '')
+                        }
+                    } else {
+                        setSkuSuffix(product.sku || '')
+                    }
+
+                    // New fields
+                    setBrand(product.brand || '')
+                    setShelfLife(product.shelf_life || '')
+                    setBpomNumber(product.bpom_number || '')
+                    setRegistrationNumber(product.registration_number || '')
+                    setHalalNumber(product.halal_number || '')
+                    setComposition(product.composition || '')
 
                     // Set image URL if thumbnail exists
                     if (product.thumbnail?.slug) {
@@ -110,7 +170,6 @@ export default function ProductCreatePage() {
                         const s = product.stock[0]
                         setStock(s.quantity?.toString() || '')
                         setLowStock(s.low_quantity?.toString() || '')
-                        // setUnit(s.unit_id) 
                     }
                 }
             } catch (err) {
@@ -127,7 +186,7 @@ export default function ProductCreatePage() {
         }
 
         loadProduct()
-    }, [id, navigate, toast])
+    }, [id, navigate, toast, skuParents])
 
     const handleBarcodeScan = async (code: string) => {
         setBarcode(code)
@@ -143,7 +202,6 @@ export default function ProductCreatePage() {
 
             if (info) {
                 if (info.name) setName(info.name)
-                // Skip category from lookup since we use categoryId now
                 if (info.description) setDescription(info.description)
                 if (info.barcode && !barcode) setBarcode(info.barcode)
 
@@ -170,18 +228,13 @@ export default function ProductCreatePage() {
         }
     }
 
-    const handleBarcodeFill = (barcodeValue: string) => {
-        setBarcode(barcodeValue)
-        handleLookup(barcodeValue)
-    }
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         try {
             const productData = {
                 name,
-                sku: sku || undefined,
+                sku: computedSku || undefined,
                 barcode: barcode || undefined,
                 description,
                 selling_price: parseFloat(sellingPrice) || 0,
@@ -190,6 +243,13 @@ export default function ProductCreatePage() {
                 stock_management: stockManagement,
                 thumbnail_id: thumbnailId || null,
                 category_id: categoryId === 'none' ? null : categoryId,
+                sku_parent_id: skuParentId === 'none' ? null : skuParentId,
+                brand: brand || null,
+                shelf_life: shelfLife || null,
+                bpom_number: bpomNumber || null,
+                registration_number: registrationNumber || null,
+                halal_number: halalNumber || null,
+                composition: composition || null,
             }
 
             if (isEditMode && id) {
@@ -235,6 +295,47 @@ export default function ProductCreatePage() {
         }
     }
 
+    const handleCreateSkuParent = async () => {
+        if (!newSkuParentCode.trim() || !newSkuParentName.trim()) {
+            toast({ variant: "destructive", title: "Error", description: "Code and name are required" })
+            return
+        }
+
+        setIsCreatingSkuParent(true)
+        try {
+            const result = await createSkuParent({
+                code: newSkuParentCode.trim(),
+                name: newSkuParentName.trim(),
+                description: newSkuParentDescription.trim() || undefined
+            })
+
+            if (result) {
+                setSkuParentId(result.id)
+                setIsSkuParentDialogOpen(false)
+                setNewSkuParentCode('')
+                setNewSkuParentName('')
+                setNewSkuParentDescription('')
+            }
+        } finally {
+            setIsCreatingSkuParent(false)
+        }
+    }
+
+    const handleDeleteSkuParent = async () => {
+        if (!skuParentToDelete) return
+
+        setIsDeletingSkuParent(true)
+        try {
+            const success = await deleteSkuParent(skuParentToDelete)
+            if (success && skuParentId === skuParentToDelete) {
+                setSkuParentId('none')
+            }
+        } finally {
+            setIsDeletingSkuParent(false)
+            setSkuParentToDelete(null)
+        }
+    }
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -244,7 +345,7 @@ export default function ProductCreatePage() {
                 </Button>
                 <div>
                     <h1 className="text-2xl font-bold">{isEditMode ? 'Edit Product' : 'Add New Product'}</h1>
-                    <p className="text-[hsl(var(--muted-foreground))]">
+                    <p className="text-muted-foreground">
                         {isEditMode ? 'Update existing product information' : 'Create a new product in your inventory'}
                     </p>
                 </div>
@@ -259,6 +360,7 @@ export default function ProductCreatePage() {
                                 <CardTitle>Product Information</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                {/* Barcode Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="barcode">Barcode / QR Code</Label>
@@ -298,19 +400,85 @@ export default function ProductCreatePage() {
                                             Scan barcode to auto-fill field
                                         </p>
                                     </div>
+                                    
+                                    {/* SKU Parent Selector */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="sku">SKU</Label>
-                                        <Input
-                                            id="sku"
-                                            placeholder="Auto-generated if empty"
-                                            value={sku}
-                                            onChange={(e) => setSku(e.target.value)}
-                                        />
+                                        <Label htmlFor="sku-parent">SKU Parent (Induk)</Label>
+                                        <div className="flex gap-2">
+                                            <Select value={skuParentId} onValueChange={(val) => {
+                                                if (val === 'create-new') {
+                                                    setIsSkuParentDialogOpen(true)
+                                                } else {
+                                                    setSkuParentId(val)
+                                                }
+                                            }}>
+                                                <SelectTrigger className="flex-1">
+                                                    <SelectValue placeholder="Select SKU Parent..." />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-background border shadow-lg">
+                                                    <SelectItem value="none">None (No Parent)</SelectItem>
+                                                    {skuParents.map((parent) => (
+                                                        <SelectItem key={parent.id} value={parent.id}>
+                                                            <span className="font-mono">{parent.code}</span>
+                                                            <span className="text-muted-foreground ml-2">- {parent.name}</span>
+                                                        </SelectItem>
+                                                    ))}
+                                                    <div className="border-t mt-1 pt-1">
+                                                        <SelectItem value="create-new" className="text-primary font-medium">
+                                                            <Plus className="inline-block h-4 w-4 mr-1" />
+                                                            Create New SKU Parent
+                                                        </SelectItem>
+                                                    </div>
+                                                </SelectContent>
+                                            </Select>
+                                            {skuParentId !== 'none' && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => setSkuParentToDelete(skuParentId)}
+                                                    title="Delete SKU Parent"
+                                                    className="text-destructive hover:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
+
+                                {/* SKU Child Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="name" required>Product Name</Label>
+                                        <Label htmlFor="sku-suffix">SKU Suffix (Child)</Label>
+                                        <Input
+                                            id="sku-suffix"
+                                            placeholder="e.g., 001, A1, etc."
+                                            value={skuSuffix}
+                                            onChange={(e) => setSkuSuffix(e.target.value)}
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Combined with parent to form full SKU
+                                        </p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Final SKU</Label>
+                                        <Input
+                                            value={computedSku}
+                                            disabled
+                                            className="bg-muted font-mono"
+                                            placeholder="SKU will appear here"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Auto-generated from Parent + Suffix
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Name & Category Row */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name">Product Name *</Label>
                                         <Input
                                             id="name"
                                             placeholder="Enter product name"
@@ -331,9 +499,8 @@ export default function ProductCreatePage() {
                                             <SelectTrigger id="category" className="w-full">
                                                 <SelectValue placeholder="Select category..." />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-white border-2 border-border shadow-lg max-h-[300px]">
-                                                {/* Search Input */}
-                                                <div className="p-2 border-b sticky top-0 bg-white z-10">
+                                            <SelectContent className="bg-background border shadow-lg max-h-[300px]">
+                                                <div className="p-2 border-b sticky top-0 bg-background z-10">
                                                     <Input
                                                         placeholder="Search categories..."
                                                         value={categorySearch}
@@ -349,7 +516,6 @@ export default function ProductCreatePage() {
                                                 {categories
                                                     .filter(cat => !cat.parent_id)
                                                     .filter(parent => {
-                                                        // Filter by search term
                                                         if (!categorySearch) return true
                                                         const searchLower = categorySearch.toLowerCase()
                                                         const parentMatch = parent.name.toLowerCase().includes(searchLower)
@@ -367,7 +533,6 @@ export default function ProductCreatePage() {
                                                             })
 
                                                         if (children.length === 0) {
-                                                            // Parent with no children - selectable
                                                             return (
                                                                 <SelectItem key={parent.id} value={parent.id} className="font-medium">
                                                                     {parent.name}
@@ -375,7 +540,6 @@ export default function ProductCreatePage() {
                                                             )
                                                         }
 
-                                                        // Parent with children - use SelectGroup
                                                         return (
                                                             <SelectGroup key={parent.id}>
                                                                 <SelectLabel className="text-sm font-semibold text-foreground px-2 py-1.5">
@@ -404,12 +568,13 @@ export default function ProductCreatePage() {
                                         </Select>
                                     </div>
                                 </div>
+
+                                {/* Description */}
                                 <div className="space-y-2">
                                     <Label htmlFor="description">Description</Label>
-                                    <textarea
+                                    <Textarea
                                         id="description"
                                         rows={3}
-                                        className="w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm"
                                         placeholder="Product description"
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
@@ -418,6 +583,75 @@ export default function ProductCreatePage() {
                             </CardContent>
                         </Card>
 
+                        {/* Regulatory & Brand Information */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Regulatory & Brand Information</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="brand">Merek (Brand)</Label>
+                                        <Input
+                                            id="brand"
+                                            placeholder="Brand name"
+                                            value={brand}
+                                            onChange={(e) => setBrand(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="shelf-life">Masa Penyimpanan (Shelf Life)</Label>
+                                        <Input
+                                            id="shelf-life"
+                                            placeholder="e.g., 12 months, 2 years"
+                                            value={shelfLife}
+                                            onChange={(e) => setShelfLife(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bpom-number">No BPOM</Label>
+                                        <Input
+                                            id="bpom-number"
+                                            placeholder="BPOM registration number"
+                                            value={bpomNumber}
+                                            onChange={(e) => setBpomNumber(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="registration-number">No Registrasi</Label>
+                                        <Input
+                                            id="registration-number"
+                                            placeholder="Product registration number"
+                                            value={registrationNumber}
+                                            onChange={(e) => setRegistrationNumber(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="halal-number">No Halal</Label>
+                                        <Input
+                                            id="halal-number"
+                                            placeholder="Halal certification number"
+                                            value={halalNumber}
+                                            onChange={(e) => setHalalNumber(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="composition">Komposisi (Composition)</Label>
+                                    <Textarea
+                                        id="composition"
+                                        rows={2}
+                                        placeholder="Product ingredients or composition"
+                                        value={composition}
+                                        onChange={(e) => setComposition(e.target.value)}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Pricing */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Pricing</CardTitle>
@@ -435,7 +669,7 @@ export default function ProductCreatePage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="selling_price" required>Selling Price</Label>
+                                        <Label htmlFor="selling_price">Selling Price *</Label>
                                         <Input
                                             id="selling_price"
                                             type="number"
@@ -446,19 +680,10 @@ export default function ProductCreatePage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="wholesale_price">Wholesale Price</Label>
-                                        <Input id="wholesale_price" type="number" placeholder="0" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="tax_group">Tax Group</Label>
-                                        <Input id="tax_group" placeholder="Select tax group" />
-                                    </div>
-                                </div>
                             </CardContent>
                         </Card>
 
+                        {/* Inventory */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Inventory</CardTitle>
@@ -473,7 +698,7 @@ export default function ProductCreatePage() {
                                             placeholder="0"
                                             value={stock}
                                             onChange={(e) => setStock(e.target.value)}
-                                            disabled={isEditMode} // Disable stock edit on main form for now
+                                            disabled={isEditMode}
                                             title={isEditMode ? "Use Stock Adjustment to change stock" : ""}
                                         />
                                     </div>
@@ -525,7 +750,7 @@ export default function ProductCreatePage() {
                                     <Label htmlFor="status">Product Status</Label>
                                     <select
                                         id="status"
-                                        className="w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm"
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
@@ -561,7 +786,7 @@ export default function ProductCreatePage() {
 
             {/* Category Creation Dialog */}
             <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                <DialogContent className="sm:max-w-[425px] bg-white border shadow-lg">
+                <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Create New Category</DialogTitle>
                     </DialogHeader>
@@ -582,7 +807,7 @@ export default function ProductCreatePage() {
                                 <SelectTrigger id="new-category-parent" className="w-full">
                                     <SelectValue placeholder="Select parent..." />
                                 </SelectTrigger>
-                                <SelectContent className="bg-white border-2 border-border shadow-lg">
+                                <SelectContent className="bg-background border shadow-lg">
                                     <SelectItem value="none">None (Top Level)</SelectItem>
                                     {categories
                                         .filter(cat => !cat.parent_id)
@@ -606,6 +831,86 @@ export default function ProductCreatePage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* SKU Parent Creation Dialog */}
+            <Dialog open={isSkuParentDialogOpen} onOpenChange={setIsSkuParentDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Create New SKU Parent</DialogTitle>
+                        <DialogDescription>
+                            Create a new SKU parent code that will be used as prefix for product SKUs.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="new-sku-parent-code">Code (Prefix) *</Label>
+                            <Input
+                                id="new-sku-parent-code"
+                                placeholder="e.g., FOOD-, BEV-, ELEC-"
+                                value={newSkuParentCode}
+                                onChange={(e) => setNewSkuParentCode(e.target.value.toUpperCase())}
+                                className="font-mono"
+                                autoFocus
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                This will be the prefix for all child SKUs
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new-sku-parent-name">Name *</Label>
+                            <Input
+                                id="new-sku-parent-name"
+                                placeholder="e.g., Food Products"
+                                value={newSkuParentName}
+                                onChange={(e) => setNewSkuParentName(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new-sku-parent-description">Description</Label>
+                            <Textarea
+                                id="new-sku-parent-description"
+                                placeholder="Optional description"
+                                value={newSkuParentDescription}
+                                onChange={(e) => setNewSkuParentDescription(e.target.value)}
+                                rows={2}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsSkuParentDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="button" onClick={handleCreateSkuParent} disabled={isCreatingSkuParent}>
+                            {isCreatingSkuParent && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Create SKU Parent
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* SKU Parent Delete Confirmation */}
+            <AlertDialog open={!!skuParentToDelete} onOpenChange={(open) => !open && setSkuParentToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete SKU Parent?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete this SKU Parent. Products using this parent will not be affected, 
+                            but you won't be able to use this parent for new products.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={handleDeleteSkuParent} 
+                            disabled={isDeletingSkuParent}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeletingSkuParent && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
