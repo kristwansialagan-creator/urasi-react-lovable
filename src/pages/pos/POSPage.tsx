@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Plus, Minus, Trash2, ShoppingCart, CreditCard, Check, PackageSearch, Smartphone, Package, Camera, X } from 'lucide-react'
+import { Search, Plus, Minus, Trash2, ShoppingCart, CreditCard, Check, PackageSearch, Smartphone, Package, X, Banknote, Building2, QrCode, Wallet, Coins } from 'lucide-react'
 import { useProducts, useOrders, useCustomers, useRegisters, useCoupons, useSettings } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -561,43 +561,60 @@ export default function POSPage() {
                 </div>
 
                 {/* Column 3: Payment */}
-                <div className="w-[240px] shrink-0 flex flex-col min-h-0">
+                <div className="w-[220px] shrink-0 flex flex-col min-h-0">
                     <Card className="flex-1 flex flex-col min-h-0 overflow-hidden">
                         <CardHeader className="py-2 px-3 border-b shrink-0">
                             <CardTitle className="flex items-center gap-2 text-sm">
                                 <CreditCard className="h-4 w-4" />
-                                <span>Payment</span>
+                                <span>Pembayaran</span>
                             </CardTitle>
                         </CardHeader>
 
                         <CardContent className="flex-1 overflow-y-auto p-2 min-h-0 space-y-3">
-                            {/* Payment Methods */}
+                            {/* Payment Methods - Single row with icons */}
                             <div className="space-y-1">
-                                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Select Method</p>
-                                <div className="grid grid-cols-2 gap-1.5">
-                                    {paymentTypes.map(pt => {
-                                        const isSelected = payments.find(p => p.payment_type_id === pt.id)
-                                        return (
-                                            <Button
-                                                key={pt.id}
-                                                variant={isSelected ? "default" : "outline"}
-                                                className={`h-8 text-xs justify-center ${isSelected ? 'ring-1 ring-primary' : ''}`}
-                                                onClick={() => {
-                                                    const existing = payments.find(p => p.payment_type_id === pt.id)
-                                                    if (existing) {
-                                                        setPayments(payments.filter(p => p.payment_type_id !== pt.id))
-                                                    } else {
-                                                        const remaining = total - totalPaid
-                                                        setPayments([...payments, { payment_type_id: pt.id, value: remaining > 0 ? remaining : 0 }])
-                                                    }
-                                                }}
-                                            >
-                                                <span className="truncate">{pt.label}</span>
-                                                {isSelected && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                                            </Button>
-                                        )
-                                    })}
-                                </div>
+                                {paymentTypes.map(pt => {
+                                    const isSelected = payments.find(p => p.payment_type_id === pt.id)
+                                    // Get icon based on identifier
+                                    const getPaymentIcon = (identifier: string) => {
+                                        const id = identifier.toLowerCase()
+                                        if (id.includes('cash') || id.includes('tunai')) return <Banknote className="h-4 w-4" />
+                                        if (id.includes('bank') || id.includes('transfer')) return <Building2 className="h-4 w-4" />
+                                        if (id.includes('qris') || id.includes('qr')) return <QrCode className="h-4 w-4" />
+                                        if (id.includes('credit') || id.includes('card') || id.includes('debit')) return <CreditCard className="h-4 w-4" />
+                                        if (id.includes('wallet') || id.includes('ewallet') || id.includes('gopay') || id.includes('ovo') || id.includes('dana')) return <Wallet className="h-4 w-4" />
+                                        return <Coins className="h-4 w-4" />
+                                    }
+                                    // Clean label - remove redundant words
+                                    const cleanLabel = (label: string) => {
+                                        return label
+                                            .replace(/payment/gi, '')
+                                            .replace(/pembayaran/gi, '')
+                                            .replace(/method/gi, '')
+                                            .replace(/metode/gi, '')
+                                            .trim()
+                                    }
+                                    return (
+                                        <Button
+                                            key={pt.id}
+                                            variant={isSelected ? "default" : "outline"}
+                                            className={`w-full h-9 text-xs justify-start gap-2 ${isSelected ? 'ring-1 ring-primary' : ''}`}
+                                            onClick={() => {
+                                                const existing = payments.find(p => p.payment_type_id === pt.id)
+                                                if (existing) {
+                                                    setPayments(payments.filter(p => p.payment_type_id !== pt.id))
+                                                } else {
+                                                    const remaining = total - totalPaid
+                                                    setPayments([...payments, { payment_type_id: pt.id, value: remaining > 0 ? remaining : 0 }])
+                                                }
+                                            }}
+                                        >
+                                            {getPaymentIcon(pt.identifier)}
+                                            <span className="flex-1 text-left truncate">{cleanLabel(pt.label)}</span>
+                                            {isSelected && <Check className="h-3 w-3 shrink-0" />}
+                                        </Button>
+                                    )
+                                })}
                             </div>
 
                             {/* Payment Inputs */}
