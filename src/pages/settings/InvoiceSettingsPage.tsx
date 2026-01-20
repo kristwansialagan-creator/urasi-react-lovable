@@ -47,7 +47,7 @@ export default function InvoiceSettingsPage() {
         if (!file) return
 
         setUploading(true)
-        const { url } = await uploadFile(file)
+        const url = await uploadFile(file)
         if (url) {
             setFormData({ ...formData, invoice_company_logo: url })
         }
