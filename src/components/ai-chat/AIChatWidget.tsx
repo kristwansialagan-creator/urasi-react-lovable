@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Globe, Loader2, MessageSquare, Package, Paperclip, Send, Terminal, Trash2, User, X, Plus, History, LogIn, LogOut, ExternalLink, Copy, Check } from 'lucide-react'
+import { Bot, Globe, Loader2, MessageSquare, Package, Paperclip, Send, Terminal, Trash2, User, X, Plus, History, LogIn, LogOut, ExternalLink, Copy } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSanitize from 'rehype-sanitize'
@@ -19,7 +19,8 @@ import {
   deleteChatSession,
   signIn,
   getUser,
-  isSignedIn
+  isSignedIn,
+  type ChatMode
 } from './chatSessionStore'
 import { chatStream, deletePath, listModels, uploadFiles, signOut } from './puterClient'
 import { firecrawlApi, isValidUrl } from '@/lib/api/firecrawl'
@@ -39,7 +40,6 @@ const VISION_MODELS = [
 ]
 
 type ConnectionStatus = 'loading' | 'ready' | 'error'
-type ChatMode = 'ai' | 'scraper' | 'product'
 
 type ChatAttachment = {
   name: string
@@ -67,6 +67,20 @@ type ModelOption = {
   id: string
   label: string
   provider: string
+}
+
+type ChatIndexItem = {
+  id: string
+  title: string
+  createdAt: number
+  updatedAt: number
+}
+
+// Per-mode state type
+type PerModeState = {
+  currentChatId: string | null
+  messages: ChatMessage[]
+  chatHistory: ChatIndexItem[]
 }
 
 function uid() {
@@ -110,21 +124,24 @@ function classNames(...values: Array<string | false | null | undefined>) {
 
 export default function AIChatWidget() {
   const navigate = useNavigate()
-  const { setExtractedData, clearExtractedData } = useProductExtraction()
+  const { setExtractedData } = useProductExtraction()
 
   // UI State
   const [isOpen, setIsOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [chatMode, setChatMode] = useState<ChatMode>('ai')
-  const [copiedProductId, setCopiedProductId] = useState<string | null>(null)
 
-  // Data State
+  // Data State - Per Mode
+  const [modeStates, setModeStates] = useState<Record<ChatMode, PerModeState>>({
+    ai: { currentChatId: null, messages: [], chatHistory: [] },
+    scraper: { currentChatId: null, messages: [], chatHistory: [] },
+    product: { currentChatId: null, messages: [], chatHistory: [] }
+  })
+
+  // Auth State
   const [user, setUser] = useState<any>(null)
   const [isUserSignedIn, setIsUserSignedIn] = useState(false)
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [chatHistory, setChatHistory] = useState<any[]>([]) // List of {id, title, updatedAt}
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [showWelcome, setShowWelcome] = useState(false)
 
   // Chat/Model State
@@ -141,10 +158,23 @@ export default function AIChatWidget() {
   const scrollAnchorRef = useRef<HTMLDivElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const hasLoadedModelsRef = useRef(false)
+  const loadedModesRef = useRef<Set<ChatMode>>(new Set())
+
+  // Current mode's state (derived)
+  const currentState = modeStates[chatMode]
+  const { currentChatId, messages, chatHistory } = currentState
+
+  // Helper to update mode state
+  const updateModeState = (mode: ChatMode, updates: Partial<PerModeState>) => {
+    setModeStates(prev => ({
+      ...prev,
+      [mode]: { ...prev[mode], ...updates }
+    }))
+  }
 
   // --- Initialization ---
 
-  // Load User & Chat Index on Open
+  // Load User & Models on Open
   useEffect(() => {
     if (!isOpen) return
 
@@ -162,7 +192,6 @@ export default function AIChatWidget() {
         }
       } catch (e: unknown) { 
         console.error('Auth check failed', e)
-        // Don't throw error to prevent console spam
         const errorMessage = e instanceof Error ? e.message : ''
         if (errorMessage && !errorMessage.includes('401')) {
           console.warn('Authentication service unavailable')
@@ -183,23 +212,66 @@ export default function AIChatWidget() {
           hasLoadedModelsRef.current = true
         } catch { setStatus('error') }
       }
-
-      // 3. Load Chat History Index
-      await refreshHistory()
     }
     init()
   }, [isOpen])
 
+  // Load history for current mode when mode changes or widget opens
+  useEffect(() => {
+    if (!isOpen) return
+    
+    // Only load once per mode per session
+    if (loadedModesRef.current.has(chatMode)) return
+    
+    const loadModeHistory = async () => {
+      setIsLoadingHistory(true)
+      try {
+        const index = await getChatIndex(chatMode)
+        
+        if (index.length > 0) {
+          // Load the most recent chat
+          const session = await getChatSession(index[0].id, chatMode)
+          updateModeState(chatMode, {
+            chatHistory: index,
+            currentChatId: index[0].id,
+            messages: session?.messages || []
+          })
+          setShowWelcome(session?.messages.length === 0)
+        } else {
+          // Create new chat for this mode
+          const newChat = await createNewChat(chatMode)
+          updateModeState(chatMode, {
+            chatHistory: [{ id: newChat.id, title: newChat.title, createdAt: newChat.createdAt, updatedAt: newChat.updatedAt }],
+            currentChatId: newChat.id,
+            messages: []
+          })
+          setShowWelcome(true)
+        }
+        
+        loadedModesRef.current.add(chatMode)
+      } catch (e) {
+        console.error('Failed to load mode history', e)
+      } finally {
+        setIsLoadingHistory(false)
+      }
+    }
+    
+    loadModeHistory()
+  }, [isOpen, chatMode])
+
   // Load Specific Chat when currentChatId changes
   useEffect(() => {
-    if (!currentChatId) return
+    if (!currentChatId || !isOpen) return
+    
+    // Skip if we just loaded this mode's history
+    if (loadedModesRef.current.has(chatMode) && messages.length > 0) return
 
     const loadChat = async () => {
       setIsLoadingHistory(true)
       try {
-        const session = await getChatSession(currentChatId)
+        const session = await getChatSession(currentChatId, chatMode)
         if (session) {
-          setMessages(session.messages || [])
+          updateModeState(chatMode, { messages: session.messages || [] })
           if (session.messages.length === 0) setShowWelcome(true)
           else setShowWelcome(false)
 
@@ -214,20 +286,11 @@ export default function AIChatWidget() {
     loadChat()
   }, [currentChatId])
 
-  // Helper to refresh history list
+  // Helper to refresh history list for current mode
   const refreshHistory = async () => {
     try {
-      const index = await getChatIndex()
-      setChatHistory(index)
-
-      // If no current chat, load the most recent one or create new
-      if (!currentChatId) {
-        if (index.length > 0) {
-          setCurrentChatId(index[0].id)
-        } else {
-          await handleNewChat()
-        }
-      }
+      const index = await getChatIndex(chatMode)
+      updateModeState(chatMode, { chatHistory: index })
     } catch (e) {
       console.error('Failed to load history', e)
     }
@@ -267,11 +330,13 @@ export default function AIChatWidget() {
   async function handleNewChat() {
     try {
       setIsLoadingHistory(true)
-      const newChat = await createNewChat()
-      setCurrentChatId(newChat.id)
-      setMessages([])
+      const newChat = await createNewChat(chatMode)
+      updateModeState(chatMode, {
+        currentChatId: newChat.id,
+        messages: [],
+        chatHistory: [{ id: newChat.id, title: newChat.title, createdAt: newChat.createdAt, updatedAt: newChat.updatedAt }, ...chatHistory]
+      })
       setShowWelcome(true)
-      setChatHistory(prev => [{ id: newChat.id, title: 'New Chat', updatedAt: Date.now() }, ...prev])
       setIsHistoryOpen(false) // Close sidebar if open
     } catch (e) {
       console.error('New chat failed', e)
@@ -284,14 +349,43 @@ export default function AIChatWidget() {
     e.stopPropagation()
     if (!confirm('Delete this chat?')) return
 
-    await deleteChatSession(id)
+    await deleteChatSession(id, chatMode)
 
     const newHistory = chatHistory.filter(c => c.id !== id)
-    setChatHistory(newHistory)
+    updateModeState(chatMode, { chatHistory: newHistory })
 
     if (currentChatId === id) {
-      if (newHistory.length > 0) setCurrentChatId(newHistory[0].id)
-      else await handleNewChat()
+      if (newHistory.length > 0) {
+        const session = await getChatSession(newHistory[0].id, chatMode)
+        updateModeState(chatMode, {
+          currentChatId: newHistory[0].id,
+          messages: session?.messages || []
+        })
+      } else {
+        await handleNewChat()
+      }
+    }
+  }
+
+  async function handleSelectChat(id: string) {
+    if (id === currentChatId) {
+      setIsHistoryOpen(false)
+      return
+    }
+    
+    setIsLoadingHistory(true)
+    try {
+      const session = await getChatSession(id, chatMode)
+      updateModeState(chatMode, {
+        currentChatId: id,
+        messages: session?.messages || []
+      })
+      setShowWelcome(session?.messages.length === 0)
+    } catch (e) {
+      console.error('Failed to load chat', e)
+    } finally {
+      setIsLoadingHistory(false)
+      setIsHistoryOpen(false)
     }
   }
 
@@ -303,11 +397,12 @@ export default function AIChatWidget() {
       if (signedIn) {
         const u = await getUser()
         setUser(u)
-        await refreshHistory() // Reload history as it might merge with cloud
+        // Reload history for current mode
+        loadedModesRef.current.delete(chatMode)
+        await refreshHistory()
       }
     } catch (e: unknown) {
       console.error('Sign in failed', e)
-      // Don't throw error to prevent console spam
       const errorMessage = e instanceof Error ? e.message : ''
       if (errorMessage && !errorMessage.includes('401')) {
         console.warn('Authentication service unavailable')
@@ -345,7 +440,7 @@ export default function AIChatWidget() {
     }
 
     const newMessages = [...messages, userMessage, scraperMessage]
-    setMessages(newMessages)
+    updateModeState(chatMode, { messages: newMessages })
     setPrompt('')
 
     try {
@@ -390,19 +485,34 @@ export default function AIChatWidget() {
       }
 
       // Update scraper message with result
-      setMessages(prev => prev.map(m => 
+      const finalMessages = newMessages.map(m => 
         m.id === scraperMessageId 
           ? { ...m, content: resultContent, metadata } 
           : m
-      ))
+      )
+      updateModeState(chatMode, { messages: finalMessages })
+
+      // Save session
+      if (currentChatId) {
+        await saveChatSession(currentChatId, finalMessages, chatMode)
+        // Update history title
+        const firstUserMsg = finalMessages.find(m => m.role === 'user')
+        if (firstUserMsg) {
+          const newTitle = firstUserMsg.content.slice(0, 30) || 'New Scrape'
+          updateModeState(chatMode, {
+            chatHistory: chatHistory.map(c => c.id === currentChatId ? { ...c, title: newTitle, updatedAt: Date.now() } : c)
+          })
+        }
+      }
 
     } catch (error: any) {
       console.error('Scraper error:', error)
-      setMessages(prev => prev.map(m => 
+      const errorMessages = newMessages.map(m => 
         m.id === scraperMessageId 
           ? { ...m, content: `**Error:** ${error?.message || 'An unexpected error occurred.'}` } 
           : m
-      ))
+      )
+      updateModeState(chatMode, { messages: errorMessages })
     } finally {
       setIsSending(false)
     }
@@ -416,12 +526,14 @@ export default function AIChatWidget() {
 
     // Must be a URL for product lookup
     if (!isValidUrl(trimmed)) {
-      setMessages(prev => [...prev, {
-        id: uid(),
-        role: 'product' as const,
-        content: '**Error:** Please enter a valid product URL (e.g., https://tokopedia.com/product/...)',
-        createdAt: Date.now()
-      }])
+      updateModeState(chatMode, {
+        messages: [...messages, {
+          id: uid(),
+          role: 'product' as const,
+          content: '**Error:** Please enter a valid product URL (e.g., https://tokopedia.com/product/...)',
+          createdAt: Date.now()
+        }]
+      })
       return
     }
 
@@ -446,7 +558,7 @@ export default function AIChatWidget() {
     }
 
     const newMessages = [...messages, userMessage, productMessage]
-    setMessages(newMessages)
+    updateModeState(chatMode, { messages: newMessages })
     setPrompt('')
 
     try {
@@ -487,7 +599,7 @@ export default function AIChatWidget() {
         resultContent += `\n\n*Source: [${new URL(trimmed).hostname}](${trimmed})*`
         
         // Update message with result
-        setMessages(prev => prev.map(m => 
+        const finalMessages = newMessages.map(m => 
           m.id === productMessageId 
             ? { 
                 ...m, 
@@ -501,22 +613,36 @@ export default function AIChatWidget() {
                 } 
               } 
             : m
-        ))
+        )
+        updateModeState(chatMode, { messages: finalMessages })
+
+        // Save session
+        if (currentChatId) {
+          await saveChatSession(currentChatId, finalMessages, chatMode)
+          // Update history title
+          const productName = extracted.name || new URL(trimmed).hostname
+          const newTitle = productName.slice(0, 30) || 'New Product'
+          updateModeState(chatMode, {
+            chatHistory: chatHistory.map(c => c.id === currentChatId ? { ...c, title: newTitle, updatedAt: Date.now() } : c)
+          })
+        }
         
       } else {
-        setMessages(prev => prev.map(m => 
+        const errorMessages = newMessages.map(m => 
           m.id === productMessageId 
             ? { ...m, content: `**Error:** ${response.error || 'Failed to extract product data.'}` } 
             : m
-        ))
+        )
+        updateModeState(chatMode, { messages: errorMessages })
       }
     } catch (error: any) {
       console.error('Product lookup error:', error)
-      setMessages(prev => prev.map(m => 
+      const errorMessages = newMessages.map(m => 
         m.id === productMessageId 
           ? { ...m, content: `**Error:** ${error?.message || 'An unexpected error occurred.'}` } 
           : m
-      ))
+      )
+      updateModeState(chatMode, { messages: errorMessages })
     } finally {
       setIsSending(false)
     }
@@ -575,18 +701,20 @@ export default function AIChatWidget() {
     }
 
     const newMessages = [...messages, userMessage, assistantMessage]
-    setMessages(newMessages)
+    updateModeState(chatMode, { messages: newMessages })
     setPrompt('')
     const filesToUpload = pendingFiles
     setPendingFiles([])
 
     // Save immediately (user msg)
     if (currentChatId) {
-      saveChatSession(currentChatId, [...messages, userMessage], selectedModel)
+      saveChatSession(currentChatId, [...messages, userMessage], chatMode, selectedModel)
       // Update history title optimistically
       const firstUserMsg = messages.find(m => m.role === 'user') || userMessage
       const newTitle = firstUserMsg.content.slice(0, 30) || 'New Chat'
-      setChatHistory(prev => prev.map(c => c.id === currentChatId ? { ...c, title: newTitle, updatedAt: Date.now() } : c))
+      updateModeState(chatMode, {
+        chatHistory: chatHistory.map(c => c.id === currentChatId ? { ...c, title: newTitle, updatedAt: Date.now() } : c)
+      })
     }
 
     try {
@@ -620,7 +748,13 @@ export default function AIChatWidget() {
       let lastFlush = 0
 
       const flush = () => {
-        setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: buffer } : m))
+        setModeStates(prev => ({
+          ...prev,
+          [chatMode]: {
+            ...prev[chatMode],
+            messages: prev[chatMode].messages.map(m => m.id === assistantId ? { ...m, content: buffer } : m)
+          }
+        }))
       }
 
       for await (const part of completion as any) {
@@ -638,7 +772,8 @@ export default function AIChatWidget() {
 
       // 5. Final Save
       const finalMessages = newMessages.map(m => m.id === assistantId ? { ...m, content: buffer } : m)
-      if (currentChatId) saveChatSession(currentChatId, finalMessages, selectedModel)
+      updateModeState(chatMode, { messages: finalMessages })
+      if (currentChatId) saveChatSession(currentChatId, finalMessages, chatMode, selectedModel)
 
       // Cleaning
       for (const p of puterPaths) try { await deletePath(p) } catch { }
@@ -646,7 +781,8 @@ export default function AIChatWidget() {
     } catch (e: any) {
       console.error('Chat Error:', e)
       const errorMsg = `Error: ${e?.message || 'Unknown error'}`
-      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: errorMsg } : m))
+      const errorMessages = newMessages.map(m => m.id === assistantId ? { ...m, content: errorMsg } : m)
+      updateModeState(chatMode, { messages: errorMessages })
     } finally {
       setIsSending(false)
     }
@@ -678,7 +814,9 @@ export default function AIChatWidget() {
           isHistoryOpen ? "translate-x-0" : "-translate-x-full"
         )}>
           <div className="p-3 border-b border-[hsl(var(--border))] flex items-center justify-between">
-            <span className="font-semibold text-xs">Chat History</span>
+            <span className="font-semibold text-xs">
+              {chatMode === 'ai' ? 'Chat History' : chatMode === 'product' ? 'Product History' : 'Scrape History'}
+            </span>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsHistoryOpen(false)}><X className="h-3 w-3" /></Button>
           </div>
           <ScrollArea className="flex-1">
@@ -690,7 +828,7 @@ export default function AIChatWidget() {
                     "group flex items-center justify-between p-1.5 rounded-md text-xs cursor-pointer hover:bg-[hsl(var(--accent)/0.1)] transition-colors",
                     currentChatId === chat.id ? "bg-[hsl(var(--accent)/0.2)] font-medium text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]"
                   )}
-                  onClick={() => { setCurrentChatId(chat.id); setIsHistoryOpen(false); }}
+                  onClick={() => handleSelectChat(chat.id)}
                 >
                   <span className="truncate flex-1">{chat.title || 'Untitled Chat'}</span>
                   <Button
@@ -961,7 +1099,7 @@ export default function AIChatWidget() {
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder={chatMode === 'ai' ? "Ask anything..." : "Enter URL to scrape or search query..."}
+              placeholder={chatMode === 'ai' ? "Ask anything..." : chatMode === 'product' ? "Paste product URL..." : "Enter URL or search query..."}
               className="min-h-[36px] max-h-24 w-full resize-none border-0 bg-transparent px-3 py-2 text-xs focus-visible:ring-0 shadow-none text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
