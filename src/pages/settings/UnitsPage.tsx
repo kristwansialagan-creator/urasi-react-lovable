@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Ruler, Plus, Edit2, Trash2 } from 'lucide-react'
 import { useUnits } from '@/hooks'
 
@@ -108,7 +111,7 @@ export default function UnitsPage() {
                                 <td className="p-3 font-medium">{unit.name}</td>
                                 <td className="p-3"><span className="px-2 py-1 bg-[hsl(var(--muted))] rounded text-xs font-mono">{unit.identifier}</span></td>
                                 <td className="p-3 text-center font-bold">{unit.value}</td>
-                                <td className="p-3 text-center">{unit.base_unit ? <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Yes</span> : <span className="text-[hsl(var(--muted-foreground))]">No</span>}</td>
+                                <td className="p-3 text-center">{unit.base_unit ? <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded text-xs">Yes</span> : <span className="text-[hsl(var(--muted-foreground))]">No</span>}</td>
                                 <td className="p-3">{unit.group?.name || '-'}</td>
                                 <td className="p-3"><div className="flex gap-2 justify-center"><Button size="sm" variant="outline" onClick={() => openEdit(unit)}><Edit2 className="h-3 w-3" /></Button><Button size="sm" variant="destructive" onClick={() => handleDeleteUnit(unit.id)}><Trash2 className="h-3 w-3" /></Button></div></td>
                             </tr>
@@ -116,31 +119,81 @@ export default function UnitsPage() {
                 )}
             </CardContent></Card>
 
-            {/* Unit Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-md"><CardHeader><CardTitle>{editingUnit ? 'Edit' : 'New'} Unit</CardTitle></CardHeader><CardContent className="space-y-4">
-                        <div><Label>Name *</Label><Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Piece, Box, Kilogram" /></div>
-                        <div><Label>Identifier *</Label><Input value={formData.identifier} onChange={e => setFormData({ ...formData, identifier: e.target.value })} placeholder="pcs, box, kg" /></div>
-                        <div><Label>Value (conversion factor)</Label><Input type="number" step="0.01" value={formData.value} onChange={e => setFormData({ ...formData, value: Number(e.target.value) })} /></div>
-                        <div><Label>Group</Label><select value={formData.group_id} onChange={e => setFormData({ ...formData, group_id: e.target.value })} className="w-full px-3 py-2 border rounded"><option value="">Select group...</option>{groups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>
-                        <div className="flex items-center gap-2"><input type="checkbox" checked={formData.base_unit} onChange={e => setFormData({ ...formData, base_unit: e.target.checked })} id="base" /><Label htmlFor="base">Base Unit</Label></div>
-                        <div><Label>Description</Label><Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Optional" /></div>
-                        <div className="flex gap-2 pt-4"><Button variant="outline" onClick={() => { setShowModal(false); resetForm() }} className="flex-1">Cancel</Button><Button onClick={handleSaveUnit} className="flex-1">{editingUnit ? 'Update' : 'Create'}</Button></div>
-                    </CardContent></Card>
-                </div>
-            )}
+            {/* Unit Modal - Using Dialog Component */}
+            <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) resetForm() }}>
+                <DialogContent className="bg-background">
+                    <DialogHeader>
+                        <DialogTitle>{editingUnit ? 'Edit' : 'New'} Unit</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Name *</Label>
+                            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Piece, Box, Kilogram" />
+                        </div>
+                        <div>
+                            <Label>Identifier *</Label>
+                            <Input value={formData.identifier} onChange={e => setFormData({ ...formData, identifier: e.target.value })} placeholder="pcs, box, kg" />
+                        </div>
+                        <div>
+                            <Label>Value (conversion factor)</Label>
+                            <Input type="number" step="0.01" value={formData.value} onChange={e => setFormData({ ...formData, value: Number(e.target.value) })} />
+                        </div>
+                        <div>
+                            <Label>Group</Label>
+                            <Select value={formData.group_id} onValueChange={(value) => setFormData({ ...formData, group_id: value })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select group..." />
+                                </SelectTrigger>
+                                <SelectContent className="bg-popover z-[150]">
+                                    <SelectItem value="">No group</SelectItem>
+                                    {groups.map((g: any) => (
+                                        <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id="base_unit"
+                                checked={formData.base_unit}
+                                onCheckedChange={(checked) => setFormData({ ...formData, base_unit: !!checked })}
+                            />
+                            <Label htmlFor="base_unit">Base Unit</Label>
+                        </div>
+                        <div>
+                            <Label>Description</Label>
+                            <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Optional" />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => { setShowModal(false); resetForm() }}>Cancel</Button>
+                        <Button onClick={handleSaveUnit}>{editingUnit ? 'Update' : 'Create'}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-            {/* Group Modal */}
-            {showGroupModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-md"><CardHeader><CardTitle>{editingGroup ? 'Edit' : 'New'} Unit Group</CardTitle></CardHeader><CardContent className="space-y-4">
-                        <div><Label>Name *</Label><Input value={groupData.name} onChange={e => setGroupData({ ...groupData, name: e.target.value })} placeholder="Weight, Volume, Length" /></div>
-                        <div><Label>Description</Label><Input value={groupData.description} onChange={e => setGroupData({ ...groupData, description: e.target.value })} placeholder="Optional" /></div>
-                        <div className="flex gap-2 pt-4"><Button variant="outline" onClick={() => { setShowGroupModal(false); resetForm() }} className="flex-1">Cancel</Button><Button onClick={handleSaveGroup} className="flex-1">{editingGroup ? 'Update' : 'Create'}</Button></div>
-                    </CardContent></Card>
-                </div>
-            )}
+            {/* Group Modal - Using Dialog Component */}
+            <Dialog open={showGroupModal} onOpenChange={(open) => { setShowGroupModal(open); if (!open) resetForm() }}>
+                <DialogContent className="bg-background">
+                    <DialogHeader>
+                        <DialogTitle>{editingGroup ? 'Edit' : 'New'} Unit Group</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Name *</Label>
+                            <Input value={groupData.name} onChange={e => setGroupData({ ...groupData, name: e.target.value })} placeholder="Weight, Volume, Length" />
+                        </div>
+                        <div>
+                            <Label>Description</Label>
+                            <Input value={groupData.description} onChange={e => setGroupData({ ...groupData, description: e.target.value })} placeholder="Optional" />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => { setShowGroupModal(false); resetForm() }}>Cancel</Button>
+                        <Button onClick={handleSaveGroup}>{editingGroup ? 'Update' : 'Create'}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

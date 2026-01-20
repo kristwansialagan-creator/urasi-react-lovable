@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calculator, Plus, Edit2, Trash2, Percent } from 'lucide-react'
 import { useTaxes } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
@@ -115,29 +117,70 @@ export default function TaxesPage() {
                 )}
             </CardContent></Card>
 
-            {/* Tax Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-md"><CardHeader><CardTitle>{editingTax ? 'Edit' : 'New'} Tax</CardTitle></CardHeader><CardContent className="space-y-4">
-                        <div><Label>Name *</Label><Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Sales Tax" /></div>
-                        <div><Label>Type</Label><select value={formData.tax_type} onChange={e => setFormData({ ...formData, tax_type: e.target.value as 'percentage' | 'flat' })} className="w-full px-3 py-2 border rounded"><option value="percentage">Percentage</option><option value="flat">Flat Amount</option></select></div>
-                        <div><Label>Rate *</Label><div className="relative"><Input type="number" step="0.01" value={formData.rate} onChange={e => setFormData({ ...formData, rate: Number(e.target.value) })} />{formData.tax_type === 'percentage' && <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />}</div></div>
-                        <div><Label>Description</Label><Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Optional description" /></div>
-                        <div className="flex gap-2 pt-4"><Button variant="outline" onClick={() => { setShowModal(false); resetForm() }} className="flex-1">Cancel</Button><Button onClick={handleSaveTax} className="flex-1">{editingTax ? 'Update' : 'Create'}</Button></div>
-                    </CardContent></Card>
-                </div>
-            )}
+            {/* Tax Modal - Using Dialog Component */}
+            <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) resetForm() }}>
+                <DialogContent className="bg-background">
+                    <DialogHeader>
+                        <DialogTitle>{editingTax ? 'Edit' : 'New'} Tax</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Name *</Label>
+                            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Sales Tax" />
+                        </div>
+                        <div>
+                            <Label>Type</Label>
+                            <Select value={formData.tax_type} onValueChange={(value: 'percentage' | 'flat') => setFormData({ ...formData, tax_type: value })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-popover z-[150]">
+                                    <SelectItem value="percentage">Percentage</SelectItem>
+                                    <SelectItem value="flat">Flat Amount</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Rate *</Label>
+                            <div className="relative">
+                                <Input type="number" step="0.01" value={formData.rate} onChange={e => setFormData({ ...formData, rate: Number(e.target.value) })} />
+                                {formData.tax_type === 'percentage' && <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />}
+                            </div>
+                        </div>
+                        <div>
+                            <Label>Description</Label>
+                            <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Optional description" />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => { setShowModal(false); resetForm() }}>Cancel</Button>
+                        <Button onClick={handleSaveTax}>{editingTax ? 'Update' : 'Create'}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-            {/* Group Modal */}
-            {showGroupModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-md"><CardHeader><CardTitle>{editingGroup ? 'Edit' : 'New'} Tax Group</CardTitle></CardHeader><CardContent className="space-y-4">
-                        <div><Label>Name *</Label><Input value={groupData.name} onChange={e => setGroupData({ ...groupData, name: e.target.value })} placeholder="Tax Group Name" /></div>
-                        <div><Label>Description</Label><Input value={groupData.description} onChange={e => setGroupData({ ...groupData, description: e.target.value })} placeholder="Optional description" /></div>
-                        <div className="flex gap-2 pt-4"><Button variant="outline" onClick={() => { setShowGroupModal(false); resetForm() }} className="flex-1">Cancel</Button><Button onClick={handleSaveGroup} className="flex-1">{editingGroup ? 'Update' : 'Create'}</Button></div>
-                    </CardContent></Card>
-                </div>
-            )}
+            {/* Group Modal - Using Dialog Component */}
+            <Dialog open={showGroupModal} onOpenChange={(open) => { setShowGroupModal(open); if (!open) resetForm() }}>
+                <DialogContent className="bg-background">
+                    <DialogHeader>
+                        <DialogTitle>{editingGroup ? 'Edit' : 'New'} Tax Group</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Name *</Label>
+                            <Input value={groupData.name} onChange={e => setGroupData({ ...groupData, name: e.target.value })} placeholder="Tax Group Name" />
+                        </div>
+                        <div>
+                            <Label>Description</Label>
+                            <Input value={groupData.description} onChange={e => setGroupData({ ...groupData, description: e.target.value })} placeholder="Optional description" />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => { setShowGroupModal(false); resetForm() }}>Cancel</Button>
+                        <Button onClick={handleSaveGroup}>{editingGroup ? 'Update' : 'Create'}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

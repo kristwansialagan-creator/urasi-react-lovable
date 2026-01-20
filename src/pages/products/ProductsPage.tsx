@@ -178,9 +178,9 @@ export default function ProductsPage() {
                                 <Filter className="mr-2 h-4 w-4" />
                                 <SelectValue placeholder="All Categories" />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-2 border-border shadow-lg max-h-[300px]">
+                            <SelectContent className="bg-popover border border-border shadow-lg max-h-[300px] z-[150]">
                                 {/* Search Input */}
-                                <div className="p-2 border-b sticky top-0 bg-white z-10">
+                                <div className="p-2 border-b sticky top-0 bg-popover z-10">
                                     <Input
                                         placeholder="Search categories..."
                                         value={categorySearch}
