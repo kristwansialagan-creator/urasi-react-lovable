@@ -2,6 +2,7 @@ import { kvGet, kvSet, kvDel, signIn, getUser, isSignedIn } from './puterClient'
 
 const CHAT_INDEX_KEY = 'urasi_chat_index_v1'
 const CHAT_PREFIX = 'urasi_chat_'
+const LOCAL_PREFIX = 'urasi_local_'
 
 interface ChatMessage {
   id: string;
@@ -32,12 +33,59 @@ function uid(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
 }
 
+// ============ LocalStorage Fallback Functions ============
+function localGet(key: string): any {
+  try {
+    const item = localStorage.getItem(LOCAL_PREFIX + key)
+    return item ? JSON.parse(item) : null
+  } catch {
+    return null
+  }
+}
+
+function localSet(key: string, value: any): void {
+  try {
+    localStorage.setItem(LOCAL_PREFIX + key, JSON.stringify(value))
+  } catch (e) {
+    console.warn('localStorage save failed', e)
+  }
+}
+
+function localDel(key: string): void {
+  try {
+    localStorage.removeItem(LOCAL_PREFIX + key)
+  } catch {
+    // ignore
+  }
+}
+
+// Check if user is signed in (with error handling)
+async function checkSignedIn(): Promise<boolean> {
+  try {
+    return await isSignedIn()
+  } catch {
+    return false
+  }
+}
+
 /**
  * Loads the list of all chat sessions (metadata only).
+ * Uses localStorage for guests, Puter KV for signed-in users.
  */
 export async function getChatIndex(): Promise<ChatIndexItem[]> {
-  const index = await kvGet(CHAT_INDEX_KEY)
-  return Array.isArray(index) ? index as ChatIndexItem[] : []
+  const signedIn = await checkSignedIn()
+  
+  if (signedIn) {
+    try {
+      const index = await kvGet(CHAT_INDEX_KEY)
+      return Array.isArray(index) ? index as ChatIndexItem[] : []
+    } catch {
+      // Fallback to local if cloud fails
+      return localGet(CHAT_INDEX_KEY) || []
+    }
+  }
+  
+  return localGet(CHAT_INDEX_KEY) || []
 }
 
 /**
@@ -45,8 +93,19 @@ export async function getChatIndex(): Promise<ChatIndexItem[]> {
  */
 export async function getChatSession(chatId: string): Promise<ChatSession | null> {
   if (!chatId) return null
-  const data = await kvGet(CHAT_PREFIX + chatId)
-  return (data as ChatSession) || null
+  
+  const signedIn = await checkSignedIn()
+  
+  if (signedIn) {
+    try {
+      const data = await kvGet(CHAT_PREFIX + chatId)
+      return (data as ChatSession) || null
+    } catch {
+      return localGet(CHAT_PREFIX + chatId)
+    }
+  }
+  
+  return localGet(CHAT_PREFIX + chatId)
 }
 
 /**
@@ -61,31 +120,40 @@ export async function createNewChat(): Promise<ChatSession> {
     title: 'New Chat',
     createdAt: now,
     updatedAt: now,
-    messages: [], // Empty start
-    model: 'openai/gpt-4o-mini' // Default
+    messages: [],
+    model: 'openai/gpt-4o-mini'
   }
 
-  // Save specific chat
-  await kvSet(CHAT_PREFIX + chatId, newChat)
-
-  // Update index
+  const signedIn = await checkSignedIn()
   const index = await getChatIndex()
-  const inputEntry: ChatIndexItem = {
+  
+  const indexEntry: ChatIndexItem = {
     id: chatId,
     title: 'New Chat',
     createdAt: now,
     updatedAt: now
   }
+  const newIndex = [indexEntry, ...index]
 
-  // Prepend to index (newest first)
-  await kvSet(CHAT_INDEX_KEY, [inputEntry, ...index])
+  if (signedIn) {
+    try {
+      await kvSet(CHAT_PREFIX + chatId, newChat)
+      await kvSet(CHAT_INDEX_KEY, newIndex)
+    } catch {
+      // Fallback to local
+      localSet(CHAT_PREFIX + chatId, newChat)
+      localSet(CHAT_INDEX_KEY, newIndex)
+    }
+  } else {
+    localSet(CHAT_PREFIX + chatId, newChat)
+    localSet(CHAT_INDEX_KEY, newIndex)
+  }
 
   return newChat
 }
 
 /**
  * Saves messages to a specific chat session.
- * Also updates the 'updatedAt' field in the index.
  */
 export async function saveChatSession(
   chatId: string, 
@@ -117,18 +185,29 @@ export async function saveChatSession(
     }
   }
 
-  await kvSet(CHAT_PREFIX + chatId, updatedChat)
+  const signedIn = await checkSignedIn()
+  
+  // Save chat
+  if (signedIn) {
+    try {
+      await kvSet(CHAT_PREFIX + chatId, updatedChat)
+    } catch {
+      localSet(CHAT_PREFIX + chatId, updatedChat)
+    }
+  } else {
+    localSet(CHAT_PREFIX + chatId, updatedChat)
+  }
 
   // Update index metadata
   const index = await getChatIndex()
-  const newIndex = index.map(item => {
+  let newIndex = index.map(item => {
     if (item.id === chatId) {
       return { ...item, title: updatedChat.title, updatedAt: now }
     }
     return item
   })
 
-  // If not in index for some reason, add it
+  // If not in index, add it
   if (!newIndex.find(i => i.id === chatId)) {
     newIndex.unshift({
       id: chatId,
@@ -145,7 +224,15 @@ export async function saveChatSession(
     }
   }
 
-  await kvSet(CHAT_INDEX_KEY, newIndex)
+  if (signedIn) {
+    try {
+      await kvSet(CHAT_INDEX_KEY, newIndex)
+    } catch {
+      localSet(CHAT_INDEX_KEY, newIndex)
+    }
+  } else {
+    localSet(CHAT_INDEX_KEY, newIndex)
+  }
 }
 
 /**
@@ -154,11 +241,30 @@ export async function saveChatSession(
 export async function deleteChatSession(chatId: string): Promise<void> {
   if (!chatId) return
 
-  await kvDel(CHAT_PREFIX + chatId)
+  const signedIn = await checkSignedIn()
+  
+  if (signedIn) {
+    try {
+      await kvDel(CHAT_PREFIX + chatId)
+    } catch {
+      localDel(CHAT_PREFIX + chatId)
+    }
+  } else {
+    localDel(CHAT_PREFIX + chatId)
+  }
 
   const index = await getChatIndex()
   const newIndex = index.filter(i => i.id !== chatId)
-  await kvSet(CHAT_INDEX_KEY, newIndex)
+  
+  if (signedIn) {
+    try {
+      await kvSet(CHAT_INDEX_KEY, newIndex)
+    } catch {
+      localSet(CHAT_INDEX_KEY, newIndex)
+    }
+  } else {
+    localSet(CHAT_INDEX_KEY, newIndex)
+  }
 }
 
 /**
