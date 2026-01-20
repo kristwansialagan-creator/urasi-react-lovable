@@ -121,7 +121,7 @@ export default function StockAdjustmentPage() {
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[300px] p-0 bg-popover z-50" align="start">
-                                <Command>
+                                <Command shouldFilter={false}>
                                     <CommandInput 
                                         placeholder="Search product by name, SKU, barcode..." 
                                         value={productSearch}
@@ -133,7 +133,7 @@ export default function StockAdjustmentPage() {
                                             {filteredProducts.slice(0, 50).map((product) => (
                                                 <CommandItem
                                                     key={product.id}
-                                                    value={product.id}
+                                                    value={product.name || product.id}
                                                     onSelect={() => {
                                                         setFormData({ ...formData, product_id: product.id, unit_id: '' })
                                                         setProductPopoverOpen(false)
