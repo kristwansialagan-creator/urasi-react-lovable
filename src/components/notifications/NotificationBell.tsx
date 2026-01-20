@@ -18,15 +18,15 @@ export default function NotificationBell() {
             </Link>
 
             {/* Dropdown Preview */}
-            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="font-semibold">Notifications</h3>
-                    {unreadCount > 0 && <p className="text-xs text-[hsl(var(--muted-foreground))]">{unreadCount} unread</p>}
+            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 shadow-xl rounded-lg border border-gray-200 dark:border-slate-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="p-3 border-b border-gray-200 dark:border-slate-600">
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                    {unreadCount > 0 && <p className="text-xs text-gray-500 dark:text-slate-400">{unreadCount} unread</p>}
                 </div>
 
                 <div className="max-h-96 overflow-y-auto">
                     {recentNotifications.length === 0 ? (
-                        <div className="p-4 text-center text-[hsl(var(--muted-foreground))] text-sm">
+                        <div className="p-4 text-center text-gray-500 dark:text-slate-400 text-sm">
                             No notifications
                         </div>
                     ) : (
@@ -34,13 +34,13 @@ export default function NotificationBell() {
                             <Link
                                 key={notification.id}
                                 to="/notifications"
-                                className={`block p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-[hsl(var(--muted))] ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                                className={`block p-3 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-white dark:bg-slate-800'}`}
                             >
                                 <div className="flex items-start gap-2">
                                     <div className="flex-1">
-                                        <p className="font-medium text-sm">{notification.title}</p>
-                                        <p className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-2">{notification.description || ''}</p>
-                                        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                                        <p className="font-medium text-sm text-gray-900 dark:text-white">{notification.title}</p>
+                                        <p className="text-xs text-gray-600 dark:text-slate-300 line-clamp-2">{notification.description || ''}</p>
+                                        <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
                                             {notification.created_at ? new Date(notification.created_at).toLocaleDateString() : ''}
                                         </p>
                                     </div>
@@ -56,7 +56,7 @@ export default function NotificationBell() {
                 {recentNotifications.length > 0 && (
                     <Link
                         to="/notifications"
-                        className="block p-3 text-center text-sm text-[hsl(var(--primary))] hover:underline border-t border-gray-200 dark:border-gray-700"
+                        className="block p-3 text-center text-sm text-blue-600 dark:text-blue-400 hover:underline border-t border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-b-lg"
                     >
                         View all notifications
                     </Link>
