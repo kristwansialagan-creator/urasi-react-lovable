@@ -106,7 +106,7 @@ export default function OrdersPage() {
         return <span className={`inline-flex items-center px-2 py-1 rounded-full font-medium ${currentFontSize} ${styles[s] || styles.unpaid}`}>{labels[s] || s}</span>
     }
 
-    const getInstallmentBadge = (installments: any[]) => {
+    const getInstallmentBadge = (installments?: any[]) => {
         if (!installments || installments.length === 0) {
             return null
         }
