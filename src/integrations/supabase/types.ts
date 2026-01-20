@@ -647,6 +647,183 @@ export type Database = {
         }
         Relationships: []
       }
+      instalment_plans: {
+        Row: {
+          created_at: string | null
+          id: number
+          interest_rate: number | null
+          is_active: boolean | null
+          max_amount: number | null
+          min_amount: number
+          provider: string | null
+          tenure_months: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          interest_rate?: number | null
+          is_active?: boolean | null
+          max_amount?: number | null
+          min_amount?: number
+          provider?: string | null
+          tenure_months: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          interest_rate?: number | null
+          is_active?: boolean | null
+          max_amount?: number | null
+          min_amount?: number
+          provider?: string | null
+          tenure_months?: number
+        }
+        Relationships: []
+      }
+      instalment_schedules: {
+        Row: {
+          due_date: string
+          id: string
+          instalment_id: string | null
+          instalment_number: number
+          interest_amount: number | null
+          paid_amount: number | null
+          paid_date: string | null
+          principal_amount: number
+          status: string | null
+          total_due: number
+        }
+        Insert: {
+          due_date: string
+          id?: string
+          instalment_id?: string | null
+          instalment_number: number
+          interest_amount?: number | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          principal_amount: number
+          status?: string | null
+          total_due: number
+        }
+        Update: {
+          due_date?: string
+          id?: string
+          instalment_id?: string | null
+          instalment_number?: number
+          interest_amount?: number | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          principal_amount?: number
+          status?: string | null
+          total_due?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instalment_schedules_instalment_id_fkey"
+            columns: ["instalment_id"]
+            isOneToOne: false
+            referencedRelation: "order_instalments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entries: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          date: string
+          description: string | null
+          id: string
+          reference: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          reference?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          reference?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_lines: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          credit: number | null
+          debit: number | null
+          description: string | null
+          id: string
+          journal_entry_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          credit?: number | null
+          debit?: number | null
+          description?: string | null
+          id?: string
+          journal_entry_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          credit?: number | null
+          debit?: number | null
+          description?: string | null
+          id?: string
+          journal_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "view_general_ledger"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "view_general_ledger"
+            referencedColumns: ["journal_entry_id"]
+          },
+        ]
+      }
       label_templates: {
         Row: {
           created_at: string | null
@@ -822,11 +999,72 @@ export type Database = {
         }
         Relationships: []
       }
+      order_instalments: {
+        Row: {
+          created_at: string | null
+          down_payment: number | null
+          end_date: string
+          id: string
+          interest_accrued: number | null
+          next_due_date: string | null
+          order_id: string | null
+          plan_id: number | null
+          remaining_balance: number
+          start_date: string
+          status: string | null
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string | null
+          down_payment?: number | null
+          end_date: string
+          id?: string
+          interest_accrued?: number | null
+          next_due_date?: string | null
+          order_id?: string | null
+          plan_id?: number | null
+          remaining_balance: number
+          start_date: string
+          status?: string | null
+          total_amount: number
+        }
+        Update: {
+          created_at?: string | null
+          down_payment?: number | null
+          end_date?: string
+          id?: string
+          interest_accrued?: number | null
+          next_due_date?: string | null
+          order_id?: string | null
+          plan_id?: number | null
+          remaining_balance?: number
+          start_date?: string
+          status?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_instalments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_instalments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "instalment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_payments: {
         Row: {
           amount: number
           created_at: string | null
           id: string
+          instalment_schedule_id: string | null
           order_id: string
           payment_type: string | null
           updated_at: string | null
@@ -835,6 +1073,7 @@ export type Database = {
           amount?: number
           created_at?: string | null
           id?: string
+          instalment_schedule_id?: string | null
           order_id: string
           payment_type?: string | null
           updated_at?: string | null
@@ -843,11 +1082,19 @@ export type Database = {
           amount?: number
           created_at?: string | null
           id?: string
+          instalment_schedule_id?: string | null
           order_id?: string
           payment_type?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "order_payments_instalment_schedule_id_fkey"
+            columns: ["instalment_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "instalment_schedules"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_payments_order_id_fkey"
             columns: ["order_id"]
@@ -1007,6 +1254,7 @@ export type Database = {
           expected_payment_date: string | null
           gross_total: number | null
           id: string
+          instalment_id: string | null
           net_total: number | null
           note: string | null
           payment_status: string | null
@@ -1044,6 +1292,7 @@ export type Database = {
           expected_payment_date?: string | null
           gross_total?: number | null
           id?: string
+          instalment_id?: string | null
           net_total?: number | null
           note?: string | null
           payment_status?: string | null
@@ -1081,6 +1330,7 @@ export type Database = {
           expected_payment_date?: string | null
           gross_total?: number | null
           id?: string
+          instalment_id?: string | null
           net_total?: number | null
           note?: string | null
           payment_status?: string | null
@@ -1117,6 +1367,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_instalment_id_fkey"
+            columns: ["instalment_id"]
+            isOneToOne: false
+            referencedRelation: "order_instalments"
             referencedColumns: ["id"]
           },
           {
@@ -1995,10 +2252,13 @@ export type Database = {
           created_at: string | null
           description: string | null
           displays_on_pos: boolean | null
+          icon: string | null
           id: string
           media_id: string | null
           name: string
           parent_id: string | null
+          status: string | null
+          thumbnail: string | null
           total_items: number | null
           updated_at: string | null
         }
@@ -2007,10 +2267,13 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           displays_on_pos?: boolean | null
+          icon?: string | null
           id?: string
           media_id?: string | null
           name: string
           parent_id?: string | null
+          status?: string | null
+          thumbnail?: string | null
           total_items?: number | null
           updated_at?: string | null
         }
@@ -2019,10 +2282,13 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           displays_on_pos?: boolean | null
+          icon?: string | null
           id?: string
           media_id?: string | null
           name?: string
           parent_id?: string | null
+          status?: string | null
+          thumbnail?: string | null
           total_items?: number | null
           updated_at?: string | null
         }
@@ -3061,6 +3327,39 @@ export type Database = {
         }
         Relationships: []
       }
+      system_audit_logs: {
+        Row: {
+          action: string
+          author_id: string | null
+          created_at: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          author_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          author_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       taxes: {
         Row: {
           author: string | null
@@ -3254,6 +3553,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          journal_entry_id: string | null
           name: string
           occurrence: number | null
           occurrence_count: number | null
@@ -3276,6 +3576,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          journal_entry_id?: string | null
           name: string
           occurrence?: number | null
           occurrence_count?: number | null
@@ -3298,6 +3599,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          journal_entry_id?: string | null
           name?: string
           occurrence?: number | null
           occurrence_count?: number | null
@@ -3327,6 +3629,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "view_general_ledger"
+            referencedColumns: ["journal_entry_id"]
           },
           {
             foreignKeyName: "transactions_order_id_fkey"
@@ -3577,7 +3893,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      view_general_ledger: {
+        Row: {
+          account_code: string | null
+          account_id: string | null
+          account_name: string | null
+          account_type: string | null
+          created_at: string | null
+          credit: number | null
+          debit: number | null
+          entry_date: string | null
+          entry_description: string | null
+          journal_entry_id: string | null
+          line_description: string | null
+          reference: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
