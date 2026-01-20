@@ -10,7 +10,7 @@ import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { productLookupService } from '@/services/productLookup'
 import { useToast } from '@/hooks/use-toast'
-import { useProducts, useUnits } from '@/hooks'
+import { useProducts } from '@/hooks'
 import { useCategories } from '@/hooks'
 import { useSkuParents } from '@/hooks/useSkuParents'
 import { useProductExtraction } from '@/contexts/ProductExtractionContext'
@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabase'
 import { Select, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { UnitSelector } from '@/components/ui/UnitSelector'
 
 export default function ProductCreatePage() {
     const navigate = useNavigate()
@@ -25,7 +26,6 @@ export default function ProductCreatePage() {
     const { toast } = useToast()
     const { createProduct, updateProduct } = useProducts()
     const { categories, createCategory } = useCategories()
-    const { units, fetchUnits } = useUnits()
     const { skuParents, createSkuParent, deleteSkuParent } = useSkuParents()
     const { extractedData, clearExtractedData, metadata } = useProductExtraction()
     const [loading, setLoading] = useState(false)
@@ -111,11 +111,6 @@ export default function ProductCreatePage() {
             clearExtractedData()
         }
     }, [extractedData, isEditMode, metadata, clearExtractedData, toast])
-
-    // Fetch units on mount
-    useEffect(() => {
-        fetchUnits()
-    }, [fetchUnits])
 
     // Load product data if in edit mode
     useEffect(() => {
@@ -739,19 +734,11 @@ export default function ProductCreatePage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="unit">Unit</Label>
-                                        <Select value={unitId} onValueChange={setUnitId}>
-                                            <SelectTrigger id="unit">
-                                                <SelectValue placeholder="Select unit..." />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-background border shadow-lg">
-                                                <SelectItem value="none">None</SelectItem>
-                                                {units.map((u) => (
-                                                    <SelectItem key={u.id} value={u.id}>
-                                                        {u.name} ({u.identifier})
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <UnitSelector
+                                            value={unitId === 'none' ? '' : unitId}
+                                            onChange={(val) => setUnitId(val || 'none')}
+                                            placeholder="Select unit..."
+                                        />
                                     </div>
                                 </div>
                             </CardContent>
