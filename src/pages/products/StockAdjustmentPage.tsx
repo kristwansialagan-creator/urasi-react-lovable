@@ -7,7 +7,7 @@ import { Package, Search, History, Save, Check, ChevronsUpDown } from 'lucide-re
 import { useStockAdjustment } from '@/hooks/useStockAdjustment'
 import { useProducts, useUnits } from '@/hooks'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+
 import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -71,19 +71,12 @@ export default function StockAdjustmentPage() {
         )
     }, [products, productSearch])
 
-    // Get units available for the selected product (base on stock)
+    // Get units available for the selected product - ONLY units that exist in product_unit_quantities
     const availableUnits = useMemo(() => {
-        if (!selectedProduct?.stock) return units
+        if (!selectedProduct?.stock || !Array.isArray(selectedProduct.stock)) return []
         const stockArr = selectedProduct.stock as { unit_id: string }[]
-        const stockUnitIds = stockArr.map(s => s.unit_id)
-        // Return all units but prioritize ones that have stock
-        return units.sort((a, b) => {
-            const aHasStock = stockUnitIds.includes(a.id)
-            const bHasStock = stockUnitIds.includes(b.id)
-            if (aHasStock && !bHasStock) return -1
-            if (!aHasStock && bHasStock) return 1
-            return 0
-        })
+        const stockUnitIds = new Set(stockArr.map(s => s.unit_id))
+        return units.filter(u => stockUnitIds.has(u.id))
     }, [selectedProduct, units])
 
     return (
@@ -121,42 +114,45 @@ export default function StockAdjustmentPage() {
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[300px] p-0 bg-popover z-50" align="start">
-                                <Command shouldFilter={false}>
-                                    <CommandInput 
-                                        placeholder="Search product by name, SKU, barcode..." 
+                                <div className="flex items-center border-b px-3">
+                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                    <input
+                                        placeholder="Search by name, SKU, barcode..."
                                         value={productSearch}
-                                        onValueChange={setProductSearch}
+                                        onChange={(e) => setProductSearch(e.target.value)}
+                                        className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
                                     />
-                                    <CommandList>
-                                        <CommandEmpty>No product found.</CommandEmpty>
-                                        <CommandGroup>
-                                            {filteredProducts.slice(0, 50).map((product) => (
-                                                <CommandItem
-                                                    key={product.id}
-                                                    value={product.name || product.id}
-                                                    onSelect={() => {
-                                                        setFormData({ ...formData, product_id: product.id, unit_id: '' })
-                                                        setProductPopoverOpen(false)
-                                                        setProductSearch('')
-                                                    }}
-                                                >
-                                                    <Check
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            formData.product_id === product.id ? "opacity-100" : "opacity-0"
-                                                        )}
-                                                    />
-                                                    <div className="flex flex-col">
-                                                        <span>{product.name}</span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            SKU: {product.sku || '-'} | Barcode: {product.barcode || '-'}
-                                                        </span>
-                                                    </div>
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    </CommandList>
-                                </Command>
+                                </div>
+                                <div className="max-h-[200px] overflow-y-auto p-1">
+                                    {filteredProducts.length === 0 ? (
+                                        <div className="py-6 text-center text-sm text-muted-foreground">No product found.</div>
+                                    ) : (
+                                        filteredProducts.slice(0, 50).map((product) => (
+                                            <div
+                                                key={product.id}
+                                                className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-accent rounded-sm"
+                                                onClick={() => {
+                                                    setFormData({ ...formData, product_id: product.id, unit_id: '' })
+                                                    setProductPopoverOpen(false)
+                                                    setProductSearch('')
+                                                }}
+                                            >
+                                                <Check
+                                                    className={cn(
+                                                        "h-4 w-4 shrink-0",
+                                                        formData.product_id === product.id ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                />
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm">{product.name}</span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        SKU: {product.sku || '-'} | Barcode: {product.barcode || '-'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </PopoverContent>
                         </Popover>
                     </div>
