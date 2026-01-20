@@ -33,9 +33,12 @@ export function DashboardLayout() {
     return (
         <div className="flex h-screen overflow-hidden bg-[hsl(var(--background))]">
             {/* Sidebar */}
-            <div className={cn('transition-transform duration-300 relative z-40 shrink-0', !sidebarOpen && '-translate-x-full')}>
+            <aside className={cn(
+                'fixed inset-y-0 left-0 z-40 w-64 transition-transform duration-300',
+                sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            )}>
                 <Sidebar />
-            </div>
+            </aside>
 
             {/* Mobile Backdrop */}
             {isMobile && sidebarOpen && (
@@ -46,15 +49,18 @@ export function DashboardLayout() {
             )}
 
             {/* Main Content */}
-            <div className={cn('flex-1 flex flex-col min-w-0 transition-all duration-300', sidebarOpen && !isMobile ? 'ml-0' : '-ml-64')}>
+            <div className={cn(
+                'flex-1 flex flex-col min-w-0 transition-all duration-300',
+                sidebarOpen && !isMobile ? 'ml-64' : 'ml-0'
+            )}>
                 {/* Top Header */}
-                <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60 px-4 md:px-6">
+                <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60 px-4 md:px-6">
                     <div className="flex items-center gap-4">
+                        {/* Toggle button - visible on all screen sizes */}
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="lg:hidden"
                         >
                             <Menu className="h-5 w-5" />
                         </Button>
