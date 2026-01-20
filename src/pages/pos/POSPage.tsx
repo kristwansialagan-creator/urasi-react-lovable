@@ -388,15 +388,15 @@ export default function POSPage() {
                 <div className="flex-1 min-h-[300px] lg:min-h-0 lg:h-full min-w-0">
                     <Card className="h-full flex flex-col">
                         <CardHeader className="pb-2 sm:pb-3 px-2 sm:px-4">
-                            <div className="flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap items-center">
-                                <div className="flex-1 min-w-[120px] max-w-[200px]">
+                            <div className="flex gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
+                                <div className="flex-1 min-w-[150px]">
                                     <Input
-                                        placeholder="Search..."
+                                        placeholder="Search or scan..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         onKeyDown={handleSearchKeyDown}
                                         icon={<Search className="h-4 w-4" />}
-                                        className="text-sm h-9"
+                                        className="text-sm"
                                     />
                                 </div>
                                 <Input
@@ -410,7 +410,7 @@ export default function POSPage() {
                                         }
                                     }}
                                     icon={<Barcode className="h-4 w-4" />}
-                                    className="w-28 lg:w-40 hidden md:flex text-sm h-9"
+                                    className="w-32 lg:w-48 hidden md:flex text-sm"
                                 />
 
                                 {/* Camera Scanner Button */}
@@ -492,7 +492,7 @@ export default function POSPage() {
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center">
-                                                            <Package className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
+                                                            <Package className="h-5 w-5 sm:h-8 sm:w-8 text-gray-400" />
                                                         </div>
                                                     )}
                                                 </div>

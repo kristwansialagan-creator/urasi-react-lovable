@@ -1,4 +1,3 @@
-// Reports Page - Hub for all report types
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
