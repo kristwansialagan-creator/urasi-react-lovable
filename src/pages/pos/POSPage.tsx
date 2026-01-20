@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Plus, Minus, Trash2, ShoppingCart, CreditCard, Check, PackageSearch, Smartphone, Package, X, Banknote, Building2, QrCode, Wallet, Coins } from 'lucide-react'
+import { Search, Plus, Minus, Trash2, ShoppingCart, CreditCard, Check, PackageSearch, Smartphone, Package, X, Banknote, Building2, QrCode, Wallet as WalletIcon, Coins } from 'lucide-react'
 import { useProducts, useOrders, useCustomers, useRegisters, useCoupons, useSettings } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -582,7 +582,7 @@ export default function POSPage() {
                                         if (id.includes('bank') || id.includes('transfer')) return <Building2 className="h-4 w-4" />
                                         if (id.includes('qris') || id.includes('qr')) return <QrCode className="h-4 w-4" />
                                         if (id.includes('credit') || id.includes('card') || id.includes('debit')) return <CreditCard className="h-4 w-4" />
-                                        if (id.includes('wallet') || id.includes('ewallet') || id.includes('gopay') || id.includes('ovo') || id.includes('dana')) return <Wallet className="h-4 w-4" />
+                                        if (id.includes('wallet') || id.includes('ewallet') || id.includes('gopay') || id.includes('ovo') || id.includes('dana')) return <WalletIcon className="h-4 w-4" />
                                         return <Coins className="h-4 w-4" />
                                     }
                                     // Clean label - remove redundant words
