@@ -1,16 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { Receipt, Save, Printer } from 'lucide-react'
 import { useSettings } from '@/hooks'
+import { toast } from 'sonner'
 
 export default function ReceiptTemplatePage() {
     const { settings, bulkUpdate, loading } = useSettings()
+    const iframeRef = useRef<HTMLIFrameElement>(null)
+    
     const [formData, setFormData] = useState({
         receipt_header: '',
-        receipt_footer: '',
+        receipt_footer: 'Terima kasih atas kunjungan Anda!',
         receipt_show_store_name: true,
         receipt_show_store_address: true,
         receipt_show_store_phone: true,
@@ -26,7 +32,7 @@ export default function ReceiptTemplatePage() {
         if (Object.keys(settings).length > 0) {
             setFormData({
                 receipt_header: settings.receipt_header || '',
-                receipt_footer: settings.receipt_footer || 'Thank you for your purchase!',
+                receipt_footer: settings.receipt_footer || 'Terima kasih atas kunjungan Anda!',
                 receipt_show_store_name: settings.receipt_show_store_name ?? true,
                 receipt_show_store_address: settings.receipt_show_store_address ?? true,
                 receipt_show_store_phone: settings.receipt_show_store_phone ?? true,
@@ -40,9 +46,25 @@ export default function ReceiptTemplatePage() {
         }
     }, [settings])
 
+    // Update iframe preview whenever formData changes
+    useEffect(() => {
+        if (iframeRef.current) {
+            const doc = iframeRef.current.contentDocument
+            if (doc) {
+                doc.open()
+                doc.write(generateTestReceipt())
+                doc.close()
+            }
+        }
+    }, [formData, settings])
+
     const handleSave = async () => {
         const success = await bulkUpdate(formData, 'receipt')
-        if (success) alert('Receipt template saved successfully!')
+        if (success) {
+            toast.success('Template struk berhasil disimpan!')
+        } else {
+            toast.error('Gagal menyimpan template struk')
+        }
     }
 
     const handleTestPrint = () => {
@@ -56,7 +78,10 @@ export default function ReceiptTemplatePage() {
     }
 
     const generateTestReceipt = () => {
-        const width = formData.receipt_paper_size === '58mm' ? '58mm' : '80mm'
+        const width = formData.receipt_paper_size === '58mm' ? '58mm' : formData.receipt_paper_size === 'A4' ? '210mm' : '80mm'
+        const storeName = settings.store_name || 'URASI POS'
+        const storeAddress = settings.store_address || 'Jl. Contoh No. 123, Kota'
+        const storePhone = settings.store_phone || '+62 812 3456 7890'
 
         return `
 <!DOCTYPE html>
@@ -68,6 +93,7 @@ export default function ReceiptTemplatePage() {
         @media print {
             body { margin: 0; padding: 0; }
         }
+        * { box-sizing: border-box; }
         body {
             width: ${width};
             margin: 0 auto;
@@ -75,6 +101,8 @@ export default function ReceiptTemplatePage() {
             font-family: 'Courier New', monospace;
             font-size: ${formData.receipt_font_size}px;
             line-height: 1.4;
+            background: white;
+            color: black;
         }
         .center { text-align: center; }
         .bold { font-weight: bold; }
@@ -85,21 +113,21 @@ export default function ReceiptTemplatePage() {
     </style>
 </head>
 <body>
-    ${formData.receipt_logo_url ? `<div class="center"><img src="${formData.receipt_logo_url}" style="max-width: 80%; height: auto; margin-bottom: 10px;"></div>` : ''}
+    ${formData.receipt_logo_url ? `<div class="center"><img src="${formData.receipt_logo_url}" style="max-width: 80%; height: auto; margin-bottom: 10px;" onerror="this.style.display='none'"></div>` : ''}
     
-    ${formData.receipt_show_store_name ? `<div class="center bold" style="font-size: ${parseInt(formData.receipt_font_size) + 2}px;">${settings.store_name || 'STORE NAME'}</div>` : ''}
-    ${formData.receipt_show_store_address ? `<div class="center">${settings.store_address || '123 Main Street, City'}</div>` : ''}
-    ${formData.receipt_show_store_phone ? `<div class="center">Tel: ${settings.store_phone || '+1 234 567 8900'}</div>` : ''}
+    ${formData.receipt_show_store_name ? `<div class="center bold" style="font-size: ${parseInt(formData.receipt_font_size) + 2}px;">${storeName}</div>` : ''}
+    ${formData.receipt_show_store_address ? `<div class="center">${storeAddress}</div>` : ''}
+    ${formData.receipt_show_store_phone ? `<div class="center">Telp: ${storePhone}</div>` : ''}
     
     ${formData.receipt_header ? `<div class="center" style="margin-top: 10px;">${formData.receipt_header}</div>` : ''}
     
     <div class="line"></div>
     
     <table>
-        <tr><td>Date:</td><td class="right">${new Date().toLocaleString()}</td></tr>
+        <tr><td>Tanggal:</td><td class="right">${new Date().toLocaleString('id-ID')}</td></tr>
         <tr><td>Order:</td><td class="right">ORD-${Date.now().toString().slice(-6)}</td></tr>
-        ${formData.receipt_show_cashier ? `<tr><td>Cashier:</td><td class="right">Test User</td></tr>` : ''}
-        ${formData.receipt_show_customer ? `<tr><td>Customer:</td><td class="right">Walk-in Customer</td></tr>` : ''}
+        ${formData.receipt_show_cashier ? `<tr><td>Kasir:</td><td class="right">Staff</td></tr>` : ''}
+        ${formData.receipt_show_customer ? `<tr><td>Pelanggan:</td><td class="right">Walk-in</td></tr>` : ''}
     </table>
     
     <div class="line"></div>
@@ -109,22 +137,22 @@ export default function ReceiptTemplatePage() {
             <tr>
                 <td class="bold">Item</td>
                 <td class="bold right">Qty</td>
-                <td class="bold right">Price</td>
+                <td class="bold right">Harga</td>
                 <td class="bold right">Total</td>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>Sample Product 1</td>
+                <td>Produk Contoh 1</td>
                 <td class="right">2</td>
-                <td class="right">$10.00</td>
-                <td class="right">$20.00</td>
+                <td class="right">Rp10.000</td>
+                <td class="right">Rp20.000</td>
             </tr>
             <tr>
-                <td>Sample Product 2</td>
+                <td>Produk Contoh 2</td>
                 <td class="right">1</td>
-                <td class="right">$15.50</td>
-                <td class="right">$15.50</td>
+                <td class="right">Rp15.500</td>
+                <td class="right">Rp15.500</td>
             </tr>
         </tbody>
     </table>
@@ -132,11 +160,11 @@ export default function ReceiptTemplatePage() {
     <div class="line"></div>
     
     <table>
-        <tr><td>Subtotal:</td><td class="right">$35.50</td></tr>
-        ${formData.receipt_show_tax_summary ? `<tr><td>Tax (10%):</td><td class="right">$3.55</td></tr>` : ''}
-        <tr><td class="bold">TOTAL:</td><td class="right bold">$39.05</td></tr>
-        <tr><td>Paid:</td><td class="right">$40.00</td></tr>
-        <tr><td>Change:</td><td class="right">$0.95</td></tr>
+        <tr><td>Subtotal:</td><td class="right">Rp35.500</td></tr>
+        ${formData.receipt_show_tax_summary ? `<tr><td>Pajak (10%):</td><td class="right">Rp3.550</td></tr>` : ''}
+        <tr><td class="bold">TOTAL:</td><td class="right bold">Rp39.050</td></tr>
+        <tr><td>Dibayar:</td><td class="right">Rp50.000</td></tr>
+        <tr><td>Kembali:</td><td class="right">Rp10.950</td></tr>
     </table>
     
     <div class="line"></div>
@@ -150,78 +178,166 @@ export default function ReceiptTemplatePage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold flex items-center gap-2"><Receipt className="h-8 w-8" />Receipt Template Editor</h1>
+        <div className="space-y-6 p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                    <Receipt className="h-6 w-6" />
+                    Template Struk
+                </h1>
                 <div className="flex gap-2">
-                    <Button onClick={handleTestPrint} variant="outline"><Printer className="h-4 w-4 mr-2" />Test Print</Button>
-                    <Button onClick={handleSave} disabled={loading}><Save className="h-4 w-4 mr-2" />Save Template</Button>
+                    <Button onClick={handleTestPrint} variant="outline">
+                        <Printer className="h-4 w-4 mr-2" />
+                        Test Print
+                    </Button>
+                    <Button onClick={handleSave} disabled={loading}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Simpan
+                    </Button>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Settings */}
+                {/* Settings Column */}
                 <div className="space-y-6">
                     {/* Paper Settings */}
-                    <Card><CardHeader><CardTitle>Paper Settings</CardTitle></CardHeader><CardContent className="space-y-4">
-                        <div><Label>Paper Size</Label><select value={formData.receipt_paper_size} onChange={e => setFormData({ ...formData, receipt_paper_size: e.target.value })} className="w-full px-3 py-2 border rounded"><option value="58mm">58mm (Thermal Printer)</option><option value="80mm">80mm (Standard POS)</option><option value="A4">A4 (Letter Size)</option></select></div>
-                        <div><Label>Font Size (px)</Label><Input type="number" min="8" max="24" value={formData.receipt_font_size} onChange={e => setFormData({ ...formData, receipt_font_size: e.target.value })} /></div>
-                    </CardContent></Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Pengaturan Kertas</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Ukuran Kertas</Label>
+                                <Select 
+                                    value={formData.receipt_paper_size} 
+                                    onValueChange={(value) => setFormData({ ...formData, receipt_paper_size: value })}
+                                >
+                                    <SelectTrigger className="bg-background">
+                                        <SelectValue placeholder="Pilih ukuran" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-popover">
+                                        <SelectItem value="58mm">58mm (Thermal Printer)</SelectItem>
+                                        <SelectItem value="80mm">80mm (Standard POS)</SelectItem>
+                                        <SelectItem value="A4">A4 (Letter Size)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Ukuran Font (px)</Label>
+                                <Input 
+                                    type="number" 
+                                    min="8" 
+                                    max="24" 
+                                    value={formData.receipt_font_size} 
+                                    onChange={(e) => setFormData({ ...formData, receipt_font_size: e.target.value })} 
+                                    className="bg-background"
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Header & Footer */}
-                    <Card><CardHeader><CardTitle>Header & Footer</CardTitle></CardHeader><CardContent className="space-y-4">
-                        <div><Label>Logo URL</Label><Input value={formData.receipt_logo_url} onChange={e => setFormData({ ...formData, receipt_logo_url: e.target.value })} placeholder="https://example.com/logo.png" /></div>
-                        <div><Label>Header Text (Optional)</Label><textarea value={formData.receipt_header} onChange={e => setFormData({ ...formData, receipt_header: e.target.value })} className="w-full px-3 py-2 border rounded min-h-[60px]" placeholder="Welcome to our store..." /></div>
-                        <div><Label>Footer Text</Label><textarea value={formData.receipt_footer} onChange={e => setFormData({ ...formData, receipt_footer: e.target.value })} className="w-full px-3 py-2 border rounded min-h-[60px]" placeholder="Thank you for your purchase!" /></div>
-                    </CardContent></Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Header & Footer</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>URL Logo</Label>
+                                <Input 
+                                    value={formData.receipt_logo_url} 
+                                    onChange={(e) => setFormData({ ...formData, receipt_logo_url: e.target.value })} 
+                                    placeholder="https://example.com/logo.png" 
+                                    className="bg-background"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Teks Header (Opsional)</Label>
+                                <Textarea 
+                                    value={formData.receipt_header} 
+                                    onChange={(e) => setFormData({ ...formData, receipt_header: e.target.value })} 
+                                    placeholder="Selamat datang di toko kami..." 
+                                    className="min-h-[60px] bg-background"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Teks Footer</Label>
+                                <Textarea 
+                                    value={formData.receipt_footer} 
+                                    onChange={(e) => setFormData({ ...formData, receipt_footer: e.target.value })} 
+                                    placeholder="Terima kasih atas kunjungan Anda!" 
+                                    className="min-h-[60px] bg-background"
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Display Options */}
-                    <Card><CardHeader><CardTitle>Display Options</CardTitle></CardHeader><CardContent className="space-y-3">
-                        {[
-                            { key: 'receipt_show_store_name', label: 'Show Store Name' },
-                            { key: 'receipt_show_store_address', label: 'Show Store Address' },
-                            { key: 'receipt_show_store_phone', label: 'Show Store Phone' },
-                            { key: 'receipt_show_cashier', label: 'Show Cashier Name' },
-                            { key: 'receipt_show_customer', label: 'Show Customer Name' },
-                            { key: 'receipt_show_tax_summary', label: 'Show Tax Summary' }
-                        ].map(option => (
-                            <div key={option.key} className="flex items-center justify-between p-2 bg-[hsl(var(--muted))] rounded">
-                                <Label className="font-medium">{option.label}</Label>
-                                <input type="checkbox" checked={formData[option.key as keyof typeof formData] as boolean} onChange={e => setFormData({ ...formData, [option.key]: e.target.checked })} className="h-4 w-4" />
-                            </div>
-                        ))}
-                    </CardContent></Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Opsi Tampilan</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {[
+                                { key: 'receipt_show_store_name', label: 'Tampilkan Nama Toko' },
+                                { key: 'receipt_show_store_address', label: 'Tampilkan Alamat Toko' },
+                                { key: 'receipt_show_store_phone', label: 'Tampilkan Telepon Toko' },
+                                { key: 'receipt_show_cashier', label: 'Tampilkan Nama Kasir' },
+                                { key: 'receipt_show_customer', label: 'Tampilkan Nama Pelanggan' },
+                                { key: 'receipt_show_tax_summary', label: 'Tampilkan Ringkasan Pajak' }
+                            ].map(option => (
+                                <div key={option.key} className="flex items-center justify-between">
+                                    <Label className="font-normal">{option.label}</Label>
+                                    <Switch
+                                        checked={formData[option.key as keyof typeof formData] as boolean}
+                                        onCheckedChange={(checked) => setFormData({ ...formData, [option.key]: checked })}
+                                    />
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
                 </div>
 
-                {/* Live Preview */}
+                {/* Preview Column */}
                 <div className="space-y-6">
-                    <Card><CardHeader><CardTitle>Live Preview</CardTitle></CardHeader><CardContent>
-                        <div className="border-2 border-dashed rounded-lg p-4 bg-white">
-                            <div dangerouslySetInnerHTML={{ __html: generateTestReceipt() }} />
-                        </div>
-                        <p className="text-sm text-[hsl(var(--muted-foreground))] mt-4">This is a live preview of your receipt template. Click "Test Print" to see how it looks when printed.</p>
-                    </CardContent></Card>
-
-                    {/* Template Variables */}
-                    <Card><CardHeader><CardTitle>Available Template Variables</CardTitle></CardHeader><CardContent>
-                        <div className="space-y-2 text-sm">
-                            <p className="text-[hsl(var(--muted-foreground))]">You can use these variables in header/footer text:</p>
-                            <div className="grid grid-cols-2 gap-2 font-mono text-xs">
-                                <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{store_name}}'}</code>
-                                <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{store_phone}}'}</code>
-                                <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{order_code}}'}</code>
-                                <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{date}}'}</code>
-                                <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{total}}'}</code>
-                                <code className="bg-[hsl(var(--muted))] p-1 rounded">{'{{cashier}}'}</code>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Preview Struk</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="border rounded-lg overflow-hidden bg-white flex justify-center">
+                                <iframe
+                                    ref={iframeRef}
+                                    title="Receipt Preview"
+                                    className="w-full h-[500px] border-0"
+                                    sandbox="allow-same-origin"
+                                />
                             </div>
-                        </div>
-                    </CardContent></Card>
-                </div>
-            </div>
+                            <p className="text-sm text-muted-foreground mt-4">
+                                Ini adalah preview struk Anda. Klik "Test Print" untuk melihat hasil cetak.
+                            </p>
+                        </CardContent>
+                    </Card>
 
-            <div className="flex justify-end gap-2">
-                <Button onClick={handleTestPrint} variant="outline" size="lg"><Printer className="h-5 w-5 mr-2" />Test Print</Button>
-                <Button onClick={handleSave} disabled={loading} size="lg"><Save className="h-5 w-5 mr-2" />Save Template</Button>
+                    {/* Template Variables Info */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Variabel Template</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground mb-3">
+                                Data berikut akan diambil dari pengaturan toko:
+                            </p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="bg-muted p-2 rounded font-mono">Nama Toko</div>
+                                <div className="bg-muted p-2 rounded font-mono">Alamat Toko</div>
+                                <div className="bg-muted p-2 rounded font-mono">Telepon Toko</div>
+                                <div className="bg-muted p-2 rounded font-mono">Kode Order</div>
+                                <div className="bg-muted p-2 rounded font-mono">Tanggal</div>
+                                <div className="bg-muted p-2 rounded font-mono">Kasir</div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     )
