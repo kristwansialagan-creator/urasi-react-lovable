@@ -1698,11 +1698,14 @@ export type Database = {
       orders_products: {
         Row: {
           author: string | null
+          batch_id: string | null
+          batch_number: string | null
           created_at: string | null
           discount: number | null
           discount_percentage: number | null
           discount_rate: number | null
           discount_type: string | null
+          expiry_date: string | null
           gross_price: number | null
           id: string
           mode: string | null
@@ -1732,11 +1735,14 @@ export type Database = {
         }
         Insert: {
           author?: string | null
+          batch_id?: string | null
+          batch_number?: string | null
           created_at?: string | null
           discount?: number | null
           discount_percentage?: number | null
           discount_rate?: number | null
           discount_type?: string | null
+          expiry_date?: string | null
           gross_price?: number | null
           id?: string
           mode?: string | null
@@ -1766,11 +1772,14 @@ export type Database = {
         }
         Update: {
           author?: string | null
+          batch_id?: string | null
+          batch_number?: string | null
           created_at?: string | null
           discount?: number | null
           discount_percentage?: number | null
           discount_rate?: number | null
           discount_type?: string | null
+          expiry_date?: string | null
           gross_price?: number | null
           id?: string
           mode?: string | null
@@ -1804,6 +1813,13 @@ export type Database = {
             columns: ["author"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_products_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "stock_batches"
             referencedColumns: ["id"]
           },
           {
@@ -2670,9 +2686,12 @@ export type Database = {
         Row: {
           after_quantity: number | null
           author: string | null
+          batch_id: string | null
+          batch_number: string | null
           before_quantity: number | null
           created_at: string | null
           description: string | null
+          expiry_date: string | null
           id: string
           operation_type: string
           order_id: string | null
@@ -2688,9 +2707,12 @@ export type Database = {
         Insert: {
           after_quantity?: number | null
           author?: string | null
+          batch_id?: string | null
+          batch_number?: string | null
           before_quantity?: number | null
           created_at?: string | null
           description?: string | null
+          expiry_date?: string | null
           id?: string
           operation_type: string
           order_id?: string | null
@@ -2706,9 +2728,12 @@ export type Database = {
         Update: {
           after_quantity?: number | null
           author?: string | null
+          batch_id?: string | null
+          batch_number?: string | null
           before_quantity?: number | null
           created_at?: string | null
           description?: string | null
+          expiry_date?: string | null
           id?: string
           operation_type?: string
           order_id?: string | null
@@ -2727,6 +2752,13 @@ export type Database = {
             columns: ["author"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_history_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "stock_batches"
             referencedColumns: ["id"]
           },
           {
@@ -3389,6 +3421,73 @@ export type Database = {
             columns: ["author"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_batches: {
+        Row: {
+          author: string | null
+          batch_number: string
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          initial_quantity: number | null
+          notes: string | null
+          product_id: string
+          purchase_price: number | null
+          quantity: number | null
+          unit_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string | null
+          batch_number: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          initial_quantity?: number | null
+          notes?: string | null
+          product_id: string
+          purchase_price?: number | null
+          quantity?: number | null
+          unit_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string | null
+          batch_number?: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          initial_quantity?: number | null
+          notes?: string | null
+          product_id?: string
+          purchase_price?: number | null
+          quantity?: number | null
+          unit_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_batches_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_batches_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
