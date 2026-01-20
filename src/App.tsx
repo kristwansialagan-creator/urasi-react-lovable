@@ -4,7 +4,6 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { DashboardLayout } from '@/components/layout'
-import AIChatWidget from '@/components/ai-chat/AIChatWidget'
 import { Loader2 } from 'lucide-react'
 
 // Lazy Load Pages
@@ -65,7 +64,7 @@ function App() {
                         <Route path="/unauthorized" element={<UnauthorizedPage />} />
                         <Route path="/scanner/:sessionId" element={<MobileScannerPage />} />
 
-                        {/* Protected Routes */}
+                        {/* Protected Routes - Base authenticated */}
                         <Route
                             element={
                                 <ProtectedRoute>
@@ -73,66 +72,185 @@ function App() {
                                 </ProtectedRoute>
                             }
                         >
+                            {/* Dashboard - accessible to all authenticated users */}
                             <Route path="/dashboard" element={<DashboardPage />} />
-                            <Route path="/pos" element={<POSPage />} />
+                            
+                            {/* POS - requires pos permission or admin */}
+                            <Route path="/pos" element={
+                                <ProtectedRoute requiredPermission="pos.access">
+                                    <POSPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Products */}
-                            <Route path="/products" element={<ProductsPage />} />
-                            <Route path="/products/create" element={<ProductCreatePage />} />
-                            <Route path="/products/edit/:id" element={<ProductCreatePage />} />
-                            <Route path="/products/categories" element={<CategoriesPage />} />
-                            <Route path="/products/stock-adjustment" element={<StockAdjustmentPage />} />
-                            <Route path="/products/print-labels" element={<PrintLabelsPage />} />
+                            {/* Products - requires products permission */}
+                            <Route path="/products" element={
+                                <ProtectedRoute requiredPermission="products.read">
+                                    <ProductsPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/products/create" element={
+                                <ProtectedRoute requiredPermission="products.create">
+                                    <ProductCreatePage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/products/edit/:id" element={
+                                <ProtectedRoute requiredPermission="products.update">
+                                    <ProductCreatePage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/products/categories" element={
+                                <ProtectedRoute requiredPermission="categories.read">
+                                    <CategoriesPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/products/stock-adjustment" element={
+                                <ProtectedRoute requiredPermission="products.update">
+                                    <StockAdjustmentPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/products/print-labels" element={
+                                <ProtectedRoute requiredPermission="products.read">
+                                    <PrintLabelsPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Orders */}
-                            <Route path="/orders" element={<OrdersPage />} />
-                            <Route path="/orders/:id" element={<OrderDetailsPage />} />
-                            <Route path="/orders/:id/refund" element={<OrderRefundPage />} />
-                            <Route path="/orders/:id/payment" element={<OrderPaymentPage />} />
-                            <Route path="/installments" element={<InstallmentsPage />} />
-                            <Route path="/orders/invoice/:id" element={<InvoicePage />} />
+                            {/* Orders - requires orders permission */}
+                            <Route path="/orders" element={
+                                <ProtectedRoute requiredPermission="orders.read">
+                                    <OrdersPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/orders/:id" element={
+                                <ProtectedRoute requiredPermission="orders.read">
+                                    <OrderDetailsPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/orders/:id/refund" element={
+                                <ProtectedRoute requiredPermission="orders.refund">
+                                    <OrderRefundPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/orders/:id/payment" element={
+                                <ProtectedRoute requiredPermission="orders.update">
+                                    <OrderPaymentPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/installments" element={
+                                <ProtectedRoute requiredPermission="orders.read">
+                                    <InstallmentsPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/orders/invoice/:id" element={
+                                <ProtectedRoute requiredPermission="orders.read">
+                                    <InvoicePage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Customers */}
-                            <Route path="/customers" element={<CustomersPage />} />
-                            <Route path="/customers/groups" element={<CustomerGroupsPage />} />
+                            {/* Customers - requires customers permission */}
+                            <Route path="/customers" element={
+                                <ProtectedRoute requiredPermission="customers.read">
+                                    <CustomersPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/customers/groups" element={
+                                <ProtectedRoute requiredPermission="customers.read">
+                                    <CustomerGroupsPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Registers */}
-                            <Route path="/registers" element={<RegistersPage />} />
+                            {/* Registers - requires registers permission */}
+                            <Route path="/registers" element={
+                                <ProtectedRoute requiredPermission="registers.read">
+                                    <RegistersPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Reports */}
-                            <Route path="/reports/*" element={<ReportsPage />} />
+                            {/* Reports - requires reports permission */}
+                            <Route path="/reports/*" element={
+                                <ProtectedRoute requiredPermission="reports.read">
+                                    <ReportsPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Procurement */}
-                            <Route path="/procurements" element={<ProcurementPage />} />
-                            <Route path="/procurements/providers" element={<ProvidersPage />} />
-                            <Route path="/procurement/groups" element={<ProductGroupsPage />} />
-                            <Route path="/procurement/groups/:groupId/products" element={<ProcurementProductsPage />} />
+                            {/* Procurement - requires procurement permission */}
+                            <Route path="/procurements" element={
+                                <ProtectedRoute requiredPermission="procurements.read">
+                                    <ProcurementPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/procurements/providers" element={
+                                <ProtectedRoute requiredPermission="procurements.read">
+                                    <ProvidersPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/procurement/groups" element={
+                                <ProtectedRoute requiredPermission="procurements.read">
+                                    <ProductGroupsPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/procurement/groups/:groupId/products" element={
+                                <ProtectedRoute requiredPermission="procurements.read">
+                                    <ProcurementProductsPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Marketing */}
-                            <Route path="/coupons" element={<CouponsPage />} />
+                            {/* Marketing - requires marketing permission */}
+                            <Route path="/coupons" element={
+                                <ProtectedRoute requiredPermission="coupons.read">
+                                    <CouponsPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Transactions / Accounting */}
-                            <Route path="/transactions" element={<TransactionsPage />} />
-                            <Route path="/accounting/journal-entries" element={<JournalEntriesPage />} />
+                            {/* Transactions / Accounting - requires accounting permission */}
+                            <Route path="/transactions" element={
+                                <ProtectedRoute requiredPermission="transactions.read">
+                                    <TransactionsPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/accounting/journal-entries" element={
+                                <ProtectedRoute requiredPermission="accounting.read">
+                                    <JournalEntriesPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Media */}
-                            <Route path="/media" element={<MediaLibraryPage />} />
+                            {/* Media - requires media permission */}
+                            <Route path="/media" element={
+                                <ProtectedRoute requiredPermission="media.read">
+                                    <MediaLibraryPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Rewards */}
-                            <Route path="/rewards" element={<RewardsPage />} />
+                            {/* Rewards - requires rewards permission */}
+                            <Route path="/rewards" element={
+                                <ProtectedRoute requiredPermission="rewards.read">
+                                    <RewardsPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Profile */}
+                            {/* Profile - accessible to all authenticated users */}
                             <Route path="/profile" element={<ProfilePage />} />
 
-                            {/* Notifications */}
+                            {/* Notifications - accessible to all authenticated users */}
                             <Route path="/notifications" element={<NotificationsPage />} />
 
-                            {/* Tools */}
-                            <Route path="/tools/data-management" element={<DataManagementPage />} />
-                            <Route path="/tools/bulk-editor" element={<BulkEditorPage />} />
+                            {/* Tools - admin only */}
+                            <Route path="/tools/data-management" element={
+                                <ProtectedRoute requireAdmin>
+                                    <DataManagementPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/tools/bulk-editor" element={
+                                <ProtectedRoute requireAdmin>
+                                    <BulkEditorPage />
+                                </ProtectedRoute>
+                            } />
 
-                            {/* Settings */}
-                            <Route path="/settings/*" element={<SettingsPage />} />
+                            {/* Settings - admin only */}
+                            <Route path="/settings/*" element={
+                                <ProtectedRoute requireAdmin>
+                                    <SettingsPage />
+                                </ProtectedRoute>
+                            } />
                         </Route>
 
                         {/* Redirect */}
