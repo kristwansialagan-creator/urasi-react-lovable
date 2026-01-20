@@ -211,3 +211,20 @@ body {
 .urasi-scanner p {
   color: hsl(var(--foreground));
 }
+
+/* Safe viewport height utilities */
+.h-safe-screen {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.min-h-safe-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Ensure content doesn't overflow unexpectedly */
+.overflow-safe {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}

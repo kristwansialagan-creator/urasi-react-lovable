@@ -31,9 +31,9 @@ export function DashboardLayout() {
     }
 
     return (
-        <div className="min-h-screen bg-[hsl(var(--background))]">
+        <div className="flex h-screen overflow-hidden bg-[hsl(var(--background))]">
             {/* Sidebar */}
-            <div className={cn('transition-transform duration-300 relative z-40', !sidebarOpen && '-translate-x-full')}>
+            <div className={cn('transition-transform duration-300 relative z-40 shrink-0', !sidebarOpen && '-translate-x-full')}>
                 <Sidebar />
             </div>
 
@@ -46,9 +46,9 @@ export function DashboardLayout() {
             )}
 
             {/* Main Content */}
-            <div className={cn('transition-all duration-300', sidebarOpen && !isMobile ? 'ml-64' : 'ml-0')}>
+            <div className={cn('flex-1 flex flex-col min-w-0 transition-all duration-300', sidebarOpen && !isMobile ? 'ml-0' : '-ml-64')}>
                 {/* Top Header */}
-                <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60 px-6">
+                <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60 px-4 md:px-6">
                     <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
@@ -64,7 +64,7 @@ export function DashboardLayout() {
                                 placeholder="Search products, orders, customers..."
                                 icon={<Search className="h-4 w-4" />}
                                 className="bg-[hsl(var(--muted))]"
-                                onKeyDown={handleSearch} // Modified
+                                onKeyDown={handleSearch}
                             />
                         </div>
                     </div>
@@ -74,8 +74,8 @@ export function DashboardLayout() {
                     </div>
                 </header>
 
-                {/* Page Content */}
-                <main className="p-6">
+                {/* Page Content - Scrollable */}
+                <main className="flex-1 overflow-auto p-4 md:p-6">
                     <Outlet />
                 </main>
             </div>

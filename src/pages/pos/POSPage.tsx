@@ -365,7 +365,7 @@ export default function POSPage() {
     const change = totalPaid - total
 
     return (
-        <div className="flex flex-col h-screen p-2 sm:p-4 lg:p-0 gap-2">
+        <div className="flex flex-col h-full min-h-0 gap-2">
             {/* Clock Header */}
             <div className="flex justify-end px-1 shrink-0">
                 <div className="text-xs sm:text-sm font-medium text-[hsl(var(--muted-foreground))] flex items-center gap-1.5 sm:gap-2 bg-[hsl(var(--card))] px-2 sm:px-3 py-1 rounded-full shadow-sm border">
@@ -383,9 +383,9 @@ export default function POSPage() {
             </div>
 
             {/* Main Content Row */}
-            <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-2 sm:gap-4 items-start">
+            <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-2 sm:gap-4">
                 {/* Left Section: Products */}
-                <div className="flex-1 h-[50vh] lg:h-full min-h-0 self-stretch">
+                <div className="flex-1 min-h-[300px] lg:min-h-0 lg:h-full min-w-0">
                     <Card className="h-full flex flex-col">
                         <CardHeader className="pb-2 sm:pb-3 px-2 sm:px-4">
                             <div className="flex gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
@@ -519,8 +519,8 @@ export default function POSPage() {
                 </div>
 
                 {/* Right Section: Cart */}
-                <div className="w-full lg:w-[320px] xl:w-[400px] 2xl:w-[450px] flex-none h-auto max-h-[45vh] lg:max-h-full flex flex-col">
-                    <Card className="flex flex-col max-h-full overflow-hidden shadow-lg">
+                <div className="w-full lg:w-[320px] xl:w-[400px] 2xl:w-[450px] flex-none min-h-[300px] lg:min-h-0 lg:h-full flex flex-col">
+                    <Card className="flex flex-col h-full overflow-hidden shadow-lg">
                         <CardHeader className="py-2 sm:py-4 border-b shrink-0 px-2 sm:px-4">
                             <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
                                 <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
