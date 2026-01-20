@@ -412,29 +412,29 @@ export default function AIChatWidget() {
   if (!isOpen) {
     return (
       <Button
-        size="lg"
-        className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-2xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary)/0.9)] z-50 transition-all duration-300 hover:scale-105"
+        size="sm"
+        className="fixed bottom-3 right-3 h-10 w-10 rounded-full shadow-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary)/0.9)] z-50 transition-all duration-300 hover:scale-105"
         onClick={() => setIsOpen(true)}
       >
-        <MessageSquare className="h-6 w-6" />
-        {unreadCount > 0 && <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-black">{unreadCount}</span>}
+        <MessageSquare className="h-4 w-4" />
+        {unreadCount > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white dark:ring-black">{unreadCount}</span>}
       </Button>
     )
   }
 
   return (
-    <div className="fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-50 flex flex-col items-end w-full sm:w-[450px] h-[100vh] sm:h-[700px] pointer-events-auto font-sans antialiased text-[hsl(var(--foreground))]">
+    <div className="fixed bottom-0 right-0 sm:bottom-3 sm:right-3 z-50 flex flex-col items-end w-full sm:w-[340px] h-[100vh] sm:h-[480px] pointer-events-auto font-sans antialiased text-[hsl(var(--foreground))]">
 
-      <div className="relative flex flex-col w-full h-full bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-2xl sm:rounded-2xl overflow-hidden transition-colors duration-300">
+      <div className="relative flex flex-col w-full h-full bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-xl sm:rounded-xl overflow-hidden transition-colors duration-300">
 
         {/* --- Sidebar (History) Overlay --- */}
         <div className={classNames(
-          "absolute inset-y-0 left-0 w-64 bg-[hsl(var(--card))] backdrop-blur-xl border-r border-[hsl(var(--border))] z-20 transform transition-transform duration-300 ease-in-out flex flex-col",
+          "absolute inset-y-0 left-0 w-56 bg-[hsl(var(--card))] backdrop-blur-xl border-r border-[hsl(var(--border))] z-20 transform transition-transform duration-300 ease-in-out flex flex-col",
           isHistoryOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="p-4 border-b border-[hsl(var(--border))] flex items-center justify-between">
-            <span className="font-semibold text-sm">Chat History</span>
-            <Button variant="ghost" size="icon" onClick={() => setIsHistoryOpen(false)}><X className="h-4 w-4" /></Button>
+          <div className="p-3 border-b border-[hsl(var(--border))] flex items-center justify-between">
+            <span className="font-semibold text-xs">Chat History</span>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsHistoryOpen(false)}><X className="h-3 w-3" /></Button>
           </div>
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
@@ -442,7 +442,7 @@ export default function AIChatWidget() {
                 <div
                   key={chat.id}
                   className={classNames(
-                    "group flex items-center justify-between p-2 rounded-lg text-sm cursor-pointer hover:bg-[hsl(var(--accent)/0.1)] transition-colors",
+                    "group flex items-center justify-between p-1.5 rounded-md text-xs cursor-pointer hover:bg-[hsl(var(--accent)/0.1)] transition-colors",
                     currentChatId === chat.id ? "bg-[hsl(var(--accent)/0.2)] font-medium text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]"
                   )}
                   onClick={() => { setCurrentChatId(chat.id); setIsHistoryOpen(false); }}
@@ -450,28 +450,27 @@ export default function AIChatWidget() {
                   <span className="truncate flex-1">{chat.title || 'Untitled Chat'}</span>
                   <Button
                     variant="ghost" size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-transparent"
+                    className="h-5 w-5 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-transparent"
                     onClick={(e) => handleDeleteChat(chat.id, e)}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-2.5 w-2.5" />
                   </Button>
                 </div>
               ))}
               {chatHistory.length === 0 && (
-                <div className="text-center py-8 text-xs text-[hsl(var(--muted-foreground))]">No previous chats</div>
+                <div className="text-center py-6 text-[10px] text-[hsl(var(--muted-foreground))]">No previous chats</div>
               )}
             </div>
           </ScrollArea>
-          <div className="p-4 border-t border-[hsl(var(--border))]">
+          <div className="p-2.5 border-t border-[hsl(var(--border))]">
             {isUserSignedIn && user ? (
-              <div className="flex items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]">
-                <User className="h-3 w-3" />
+              <div className="flex items-center gap-2 text-[10px] text-[hsl(var(--muted-foreground))]">
+                <User className="h-2.5 w-2.5" />
                 <span className="truncate flex-1">Signed in as {user.username}</span>
-                {/* Sign out could go here but skipping for simplicity */}
               </div>
             ) : (
-              <Button variant="outline" size="sm" className="w-full text-xs" onClick={handleSignIn}>
-                <LogIn className="h-3 w-3 mr-2" />
+              <Button variant="outline" size="sm" className="w-full text-[10px] h-7" onClick={handleSignIn}>
+                <LogIn className="h-2.5 w-2.5 mr-1.5" />
                 Link Puter Account
               </Button>
             )}
@@ -481,22 +480,22 @@ export default function AIChatWidget() {
         {/* --- Main Chat Interface --- */}
 
         {/* Header */}
-        <div className="flex-none flex items-center justify-between px-4 py-3 bg-[hsl(var(--card)/0.8)] backdrop-blur-md border-b border-[hsl(var(--border))] z-10">
-          <div className="flex items-center gap-2">
+        <div className="flex-none flex items-center justify-between px-3 py-2 bg-[hsl(var(--card)/0.8)] backdrop-blur-md border-b border-[hsl(var(--border))] z-10">
+          <div className="flex items-center gap-1.5">
             {/* New Chat Button (Moved to Left) */}
-            <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--accent)/0.1)] transition-colors" onClick={handleNewChat} title="New Chat">
-              <Plus className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 -ml-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--accent)/0.1)] transition-colors" onClick={handleNewChat} title="New Chat">
+              <Plus className="h-3 w-3" />
             </Button>
             
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--accent)/0.1)] transition-colors" onClick={() => setIsHistoryOpen(true)}>
-              <History className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--accent)/0.1)] transition-colors" onClick={() => setIsHistoryOpen(true)}>
+              <History className="h-3 w-3" />
             </Button>
             
-            <div className="flex flex-col ml-1">
-              <span className="font-semibold text-[hsl(var(--primary))] tracking-tight text-sm">AI Assistant</span>
-              <div className="flex items-center gap-1.5">
-                <span className={classNames("h-1.5 w-1.5 rounded-full", status === 'ready' ? "bg-green-500" : "bg-gray-400")}></span>
-                <span className="text-[10px] font-medium text-[hsl(var(--muted-foreground))]">
+            <div className="flex flex-col ml-0.5">
+              <span className="font-semibold text-[hsl(var(--primary))] tracking-tight text-xs">AI Assistant</span>
+              <div className="flex items-center gap-1">
+                <span className={classNames("h-1 w-1 rounded-full", status === 'ready' ? "bg-green-500" : "bg-gray-400")}></span>
+                <span className="text-[9px] font-medium text-[hsl(var(--muted-foreground))]">
                   {status === 'ready' ? 'Online' : 'Offline'}
                 </span>
               </div>
@@ -504,24 +503,24 @@ export default function AIChatWidget() {
           </div>
 
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive)/0.1)] rounded-md transition-colors" onClick={() => setIsOpen(false)} title="Close">
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive)/0.1)] rounded-md transition-colors" onClick={() => setIsOpen(false)} title="Close">
+              <X className="h-3 w-3" />
             </Button>
           </div>
         </div>
 
         {/* Chat Area - List View - With Scrollbar */}
-        <ScrollArea className="flex-1 w-full bg-[hsl(var(--background))] [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar]:!w-2 [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb]:!bg-[hsl(var(--muted-foreground)/0.3)] hover:[&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb]:!bg-[hsl(var(--muted-foreground)/0.5)] [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-track]:!bg-transparent transition-colors">
-          <div className="flex flex-col py-6 px-4 sm:px-6 gap-8 min-h-full">
+        <ScrollArea className="flex-1 w-full bg-[hsl(var(--background))] [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar]:!w-1.5 [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb]:!bg-[hsl(var(--muted-foreground)/0.3)] hover:[&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb]:!bg-[hsl(var(--muted-foreground)/0.5)] [&>[data-radix-scroll-area-viewport]::-webkit-scrollbar-track]:!bg-transparent transition-colors">
+          <div className="flex flex-col py-3 px-3 gap-4 min-h-full">
 
             {(messages.length === 0 || showWelcome) && !isLoadingHistory ? (
-              <div className="flex flex-col items-center justify-center flex-1 h-[400px] text-center space-y-6 opacity-30 select-none">
-                <div className="h-16 w-16 bg-[hsl(var(--muted))] rounded-2xl flex items-center justify-center">
-                  <Terminal className="h-8 w-8 text-[hsl(var(--primary))]" />
+              <div className="flex flex-col items-center justify-center flex-1 h-[200px] text-center space-y-3 opacity-30 select-none">
+                <div className="h-10 w-10 bg-[hsl(var(--muted))] rounded-xl flex items-center justify-center">
+                  <Terminal className="h-5 w-5 text-[hsl(var(--primary))]" />
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-medium text-[hsl(var(--foreground))]">AI Assistant</h3>
-                  <p className="text-sm text-gray-500">
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-medium text-[hsl(var(--foreground))]">AI Assistant</h3>
+                  <p className="text-xs text-gray-500">
                     {user ? `Logged in as ${user.username}` : `Temporary Session`}
                   </p>
                 </div>
@@ -530,7 +529,7 @@ export default function AIChatWidget() {
 
             {isLoadingHistory && (
               <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--primary))]" />
+                <Loader2 className="h-5 w-5 animate-spin text-[hsl(var(--primary))]" />
               </div>
             )}
 
@@ -538,43 +537,43 @@ export default function AIChatWidget() {
               const isUser = m.role === 'user'
               return (
                 <div key={m.id} className={classNames(
-                  "group relative flex gap-5 w-full",
+                  "group relative flex gap-2 w-full",
                   isUser ? "flex-row-reverse" : "flex-row"
                 )}>
                   {/* Avatar */}
                   <div className="flex-none flex flex-col items-center gap-1">
                     <div className={classNames(
-                      "h-8 w-8 rounded-full flex items-center justify-center border shadow-sm",
+                      "h-6 w-6 rounded-full flex items-center justify-center border shadow-sm",
                       isUser
                         ? "bg-[hsl(var(--muted))] border-[hsl(var(--border))]"
                         : "bg-[hsl(var(--primary))] border-transparent"
                     )}>
-                      {isUser ? <User className="h-4 w-4 text-[hsl(var(--muted-foreground))]" /> : <Bot className="h-4 w-4 text-[hsl(var(--primary-foreground))]" />}
+                      {isUser ? <User className="h-3 w-3 text-[hsl(var(--muted-foreground))]" /> : <Bot className="h-3 w-3 text-[hsl(var(--primary-foreground))]" />}
                     </div>
                   </div>
 
                   {/* Content - Nuclear Option for Overflow */}
                   <div className={classNames(
-                    "flex-1 min-w-0 w-0 py-1 space-y-2 flex flex-col",
+                    "flex-1 min-w-0 w-0 py-0.5 space-y-1 flex flex-col",
                     isUser ? "items-end text-right" : "items-start text-left"
                   )}>
 
-                    <div className={classNames("flex items-center gap-2", isUser ? "flex-row-reverse" : "flex-row")}>
-                      <span className="text-sm font-semibold text-[hsl(var(--foreground))]">
-                        {isUser ? 'You' : 'AI Assistant'}
+                    <div className={classNames("flex items-center gap-1.5", isUser ? "flex-row-reverse" : "flex-row")}>
+                      <span className="text-xs font-semibold text-[hsl(var(--foreground))]">
+                        {isUser ? 'You' : 'AI'}
                       </span>
-                      <span className="text-[10px] text-[hsl(var(--muted-foreground))]">
+                      <span className="text-[9px] text-[hsl(var(--muted-foreground))]">
                         {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
 
                     {/* Attachments */}
                     {m.attachments?.length ? (
-                      <div className="flex flex-wrap gap-2 justify-end">
+                      <div className="flex flex-wrap gap-1 justify-end">
                         {m.attachments.map((a) => (
-                          <div key={`${m.id}_${a.name}`} className="flex items-center gap-2 text-xs bg-[hsl(var(--muted))] border border-[hsl(var(--border))] px-3 py-1.5 rounded-lg text-[hsl(var(--muted-foreground))]">
-                            <Paperclip className="h-3 w-3" />
-                            <span className="truncate max-w-[200px]">{a.name}</span>
+                          <div key={`${m.id}_${a.name}`} className="flex items-center gap-1 text-[10px] bg-[hsl(var(--muted))] border border-[hsl(var(--border))] px-2 py-1 rounded text-[hsl(var(--muted-foreground))]">
+                            <Paperclip className="h-2.5 w-2.5" />
+                            <span className="truncate max-w-[120px]">{a.name}</span>
                           </div>
                         ))}
                       </div>
@@ -582,38 +581,38 @@ export default function AIChatWidget() {
 
                     {/* Message Text */}
                     <div className={classNames(
-                      "prose prose-sm max-w-none text-[hsl(var(--foreground))] break-words prose-p:leading-7 prose-pre:bg-[hsl(var(--muted))] prose-pre:border prose-pre:border-[hsl(var(--border))] prose-pre:text-[hsl(var(--foreground))] prose-pre:rounded-xl prose-pre:overflow-x-auto prose-code:bg-[hsl(var(--muted))] prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none min-w-0 w-full overflow-hidden",
+                      "prose prose-xs max-w-none text-[hsl(var(--foreground))] break-words prose-p:leading-5 prose-p:text-xs prose-pre:bg-[hsl(var(--muted))] prose-pre:border prose-pre:border-[hsl(var(--border))] prose-pre:text-[hsl(var(--foreground))] prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:text-[10px] prose-code:bg-[hsl(var(--muted))] prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[10px] prose-code:before:content-none prose-code:after:content-none min-w-0 w-full overflow-hidden",
                       isUser ? "text-right items-end" : "text-left items-start"
                     )}>
                       {m.role === 'assistant' ? (
-                        <div className="text-left">
+                        <div className="text-left text-xs">
                           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
                             {m.content || (isSending ? 'Thinking...' : '')}
                           </ReactMarkdown>
                         </div>
                       ) : (
-                        <div className="whitespace-pre-wrap break-words">{m.content}</div>
+                        <div className="whitespace-pre-wrap break-words text-xs">{m.content}</div>
                       )}
                     </div>
                   </div>
                 </div>
               )
             })}
-            <div ref={scrollAnchorRef} className="h-4" />
+            <div ref={scrollAnchorRef} className="h-2" />
           </div>
         </ScrollArea>
 
         {/* Floating Command Input */}
-        <div className="flex-none p-4 bg-[hsl(var(--background))] border-t border-[hsl(var(--border))]">
-          <div className="relative flex flex-col bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-xl shadow-lg focus-within:ring-2 focus-within:ring-[hsl(var(--ring)/0.2)] transition-all overflow-hidden">
+        <div className="flex-none p-2 bg-[hsl(var(--background))] border-t border-[hsl(var(--border))]">
+          <div className="relative flex flex-col bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-[hsl(var(--ring)/0.2)] transition-all overflow-hidden">
 
             {pendingFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 px-3 pt-3">
+              <div className="flex flex-wrap gap-1 px-2 pt-2">
                 {pendingFiles.map((f) => (
-                  <div key={f.name} className="flex items-center gap-2 bg-[hsl(var(--muted))] px-2 py-1 rounded-md text-xs border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
-                    <span className="max-w-[120px] truncate">{f.name}</span>
+                  <div key={f.name} className="flex items-center gap-1 bg-[hsl(var(--muted))] px-1.5 py-0.5 rounded text-[10px] border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
+                    <span className="max-w-[80px] truncate">{f.name}</span>
                     <button onClick={() => setPendingFiles(prev => prev.filter(x => x !== f))}>
-                      <X className="h-3 w-3 hover:text-[hsl(var(--destructive))]" />
+                      <X className="h-2.5 w-2.5 hover:text-[hsl(var(--destructive))]" />
                     </button>
                   </div>
                 ))}
@@ -624,7 +623,7 @@ export default function AIChatWidget() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Ask anything..."
-              className="min-h-[50px] max-h-48 w-full resize-none border-0 bg-transparent px-4 py-3 text-base focus-visible:ring-0 shadow-none text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]"
+              className="min-h-[36px] max-h-24 w-full resize-none border-0 bg-transparent px-3 py-2 text-xs focus-visible:ring-0 shadow-none text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault()
@@ -634,8 +633,8 @@ export default function AIChatWidget() {
               disabled={isSending}
             />
 
-            <div className="flex justify-between items-center px-2 pb-2">
-              <div className="flex items-center gap-1">
+            <div className="flex justify-between items-center px-1.5 pb-1.5">
+              <div className="flex items-center gap-0.5">
                 <input
                   ref={fileInputRef} type="file" className="hidden" multiple
                   onChange={(e) => {
@@ -645,33 +644,33 @@ export default function AIChatWidget() {
                     e.target.value = ''
                   }}
                 />
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent)/0.1)] rounded-lg transition-colors" onClick={() => fileInputRef.current?.click()} disabled={isSending}>
-                  <Paperclip className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent)/0.1)] rounded transition-colors" onClick={() => fileInputRef.current?.click()} disabled={isSending}>
+                  <Paperclip className="h-3 w-3" />
                 </Button>
 
                 {/* Provider Selector */}
                 <div className="hidden sm:flex items-center">
                   <Select value={selectedProvider} onValueChange={setSelectedProvider} disabled={status !== 'ready'}>
-                    <SelectTrigger className="h-8 w-[90px] text-xs border-0 bg-transparent hover:bg-[hsl(var(--accent)/0.1)] rounded px-2 text-[hsl(var(--muted-foreground))] font-medium focus:ring-0 transition-colors">
+                    <SelectTrigger className="h-6 w-[70px] text-[10px] border-0 bg-transparent hover:bg-[hsl(var(--accent)/0.1)] rounded px-1.5 text-[hsl(var(--muted-foreground))] font-medium focus:ring-0 transition-colors">
                       <SelectValue placeholder="Provider" />
                     </SelectTrigger>
                     <SelectContent align="start" className="bg-[hsl(var(--popover))] border border-[hsl(var(--border))] shadow-lg p-1 max-h-[200px] overflow-y-auto">
-                      {providers.map((p) => <SelectItem key={p} value={p} className="text-xs">{p.toUpperCase()}</SelectItem>)}
+                      {providers.map((p) => <SelectItem key={p} value={p} className="text-[10px]">{p.toUpperCase()}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Model Selector */}
                 <Select value={selectedModel} onValueChange={setSelectedModel} disabled={status !== 'ready' || !selectedProvider}>
-                  <SelectTrigger className="h-8 max-w-[140px] text-xs border-0 bg-transparent hover:bg-[hsl(var(--accent)/0.1)] rounded px-2 text-[hsl(var(--muted-foreground))] font-medium focus:ring-0 truncate transition-colors">
+                  <SelectTrigger className="h-6 max-w-[100px] text-[10px] border-0 bg-transparent hover:bg-[hsl(var(--accent)/0.1)] rounded px-1.5 text-[hsl(var(--muted-foreground))] font-medium focus:ring-0 truncate transition-colors">
                     <SelectValue placeholder="Model" />
                   </SelectTrigger>
                   <SelectContent align="start" className="bg-[hsl(var(--popover))] border border-[hsl(var(--border))] shadow-lg p-1 max-h-[200px] overflow-y-auto">
                     {filteredModels.map((m) => {
                       const isVision = VISION_MODELS.some(v => m.id.toLowerCase().includes(v))
                       return (
-                        <SelectItem key={m.id} value={m.id} className="text-xs">
-                          {m.label} {isVision && <span className="ml-1 text-[10px] opacity-70">👁️</span>}
+                        <SelectItem key={m.id} value={m.id} className="text-[10px]">
+                          {m.label} {isVision && <span className="ml-1 text-[8px] opacity-70">👁️</span>}
                         </SelectItem>
                       )
                     })}
@@ -679,14 +678,14 @@ export default function AIChatWidget() {
                 </Select>
               </div>
 
-              <Button size="icon" onClick={onSend} disabled={(!prompt.trim() && pendingFiles.length === 0) || isSending} className={classNames("h-8 w-8 rounded-lg transition-all flex items-center justify-center ml-auto bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary)/0.9)] shadow-sm")}>
-                {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              <Button size="icon" onClick={onSend} disabled={(!prompt.trim() && pendingFiles.length === 0) || isSending} className={classNames("h-6 w-6 rounded transition-all flex items-center justify-center ml-auto bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary)/0.9)] shadow-sm")}>
+                {isSending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
               </Button>
             </div>
           </div>
 
-          <div className="text-center mt-2">
-            <span className="text-[10px] text-[hsl(var(--muted-foreground))] font-medium">Powered by Puter.js</span>
+          <div className="text-center mt-1">
+            <span className="text-[8px] text-[hsl(var(--muted-foreground))] font-medium">Powered by Puter.js</span>
           </div>
         </div>
       </div>

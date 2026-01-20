@@ -365,37 +365,38 @@ export default function POSPage() {
     const change = totalPaid - total
 
     return (
-        <div className="flex flex-col h-screen p-4 lg:p-0 gap-2">
+        <div className="flex flex-col h-screen p-2 sm:p-4 lg:p-0 gap-2">
             {/* Clock Header */}
             <div className="flex justify-end px-1 shrink-0">
-                <div className="text-sm font-medium text-[hsl(var(--muted-foreground))] flex items-center gap-2 bg-[hsl(var(--card))] px-3 py-1 rounded-full shadow-sm border">
+                <div className="text-xs sm:text-sm font-medium text-[hsl(var(--muted-foreground))] flex items-center gap-1.5 sm:gap-2 bg-[hsl(var(--card))] px-2 sm:px-3 py-1 rounded-full shadow-sm border">
                     <span className="hidden sm:inline">
                         {currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
-                    <span className="sm:hidden">
-                        {currentTime.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    <span className="sm:hidden text-[10px]">
+                        {currentTime.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                     </span>
-                    <span className="w-px h-4 bg-border"></span>
-                    <span className="font-mono font-bold text-[hsl(var(--primary))]">
+                    <span className="w-px h-3 sm:h-4 bg-border"></span>
+                    <span className="font-mono font-bold text-[hsl(var(--primary))] text-[10px] sm:text-sm">
                         {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')}
                     </span>
                 </div>
             </div>
 
             {/* Main Content Row */}
-            <div className="flex flex-col md:flex-row flex-1 min-h-0 gap-4 items-start">
+            <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-2 sm:gap-4 items-start">
                 {/* Left Section: Products */}
-                <div className="flex-1 h-full min-h-0 self-stretch">
+                <div className="flex-1 h-[50vh] lg:h-full min-h-0 self-stretch">
                     <Card className="h-full flex flex-col">
-                        <CardHeader className="pb-3">
-                            <div className="flex gap-4">
-                                <div className="flex-1">
+                        <CardHeader className="pb-2 sm:pb-3 px-2 sm:px-4">
+                            <div className="flex gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
+                                <div className="flex-1 min-w-[150px]">
                                     <Input
-                                        placeholder="Search products (or scan barcode)..."
+                                        placeholder="Search or scan..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         onKeyDown={handleSearchKeyDown}
                                         icon={<Search className="h-4 w-4" />}
+                                        className="text-sm"
                                     />
                                 </div>
                                 <Input
@@ -409,7 +410,7 @@ export default function POSPage() {
                                         }
                                     }}
                                     icon={<Barcode className="h-4 w-4" />}
-                                    className="w-48 hidden md:flex"
+                                    className="w-32 lg:w-48 hidden md:flex text-sm"
                                 />
 
                                 {/* Camera Scanner Button */}
@@ -418,7 +419,7 @@ export default function POSPage() {
                                 {/* Remote Scanner Button */}
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="icon" title="Connect Mobile Scanner">
+                                        <Button variant="outline" size="icon" title="Connect Mobile Scanner" className="h-9 w-9 sm:h-10 sm:w-10">
                                             <Smartphone className="h-4 w-4" />
                                         </Button>
                                     </DialogTrigger>
@@ -452,34 +453,34 @@ export default function POSPage() {
                                 </Dialog>
                             </div>
                         </CardHeader>
-                        <CardContent className="flex-1 overflow-y-auto p-4">
+                        <CardContent className="flex-1 overflow-y-auto p-2 sm:p-4">
                             {productsLoading ? (
-                                <div className="text-center py-8">Loading products...</div>
+                                <div className="text-center py-8 text-sm">Loading products...</div>
                             ) : filteredProducts.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full text-[hsl(var(--muted-foreground))] opacity-70">
-                                    <PackageSearch className="h-16 w-16 mb-4 opacity-50" />
-                                    <p className="text-lg font-medium">No products found</p>
-                                    <p className="text-sm">Try searching for something else</p>
+                                    <PackageSearch className="h-10 sm:h-16 w-10 sm:w-16 mb-2 sm:mb-4 opacity-50" />
+                                    <p className="text-sm sm:text-lg font-medium">No products found</p>
+                                    <p className="text-xs sm:text-sm">Try searching for something else</p>
                                     {search && (
-                                        <Button variant="link" onClick={() => setSearch('')} className="mt-2">
+                                        <Button variant="link" onClick={() => setSearch('')} className="mt-2 text-xs sm:text-sm">
                                             Clear search
                                         </Button>
                                     )}
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-2">
+                                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1.5 sm:gap-4 pb-2">
                                     {filteredProducts.slice(0, 50).map((product) => {
                                         // Safety check for thumbnail
                                         const hasImage = !!product.thumbnail?.slug
                                         return (
                                         <Card
                                             key={product.id}
-                                            className="cursor-pointer hover:shadow-lg transition-shadow group flex flex-col h-full overflow-hidden"
+                                            className="cursor-pointer hover:shadow-lg transition-shadow group flex flex-col h-full overflow-hidden active:scale-95"
                                             onClick={() => addToCart(product)}
                                         >
-                                            <CardContent className="p-3 text-center flex flex-col flex-1 justify-between min-h-[120px]">
+                                            <CardContent className="p-1.5 sm:p-3 text-center flex flex-col flex-1 justify-between min-h-[100px] sm:min-h-[120px]">
                                                 {/* Product Image */}
-                                                <div className="w-full aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg mb-2 overflow-hidden">
+                                                <div className="w-full aspect-square bg-gray-100 dark:bg-gray-800 rounded sm:rounded-lg mb-1 sm:mb-2 overflow-hidden">
                                                     {hasImage ? (
                                                         <img
                                                             src={`https://higfoctduijxbszgqhuc.supabase.co/storage/v1/object/public/product-images/${product.thumbnail?.slug ?? ''}`}
@@ -491,19 +492,19 @@ export default function POSPage() {
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center">
-                                                            <Package className="h-8 w-8 text-gray-400" />
+                                                            <Package className="h-5 w-5 sm:h-8 sm:w-8 text-gray-400" />
                                                         </div>
                                                     )}
                                                 </div>
                                                 
-                                                <div className="font-medium text-sm mb-2 leading-tight group-hover:text-primary transition-colors break-words line-clamp-2">
+                                                <div className="font-medium text-[10px] sm:text-sm mb-0.5 sm:mb-2 leading-tight group-hover:text-primary transition-colors break-words line-clamp-2">
                                                     {product.name}
                                                 </div>
-                                                <div className="mt-auto pt-2 w-full">
-                                                    <div className="text-[10px] text-[hsl(var(--muted-foreground))] mb-0.5 truncate w-full px-1">
+                                                <div className="mt-auto w-full">
+                                                    <div className="hidden sm:block text-[10px] text-[hsl(var(--muted-foreground))] mb-0.5 truncate w-full px-1">
                                                         {product.sku || 'N/A'}
                                                     </div>
-                                                    <div className="text-base font-bold text-[hsl(var(--primary))] truncate w-full px-1">
+                                                    <div className="text-xs sm:text-base font-bold text-[hsl(var(--primary))] truncate w-full px-0.5 sm:px-1">
                                                         {formatCurrency(product.selling_price)}
                                                     </div>
                                                 </div>
@@ -518,11 +519,11 @@ export default function POSPage() {
                 </div>
 
                 {/* Right Section: Cart */}
-                <div className="md:w-[320px] lg:w-[400px] xl:w-[450px] flex-none h-auto max-h-full flex flex-col">
+                <div className="w-full lg:w-[320px] xl:w-[400px] 2xl:w-[450px] flex-none h-auto max-h-[45vh] lg:max-h-full flex flex-col">
                     <Card className="flex flex-col max-h-full overflow-hidden shadow-lg">
-                        <CardHeader className="py-4 border-b shrink-0">
-                            <CardTitle className="flex items-center gap-2 text-lg">
-                                <ShoppingCart className="h-5 w-5" />
+                        <CardHeader className="py-2 sm:py-4 border-b shrink-0 px-2 sm:px-4">
+                            <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
+                                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                                 Current Order ({cart.length})
                             </CardTitle>
                         </CardHeader>
