@@ -67,7 +67,7 @@ export default function YearlyReportPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white"><CardHeader className="pb-2"><CardTitle className="text-sm opacity-80">Total Revenue {year}</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{formatCurrency(totalRevenue)}</div></CardContent></Card>
+                <Card className="bg-gradient-to-br from-blue-500 to-blue-600"><CardHeader className="pb-2"><CardTitle className="text-sm text-white/80">Total Revenue {year}</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-white">{formatCurrency(totalRevenue)}</div></CardContent></Card>
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Total Orders</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{totalOrders}</div></CardContent></Card>
                 <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Monthly Average</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{formatCurrency(avgMonthly)}</div></CardContent></Card>
                 <Card className="border-yellow-500"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-yellow-500" />Best Month</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{bestMonth?.month}</div><div className="text-sm text-[hsl(var(--muted-foreground))]">{formatCurrency(bestMonth?.revenue || 0)}</div></CardContent></Card>
