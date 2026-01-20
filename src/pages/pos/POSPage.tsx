@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast'
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner'
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
 import QRCode from 'qrcode'
 
@@ -515,18 +516,19 @@ export default function POSPage() {
                         {/* Cart Footer - Customer & Coupon */}
                         <div className="shrink-0 p-2 border-t bg-muted/10 space-y-2">
                             {/* Customer Select */}
-                            <select
-                                className="w-full px-2 py-1.5 border rounded-md bg-background text-xs"
-                                value={selectedCustomer || ''}
-                                onChange={(e) => setSelectedCustomer(e.target.value || null)}
-                            >
-                                <option value="">Walk-in Customer</option>
-                                {customers.map(c => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.first_name} {c.last_name}
-                                    </option>
-                                ))}
-                            </select>
+                            <Select value={selectedCustomer || ''} onValueChange={(v) => setSelectedCustomer(v || null)}>
+                                <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Walk-in Customer" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-popover z-[150]">
+                                    <SelectItem value="">Walk-in Customer</SelectItem>
+                                    {customers.map(c => (
+                                        <SelectItem key={c.id} value={c.id}>
+                                            {c.first_name} {c.last_name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
 
                             {/* Coupon Input */}
                             <div className="flex gap-1">
