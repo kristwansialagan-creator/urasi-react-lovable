@@ -10,7 +10,7 @@ import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { productLookupService } from '@/services/productLookup'
 import { useToast } from '@/hooks/use-toast'
-import { useProducts } from '@/hooks'
+import { useProducts, useUnits } from '@/hooks'
 import { useCategories } from '@/hooks'
 import { useSkuParents } from '@/hooks/useSkuParents'
 import { useProductExtraction } from '@/contexts/ProductExtractionContext'
@@ -25,6 +25,7 @@ export default function ProductCreatePage() {
     const { toast } = useToast()
     const { createProduct, updateProduct } = useProducts()
     const { categories, createCategory } = useCategories()
+    const { units, fetchUnits } = useUnits()
     const { skuParents, createSkuParent, deleteSkuParent } = useSkuParents()
     const { extractedData, clearExtractedData, metadata } = useProductExtraction()
     const [loading, setLoading] = useState(false)
@@ -41,7 +42,7 @@ export default function ProductCreatePage() {
     const [purchasePrice, setPurchasePrice] = useState('')
     const [stock, setStock] = useState('')
     const [lowStock, setLowStock] = useState('10')
-    const [unit, setUnit] = useState('')
+    const [unitId, setUnitId] = useState<string>('none')
     const [status, setStatus] = useState('available')
     const [stockManagement, setStockManagement] = useState(true)
     const [imageUrl, setImageUrl] = useState('')
@@ -111,6 +112,11 @@ export default function ProductCreatePage() {
         }
     }, [extractedData, isEditMode, metadata, clearExtractedData, toast])
 
+    // Fetch units on mount
+    useEffect(() => {
+        fetchUnits()
+    }, [fetchUnits])
+
     // Load product data if in edit mode
     useEffect(() => {
         if (!id) return
@@ -170,6 +176,7 @@ export default function ProductCreatePage() {
                         const s = product.stock[0]
                         setStock(s.quantity?.toString() || '')
                         setLowStock(s.low_quantity?.toString() || '')
+                        setUnitId(s.unit_id || 'none')
                     }
                 }
             } catch (err) {
@@ -256,7 +263,25 @@ export default function ProductCreatePage() {
                 await updateProduct(id, productData)
                 toast({ title: "Success", description: "Product updated successfully" })
             } else {
-                await createProduct(productData)
+                const newProduct = await createProduct(productData)
+                
+                // Create product_unit_quantities entry if unit and stock are provided
+                if (newProduct && unitId !== 'none' && stock) {
+                    const { error: stockError } = await supabase
+                        .from('product_unit_quantities')
+                        .insert({
+                            product_id: newProduct.id,
+                            unit_id: unitId,
+                            quantity: parseFloat(stock) || 0,
+                            low_quantity: parseFloat(lowStock) || 10,
+                            stock_alert_enabled: true
+                        })
+                    
+                    if (stockError) {
+                        console.error('Error creating stock entry:', stockError)
+                    }
+                }
+                
                 toast({ title: "Success", description: "Product created successfully" })
             }
             navigate('/products')
@@ -714,12 +739,19 @@ export default function ProductCreatePage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="unit">Unit</Label>
-                                        <Input
-                                            id="unit"
-                                            placeholder="Select unit"
-                                            value={unit}
-                                            onChange={(e) => setUnit(e.target.value)}
-                                        />
+                                        <Select value={unitId} onValueChange={setUnitId}>
+                                            <SelectTrigger id="unit">
+                                                <SelectValue placeholder="Select unit..." />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-background border shadow-lg">
+                                                <SelectItem value="none">None</SelectItem>
+                                                {units.map((u) => (
+                                                    <SelectItem key={u.id} value={u.id}>
+                                                        {u.name} ({u.identifier})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 </div>
                             </CardContent>
