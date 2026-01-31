@@ -49,7 +49,7 @@ export function useSettings() {
                 .from('settings')
                 .select('value')
                 .eq('key', key)
-                .single()
+                .maybeSingle()
 
             if (err) return defaultValue
             return (data as any)?.value || defaultValue
@@ -64,7 +64,7 @@ export function useSettings() {
                 .from('settings')
                 .select('id')
                 .eq('key', key)
-                .single()
+                .maybeSingle()
 
             if (existing) {
                 const { error: err } = await supabase

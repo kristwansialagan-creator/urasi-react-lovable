@@ -24,12 +24,12 @@ export default function NotificationsPage() {
         }
     }
 
-    const getColorClass = (type: string) => {
+    const getBorderColor = (type: string) => {
         switch (type) {
-            case 'success': return 'border-l-green-500 bg-green-50 dark:bg-green-900/20'
-            case 'error': return 'border-l-red-500 bg-red-50 dark:bg-red-900/20'
-            case 'warning': return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/20'
-            default: return 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/20'
+            case 'success': return 'border-l-green-500'
+            case 'error': return 'border-l-red-500'
+            case 'warning': return 'border-l-yellow-500'
+            default: return 'border-l-blue-500'
         }
     }
 
@@ -49,7 +49,7 @@ export default function NotificationsPage() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h1 className="text-3xl font-bold flex items-center gap-2">
-                    <Bell className="h-8 w-8" />Notifications 
+                    <Bell className="h-8 w-8" />Notifications
                     {unreadCount > 0 && <span className="px-2 py-1 bg-red-500 text-white rounded-full text-sm">{unreadCount}</span>}
                 </h1>
                 <div className="flex gap-2">
@@ -85,27 +85,32 @@ export default function NotificationsPage() {
                     </CardContent></Card>
                 ) : (
                     filtered.map((notification: any) => (
-                        <Card key={notification.id} className={`border-l-4 ${getColorClass(notification.type)} ${!notification.read ? 'shadow-md' : 'opacity-75'}`}>
+                        <Card key={notification.id} className={`border-l-4 ${getBorderColor(notification.type)} bg-white dark:bg-slate-950 ${!notification.read ? 'shadow-md' : 'shadow-sm text-opacity-90'}`}>
                             <CardContent className="p-4">
                                 <div className="flex items-start gap-4">
                                     <div className="mt-1">{getIcon(notification.type)}</div>
                                     <div className="flex-1">
                                         <div className="flex flex-col md:flex-row md:items-start justify-between mb-2 gap-2">
                                             <div>
-                                                <h3 className="font-semibold text-lg">{notification.title}</h3>
+                                                <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-50">{notification.title}</h3>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    {!notification.read && <span className="inline-block px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">New</span>}
-                                                    <span className="inline-block px-2 py-0.5 bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] text-xs rounded-full">
+                                                    {!notification.read && <span className="inline-block px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-medium">New</span>}
+                                                    <span className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-full font-medium">
                                                         {getSourceLabel(notification.source)}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <span className="text-sm text-[hsl(var(--muted-foreground))]">{new Date(notification.created_at).toLocaleString('id-ID')}</span>
+                                            <span className="text-sm text-slate-500 dark:text-slate-400">{new Date(notification.created_at).toLocaleString('id-ID')}</span>
                                         </div>
-                                        <p className="text-[hsl(var(--muted-foreground))] mb-3">{notification.description || ''}</p>
+                                        <p className="text-slate-700 dark:text-slate-300 mb-3">{notification.description || ''}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {notification.url && (
-                                                <Button size="sm" variant="outline" asChild>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    asChild
+                                                    onClick={() => !notification.read && markAsRead(notification.id)}
+                                                >
                                                     <Link to={notification.url}>
                                                         <ExternalLink className="h-3 w-3 mr-1" />View Details
                                                     </Link>

@@ -173,7 +173,7 @@ export default function UsersPage() {
             </Card>
 
             <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-                <DialogContent>
+                <DialogContent className="bg-background/100 backdrop-blur-sm border border-border shadow-lg">
                     <DialogHeader>
                         <DialogTitle>Edit User: {selectedUser?.username}</DialogTitle>
                         <DialogDescription>
@@ -181,23 +181,23 @@ export default function UsersPage() {
                         </DialogDescription>
                     </DialogHeader>
                     {selectedUser && (
-                            <div className="space-y-4 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>First Name</Label>
-                                        <Input
-                                            value={selectedUser.first_name || ''}
-                                            onChange={(e) => setSelectedUser({ ...selectedUser, first_name: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Second Name</Label>
-                                        <Input
-                                            value={selectedUser.second_name || ''}
-                                            onChange={(e) => setSelectedUser({ ...selectedUser, second_name: e.target.value })}
-                                        />
-                                    </div>
+                        <div className="space-y-4 py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>First Name</Label>
+                                    <Input
+                                        value={selectedUser.first_name || ''}
+                                        onChange={(e) => setSelectedUser({ ...selectedUser, first_name: e.target.value })}
+                                    />
                                 </div>
+                                <div className="space-y-2">
+                                    <Label>Second Name</Label>
+                                    <Input
+                                        value={selectedUser.second_name || ''}
+                                        onChange={(e) => setSelectedUser({ ...selectedUser, second_name: e.target.value })}
+                                    />
+                                </div>
+                            </div>
                             <div className="space-y-2">
                                 <Label>Primary Role (System)</Label>
                                 <Select
@@ -207,7 +207,7 @@ export default function UsersPage() {
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-50">
                                         <SelectItem value="admin">Admin</SelectItem>
                                         <SelectItem value="cashier">Cashier</SelectItem>
                                         <SelectItem value="customer">Customer</SelectItem>
@@ -226,7 +226,7 @@ export default function UsersPage() {
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select a role to add" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-50">
                                             {roles.filter(r => !selectedUser.roles?.find((ur: any) => ur.id === r.id)).map(role => (
                                                 <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
                                             ))}

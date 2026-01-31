@@ -118,7 +118,14 @@ export default function MediaLibraryPage() {
                                 </div>
                                 <div className="p-2">
                                     <p className="text-sm font-medium truncate">{m.name}</p>
-                                    <p className="text-xs text-[hsl(var(--muted-foreground))]">.{m.extension}</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs text-[hsl(var(--muted-foreground))]">.{m.extension}</p>
+                                        {m.products && m.products.length > 0 && (
+                                            <span className="text-xs bg-[hsl(var(--primary))] text-white px-2 py-0.5 rounded-full">
+                                                {m.products.length} product{m.products.length > 1 ? 's' : ''}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                     <button onClick={e => { e.stopPropagation(); setViewItem(m) }} className="p-1 bg-white rounded shadow hover:bg-[hsl(var(--muted))]"><Edit2 className="h-4 w-4" /></button>
@@ -146,6 +153,21 @@ export default function MediaLibraryPage() {
                             <div className="flex gap-4 text-sm text-[hsl(var(--muted-foreground))]">
                                 <span>Type: {viewItem.extension}</span>
                                 <span>Uploaded: {new Date(viewItem.created_at || '').toLocaleDateString()}</span>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium block mb-2">Used by Products</label>
+                                {viewItem.products && viewItem.products.length > 0 ? (
+                                    <div className="space-y-1">
+                                        {viewItem.products.map((product: any) => (
+                                            <div key={product.id} className="text-sm px-3 py-2 bg-[hsl(var(--muted))] rounded flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-[hsl(var(--primary))] rounded-full"></span>
+                                                {product.name}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-[hsl(var(--muted-foreground))] italic">Not used by any product</p>
+                                )}
                             </div>
                             <div className="flex gap-2 pt-4">
                                 <Button variant="outline" onClick={() => setViewItem(null)} className="flex-1">Close</Button>

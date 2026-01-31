@@ -1,0 +1,63 @@
+Copyright (c) 2026 En Raymon (Urasi Project)
+Copyright (c) 2020-2024 Blair Njikam and NexoPOS Contributors
+
+================================================================================
+DERIVATIVE WORK NOTICE
+================================================================================
+
+This project (Urasi) is a derivative work based on NexoPOS 4.x, originally 
+created by Blair Njikam and licensed under the GNU General Public License v3.0.
+
+Original Project: NexoPOS 4.x
+Original Repository: https://github.com/Blair2004/NexoPOS-4x
+Original License: GNU GPL v3.0
+
+================================================================================
+MODIFICATIONS
+================================================================================
+
+The following substantial modifications have been made to create Urasi:
+
+1. Complete technology stack migration:
+   - Backend: Laravel → Supabase (PostgreSQL + Edge Functions)
+   - Frontend: Vue.js → React 18 + TypeScript
+   - Styling: Legacy CSS → TailwindCSS 4
+   - Build: Webpack → Vite 7
+
+2. Architecture changes:
+   - Monolithic → Client/Server separation
+   - MySQL → PostgreSQL with real-time capabilities
+   - Server-side rendering → Single Page Application
+
+3. Feature additions and customizations:
+   - Modern UI components (Radix UI)
+   - Enhanced real-time updates
+   - Custom business logic modifications
+
+================================================================================
+LICENSE
+================================================================================
+
+This derivative work is licensed under the GNU General Public License v3.0,
+the same license as the original NexoPOS project.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <https://www.gnu.org/licenses/>.
+
+================================================================================
+ATTRIBUTION REQUIREMENT
+================================================================================
+
+Per GPL v3.0 requirements:
+- This NOTICE file must be preserved in all copies and derivative works
+- The LICENSE file (GPL v3.0) must be included
+- Attribution to the original NexoPOS project must be maintained
+- Any modifications must be clearly documented
+
+================================================================================
+DISCLAIMER
+================================================================================
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.

@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Upload, X, Image as ImageIcon, Library } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import { MediaSelector } from './MediaSelector'
 
 interface ImageUploadProps {
   value?: string
@@ -14,6 +15,7 @@ interface ImageUploadProps {
 
 export function ImageUpload({ value, onChange, onMediaIdChange, className }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
+  const [isMediaSelectorOpen, setIsMediaSelectorOpen] = useState(false)
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -109,6 +111,15 @@ export function ImageUpload({ value, onChange, onMediaIdChange, className }: Ima
     onMediaIdChange('')
   }
 
+  const handleMediaSelect = (mediaUrl: string, mediaId: string) => {
+    onChange(mediaUrl)
+    onMediaIdChange(mediaId)
+    toast({
+      title: "Image selected",
+      description: "Image from library has been applied"
+    })
+  }
+
   return (
     <Card className={className}>
       <CardContent className="p-6">
@@ -140,6 +151,15 @@ export function ImageUpload({ value, onChange, onMediaIdChange, className }: Ima
               <Upload className="h-4 w-4 mr-2" />
               Change Image
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => setIsMediaSelectorOpen(true)}
+            >
+              <Library className="h-4 w-4 mr-2" />
+              Select from Library
+            </Button>
           </div>
         ) : (
           <div className="border-2 border-dashed border-[hsl(var(--border))] rounded-lg p-8 text-center">
@@ -150,24 +170,37 @@ export function ImageUpload({ value, onChange, onMediaIdChange, className }: Ima
             <p className="text-xs text-[hsl(var(--muted-foreground))] mb-4">
               PNG, JPG, GIF up to 5MB
             </p>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Image
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Image
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsMediaSelectorOpen(true)}
+                disabled={uploading}
+              >
+                <Library className="h-4 w-4 mr-2" />
+                Select from Library
+              </Button>
+            </div>
           </div>
         )}
         <input
@@ -178,6 +211,12 @@ export function ImageUpload({ value, onChange, onMediaIdChange, className }: Ima
           className="hidden"
         />
       </CardContent>
+
+      <MediaSelector
+        open={isMediaSelectorOpen}
+        onOpenChange={setIsMediaSelectorOpen}
+        onSelect={handleMediaSelect}
+      />
     </Card>
   )
 }

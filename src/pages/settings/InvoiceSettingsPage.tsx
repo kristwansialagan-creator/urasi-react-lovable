@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { FileText, Save, Upload } from 'lucide-react'
 import { useSettings } from '@/hooks'
 import { useMedia } from '@/hooks'
+import { toast } from 'sonner'
 
 export default function InvoiceSettingsPage() {
     const { settings, bulkUpdate, loading } = useSettings()
@@ -39,7 +40,7 @@ export default function InvoiceSettingsPage() {
 
     const handleSave = async () => {
         const success = await bulkUpdate(formData, 'invoice')
-        if (success) alert('Invoice settings saved successfully!')
+        if (success) toast.success('Invoice settings saved successfully!')
     }
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

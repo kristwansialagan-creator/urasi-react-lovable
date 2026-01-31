@@ -1,5 +1,5 @@
 -- ================================================
--- NEXOPOS FULL DATABASE SCHEMA FOR SUPABASE
+-- URASI FULL DATABASE SCHEMA FOR SUPABASE
 -- Migration: 001_initial_schema
 -- ================================================
 

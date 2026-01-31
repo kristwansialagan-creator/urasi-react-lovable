@@ -5,36 +5,36 @@
   /* Primary Colors - URASI Navy Blue */
   --primary: 224 58% 24%;
   --primary-foreground: 210 40% 98%;
-  
+
   /* Secondary Colors - Golden Yellow Accent */
   --secondary: 45 93% 58%;
   --secondary-foreground: 224 58% 18%;
-  
+
   /* Accent Colors */
   --accent: 45 93% 58%;
   --accent-foreground: 224 58% 18%;
-  
+
   /* Background & Foreground */
   --background: 0 0% 98%;
   --foreground: 224 58% 18%;
-  
+
   /* Card */
   --card: 0 0% 100%;
   --card-foreground: 224 58% 18%;
-  
-  /* Popover */
+
+  /* Popover - Solid White */
   --popover: 0 0% 100%;
   --popover-foreground: 224 58% 18%;
-  
+
   /* Muted */
   --muted: 220 14% 96%;
   --muted-foreground: 220 9% 46%;
-  
+
   /* Border & Input */
   --border: 220 13% 91%;
   --input: 220 13% 91%;
   --ring: 224 58% 24%;
-  
+
   /* Status Colors */
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
@@ -42,10 +42,10 @@
   --success-foreground: 210 40% 98%;
   --warning: 38 92% 50%;
   --warning-foreground: 224 58% 18%;
-  
+
   /* Radius */
   --radius: 0.5rem;
-  
+
   /* Sidebar - Navy Theme with Gold Accent */
   --sidebar-background: 224 58% 18%;
   --sidebar-foreground: 210 40% 98%;
@@ -58,28 +58,28 @@
 .dark {
   --background: 224 58% 8%;
   --foreground: 210 40% 98%;
-  
+
   --card: 224 58% 12%;
   --card-foreground: 210 40% 98%;
-  
-  --popover: 224 58% 12%;
-  --popover-foreground: 210 40% 98%;
-  
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 58% 18%;
+
   --primary: 45 93% 58%;
   --primary-foreground: 224 58% 18%;
-  
+
   --secondary: 224 50% 25%;
   --secondary-foreground: 210 40% 98%;
-  
+
   --muted: 224 50% 20%;
   --muted-foreground: 220 14% 65%;
-  
+
   --accent: 224 50% 25%;
   --accent-foreground: 210 40% 98%;
-  
+
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
-  
+
   --border: 224 50% 20%;
   --input: 224 50% 20%;
   --ring: 45 93% 58%;
@@ -88,6 +88,16 @@
 /* Base Styles */
 * {
   @apply border-[hsl(var(--border))];
+}
+
+/* Force solid white background for all popovers */
+.bg-popover,
+[class*="bg-popover"],
+[data-radix-popper-content-wrapper]>div,
+[data-radix-menu-content],
+[data-radix-select-content] {
+  background-color: white !important;
+  color: #1e3a5f !important;
 }
 
 body {
@@ -120,18 +130,37 @@ body {
 
 /* Animation Classes */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { transform: translateY(-10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .animate-fade-in {

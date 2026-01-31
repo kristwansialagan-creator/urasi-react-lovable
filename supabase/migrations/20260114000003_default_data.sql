@@ -1,15 +1,15 @@
 -- ================================================
--- NEXOPOS DEFAULT DATA
+-- URASI DEFAULT DATA
 -- Migration: 003_default_data
 -- ================================================
 
 -- Insert default roles
 INSERT INTO roles (name, namespace, description, locked) VALUES
 ('Administrator', 'admin', 'Full system access with all permissions', true),
-('Store Administrator', 'nexopos.store.administrator', 'Store management access with limited admin capabilities', false),
-('Cashier', 'nexopos.store.cashier', 'Sales and POS operations access', false),
-('Customer', 'nexopos.store.customer', 'Customer portal access for viewing orders and account', false),
-('Driver', 'nexopos.driver', 'Delivery management and order fulfillment', false),
+('Store Administrator', 'urasi.store.administrator', 'Store management access with limited admin capabilities', false),
+('Cashier', 'urasi.store.cashier', 'Sales and POS operations access', false),
+('Customer', 'urasi.store.customer', 'Customer portal access for viewing orders and account', false),
+('Driver', 'urasi.driver', 'Delivery management and order fulfillment', false),
 ('User', 'user', 'Basic user access with minimal permissions', true)
 ON CONFLICT (namespace) DO NOTHING;
 

@@ -255,7 +255,7 @@ export default function ProcurementPage() {
                             <SelectTrigger className="w-[150px]">
                                 <SelectValue placeholder="All Status" />
                             </SelectTrigger>
-                            <SelectContent className="bg-popover z-[150]">
+                            <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-[150]">
                                 <SelectItem value="all">All Status</SelectItem>
                                 <SelectItem value="pending">Pending</SelectItem>
                                 <SelectItem value="completed">Completed</SelectItem>
@@ -377,7 +377,7 @@ export default function ProcurementPage() {
                                 <SelectTrigger className="mt-1">
                                     <SelectValue placeholder="Select provider..." />
                                 </SelectTrigger>
-                                <SelectContent className="bg-popover z-50">
+                                <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-50">
                                     {providers.map((p: any) => (
                                         <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                                     ))}

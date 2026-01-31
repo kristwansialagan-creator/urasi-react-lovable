@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -829,7 +829,10 @@ export type Database = {
           created_at: string | null
           height: number | null
           id: string
+          is_default: boolean | null
           name: string
+          paper_size: string | null
+          template: string | null
           template_data: Json | null
           updated_at: string | null
           width: number | null
@@ -838,7 +841,10 @@ export type Database = {
           created_at?: string | null
           height?: number | null
           id?: string
+          is_default?: boolean | null
           name: string
+          paper_size?: string | null
+          template?: string | null
           template_data?: Json | null
           updated_at?: string | null
           width?: number | null
@@ -847,7 +853,10 @@ export type Database = {
           created_at?: string | null
           height?: number | null
           id?: string
+          is_default?: boolean | null
           name?: string
+          paper_size?: string | null
+          template?: string | null
           template_data?: Json | null
           updated_at?: string | null
           width?: number | null
@@ -1251,6 +1260,7 @@ export type Database = {
       orders: {
         Row: {
           author: string | null
+          billing_address: Json | null
           change: number | null
           code: string
           created_at: string | null
@@ -1289,6 +1299,7 @@ export type Database = {
         }
         Insert: {
           author?: string | null
+          billing_address?: Json | null
           change?: number | null
           code: string
           created_at?: string | null
@@ -1327,6 +1338,7 @@ export type Database = {
         }
         Update: {
           author?: string | null
+          billing_address?: Json | null
           change?: number | null
           code?: string
           created_at?: string | null
@@ -1871,6 +1883,54 @@ export type Database = {
             columns: ["unit_quantity_id"]
             isOneToOne: false
             referencedRelation: "product_unit_quantities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders_products_batches: {
+        Row: {
+          batch_id: string
+          batch_number: string
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          order_product_id: string
+          purchase_price: number | null
+          quantity_deducted: number
+        }
+        Insert: {
+          batch_id: string
+          batch_number: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          order_product_id: string
+          purchase_price?: number | null
+          quantity_deducted?: number
+        }
+        Update: {
+          batch_id?: string
+          batch_number?: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          order_product_id?: string
+          purchase_price?: number | null
+          quantity_deducted?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_products_batches_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "stock_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_products_batches_order_product_id_fkey"
+            columns: ["order_product_id"]
+            isOneToOne: false
+            referencedRelation: "orders_products"
             referencedColumns: ["id"]
           },
         ]
@@ -2491,18 +2551,19 @@ export type Database = {
           brand: string | null
           category_id: string | null
           composition: string | null
+          country_of_origin: string | null
           created_at: string | null
           description: string | null
           expires: boolean | null
           gross_sale_price: number | null
           halal_number: string | null
           id: string
+          manufacturer_name: string | null
           name: string
           net_sale_price: number | null
           on_expiration: string | null
           parent_id: string | null
           purchase_price: number | null
-          registration_number: string | null
           sale_price: number | null
           sale_price_edit: boolean | null
           searchable: boolean | null
@@ -2514,6 +2575,7 @@ export type Database = {
           stock_management: boolean | null
           stock_quantity: number | null
           tax_group_id: string | null
+          tax_id: string | null
           tax_type: string | null
           thumbnail_id: string | null
           type: string | null
@@ -2529,18 +2591,19 @@ export type Database = {
           brand?: string | null
           category_id?: string | null
           composition?: string | null
+          country_of_origin?: string | null
           created_at?: string | null
           description?: string | null
           expires?: boolean | null
           gross_sale_price?: number | null
           halal_number?: string | null
           id?: string
+          manufacturer_name?: string | null
           name: string
           net_sale_price?: number | null
           on_expiration?: string | null
           parent_id?: string | null
           purchase_price?: number | null
-          registration_number?: string | null
           sale_price?: number | null
           sale_price_edit?: boolean | null
           searchable?: boolean | null
@@ -2552,6 +2615,7 @@ export type Database = {
           stock_management?: boolean | null
           stock_quantity?: number | null
           tax_group_id?: string | null
+          tax_id?: string | null
           tax_type?: string | null
           thumbnail_id?: string | null
           type?: string | null
@@ -2567,18 +2631,19 @@ export type Database = {
           brand?: string | null
           category_id?: string | null
           composition?: string | null
+          country_of_origin?: string | null
           created_at?: string | null
           description?: string | null
           expires?: boolean | null
           gross_sale_price?: number | null
           halal_number?: string | null
           id?: string
+          manufacturer_name?: string | null
           name?: string
           net_sale_price?: number | null
           on_expiration?: string | null
           parent_id?: string | null
           purchase_price?: number | null
-          registration_number?: string | null
           sale_price?: number | null
           sale_price_edit?: boolean | null
           searchable?: boolean | null
@@ -2590,6 +2655,7 @@ export type Database = {
           stock_management?: boolean | null
           stock_quantity?: number | null
           tax_group_id?: string | null
+          tax_id?: string | null
           tax_type?: string | null
           thumbnail_id?: string | null
           type?: string | null
@@ -2631,6 +2697,13 @@ export type Database = {
             columns: ["tax_group_id"]
             isOneToOne: false
             referencedRelation: "taxes_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_tax_id_fkey"
+            columns: ["tax_id"]
+            isOneToOne: false
+            referencedRelation: "taxes"
             referencedColumns: ["id"]
           },
           {

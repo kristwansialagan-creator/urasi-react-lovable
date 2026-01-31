@@ -1,5 +1,5 @@
 -- ================================================
--- NEXOPOS RLS POLICIES & TRIGGERS
+-- URASI RLS POLICIES & TRIGGERS
 -- Migration: 002_rls_and_triggers
 -- ================================================
 
@@ -87,7 +87,7 @@ CREATE POLICY "users_roles_select" ON users_roles FOR SELECT TO authenticated US
 
 CREATE POLICY "options_select" ON options FOR SELECT TO authenticated USING (true);
 CREATE POLICY "options_all" ON options FOR ALL TO authenticated USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'nexopos.store.administrator'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'urasi.store.administrator'))
 );
 
 -- RLS for medias

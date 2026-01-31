@@ -18,7 +18,7 @@ import logoFull from '@/assets/logo-full.png'
 // Map Supabase error codes to user-friendly messages
 const getErrorMessage = (error: { message: string; code?: string }) => {
     const message = error.message.toLowerCase()
-    
+
     if (message.includes('invalid login credentials') || message.includes('invalid_credentials')) {
         return {
             title: 'Login Gagal',
@@ -54,7 +54,7 @@ const getErrorMessage = (error: { message: string; code?: string }) => {
             suggestion: 'Pastikan Anda terhubung ke internet dan coba lagi.'
         }
     }
-    
+
     return {
         title: 'Login Gagal',
         description: error.message,
@@ -142,9 +142,9 @@ export default function LoginPage() {
                     {/* Logo */}
                     <div className="flex flex-col items-center mb-8">
                         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 mb-4">
-                            <img 
-                                src={logoFull} 
-                                alt="URASI" 
+                            <img
+                                src={logoFull}
+                                alt="URASI"
                                 className="h-12 w-auto brightness-0 invert"
                             />
                         </div>
@@ -200,7 +200,7 @@ export default function LoginPage() {
                     </Card>
 
                     <p className="mt-6 text-center text-white/40 text-sm">
-                        © 2024 URASI POS. All rights reserved.
+                        © {new Date().getFullYear()} URASI POS. All rights reserved.
                     </p>
                 </div>
             </div>

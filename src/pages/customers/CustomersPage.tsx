@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Plus, Filter, Eye, Edit, Trash2, Users, DollarSign, CreditCard, Loader2, X } from 'lucide-react'
+import { Search, Plus, Filter, Eye, Edit, Trash2, Users, DollarSign, CreditCard, Loader2, X, ChevronDown } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { useCustomers } from '@/hooks'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { BillingAddressFields } from '@/components/BillingAddressFields'
 
 export default function CustomersPage() {
     const { customers, loading, error, fetchCustomers, deleteCustomer, createCustomer, updateCustomer, groups, fetchGroups } = useCustomers()
@@ -16,6 +18,8 @@ export default function CustomersPage() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
     const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [deletingCustomer, setDeletingCustomer] = useState<{ id: string, name: string } | null>(null)
     const [selectedGroup, setSelectedGroup] = useState('')
     const [editFormData, setEditFormData] = useState({
         first_name: '',
@@ -24,7 +28,15 @@ export default function CustomersPage() {
         phone: '',
         group_id: '',
         account_amount: 0,
-        credit_limit_amount: 0
+        credit_limit_amount: 0,
+        address: {
+            address_1: '',
+            address_2: '',
+            city: '',
+            state: '',
+            country: '',
+            pobox: ''
+        }
     })
     const [addFormData, setAddFormData] = useState({
         first_name: '',
@@ -33,12 +45,21 @@ export default function CustomersPage() {
         phone: '',
         group_id: '',
         account_amount: 0,
-        credit_limit_amount: 0
+        credit_limit_amount: 0,
+        address: {
+            address_1: '',
+            address_2: '',
+            city: '',
+            state: '',
+            country: '',
+            pobox: ''
+        }
     })
 
     useEffect(() => {
         fetchCustomers('', selectedGroup)
         fetchGroups()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     useEffect(() => {
@@ -48,9 +69,17 @@ export default function CustomersPage() {
         return () => clearTimeout(debounceTimer)
     }, [search, selectedGroup])
 
-    const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to delete this customer?')) {
-            await deleteCustomer(id)
+    const handleDeleteClick = (customer: any) => {
+        const name = `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unknown'
+        setDeletingCustomer({ id: customer.id, name })
+        setIsDeleteDialogOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (deletingCustomer) {
+            await deleteCustomer(deletingCustomer.id)
+            setIsDeleteDialogOpen(false)
+            setDeletingCustomer(null)
         }
     }
 
@@ -61,6 +90,7 @@ export default function CustomersPage() {
 
     const handleEditCustomer = (customer: any) => {
         setSelectedCustomer(customer)
+        const customerAddress = customer.addresses?.[0] || {}
         setEditFormData({
             first_name: customer.first_name || '',
             last_name: customer.last_name || '',
@@ -68,7 +98,15 @@ export default function CustomersPage() {
             phone: customer.phone || '',
             group_id: customer.group_id || '',
             account_amount: customer.account_amount || 0,
-            credit_limit_amount: customer.credit_limit_amount || 0
+            credit_limit_amount: customer.credit_limit_amount || 0,
+            address: {
+                address_1: customerAddress.address_1 || '',
+                address_2: customerAddress.address_2 || '',
+                city: customerAddress.city || '',
+                state: customerAddress.state || '',
+                country: customerAddress.country || '',
+                pobox: customerAddress.pobox || ''
+            }
         })
         setIsEditDialogOpen(true)
     }
@@ -99,7 +137,15 @@ export default function CustomersPage() {
             phone: '',
             group_id: '',
             account_amount: 0,
-            credit_limit_amount: 0
+            credit_limit_amount: 0,
+            address: {
+                address_1: '',
+                address_2: '',
+                city: '',
+                state: '',
+                country: '',
+                pobox: ''
+            }
         })
         setIsAddDialogOpen(true)
     }
@@ -160,7 +206,7 @@ export default function CustomersPage() {
                                             <td className="py-3 px-4"><span className={`px-2 py-1 rounded-full text-xs font-medium ${groupName === 'VIP' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'}`}>{groupName}</span></td>
                                             <td className="py-3 px-4 text-right font-medium">{formatCurrency(customer.purchases_amount || 0)}</td>
                                             <td className="py-3 px-4 text-right"><span className={(customer.account_amount || 0) >= 0 ? 'text-green-600' : 'text-red-600'}>{formatCurrency(customer.account_amount || 0)}</span></td>
-                                            <td className="py-3 px-4"><div className="flex items-center justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => handleViewCustomer(customer)}><Eye className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => handleEditCustomer(customer)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="text-[hsl(var(--destructive))]" onClick={() => handleDelete(customer.id)}><Trash2 className="h-4 w-4" /></Button></div></td>
+                                            <td className="py-3 px-4"><div className="flex items-center justify-end gap-2"><Button variant="ghost" size="icon" onClick={() => handleViewCustomer(customer)}><Eye className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => handleEditCustomer(customer)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="text-[hsl(var(--destructive))]" onClick={() => handleDeleteClick(customer)}><Trash2 className="h-4 w-4" /></Button></div></td>
                                         </tr>
                                     )
                                 })}
@@ -250,6 +296,20 @@ export default function CustomersPage() {
                                 />
                             </div>
                         </div>
+                        <Collapsible className="space-y-2">
+                            <CollapsibleTrigger asChild>
+                                <Button variant="outline" className="w-full justify-between" type="button">
+                                    <span>Billing Address (Optional)</span>
+                                    <ChevronDown className="h-4 w-4" />
+                                </Button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="space-y-4 pt-4">
+                                <BillingAddressFields
+                                    address={addFormData.address}
+                                    onChange={(address) => setAddFormData({ ...addFormData, address })}
+                                />
+                            </CollapsibleContent>
+                        </Collapsible>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
                             <Button type="submit">Create Customer</Button>
@@ -296,6 +356,26 @@ export default function CustomersPage() {
                                     <p className={`font-medium ${(selectedCustomer.account_amount || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(selectedCustomer.account_amount || 0)}</p>
                                 </div>
                             </div>
+                            <div>
+                                <Label className="text-sm font-medium text-gray-600">Billing Address</Label>
+                                {selectedCustomer.addresses?.[0] ? (
+                                    <div className="space-y-1 mt-2">
+                                        {selectedCustomer.addresses[0].address_1 && <p className="font-medium">{selectedCustomer.addresses[0].address_1}</p>}
+                                        {selectedCustomer.addresses[0].address_2 && <p className="text-sm text-gray-600">{selectedCustomer.addresses[0].address_2}</p>}
+                                        <p className="text-sm">
+                                            {[
+                                                selectedCustomer.addresses[0].city,
+                                                selectedCustomer.addresses[0].state,
+                                                selectedCustomer.addresses[0].pobox
+                                            ].filter(Boolean).join(', ')}
+                                        </p>
+                                        {selectedCustomer.addresses[0].country && <p className="text-sm font-medium">{selectedCustomer.addresses[0].country}</p>}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic mt-2">No billing address</p>
+                                )}
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label className="text-sm font-medium text-gray-600">Total Purchases</Label>
@@ -394,6 +474,20 @@ export default function CustomersPage() {
                                 />
                             </div>
                         </div>
+                        <Collapsible className="space-y-2">
+                            <CollapsibleTrigger asChild>
+                                <Button variant="outline" className="w-full justify-between" type="button">
+                                    <span>Billing Address (Optional)</span>
+                                    <ChevronDown className="h-4 w-4" />
+                                </Button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="space-y-4 pt-4">
+                                <BillingAddressFields
+                                    address={editFormData.address}
+                                    onChange={(address) => setEditFormData({ ...editFormData, address })}
+                                />
+                            </CollapsibleContent>
+                        </Collapsible>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
                             <Button type="submit">Update Customer</Button>
@@ -434,6 +528,22 @@ export default function CustomersPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent className="sm:max-w-[400px] bg-white">
+                    <DialogHeader>
+                        <DialogTitle>Hapus Customer</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin menghapus "{deletingCustomer?.name}"? Tindakan ini tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Batal</Button>
+                        <Button variant="destructive" onClick={handleConfirmDelete}>Hapus</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div >
     )
 }

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { DollarSign, Save } from 'lucide-react'
 import { useSettings } from '@/hooks'
+import { toast } from 'sonner'
 
 export default function AccountingSettingsPage() {
     const { settings, bulkUpdate, loading } = useSettings()
@@ -45,7 +46,7 @@ export default function AccountingSettingsPage() {
 
     const handleSave = async () => {
         const success = await bulkUpdate(formData, 'accounting')
-        if (success) alert('Accounting settings saved successfully!')
+        if (success) toast.success('Accounting settings saved successfully!')
     }
 
     return (

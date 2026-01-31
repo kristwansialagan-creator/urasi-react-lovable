@@ -4,22 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tag, Plus, Edit2, Trash2, Check } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-
-interface LabelTemplate {
-    id: string
-    name: string
-    width: number
-    height: number
-    template: string
-    is_default: boolean
-    paper_size: string
-    created_at: string
-}
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useLabelTemplates } from '@/hooks'
+import type { LabelTemplate } from '@/hooks/useLabelTemplates'
 
 export default function LabelTemplatesPage() {
-    const [templates, setTemplates] = useState<LabelTemplate[]>([])
-    const [loading, setLoading] = useState(false)
+    const { templates, loading, fetchTemplates, createTemplate, updateTemplate, deleteTemplate, setAsDefault } = useLabelTemplates()
     const [showModal, setShowModal] = useState(false)
     const [editingTemplate, setEditingTemplate] = useState<LabelTemplate | null>(null)
     const [formData, setFormData] = useState({
@@ -30,22 +21,13 @@ export default function LabelTemplatesPage() {
         template: '',
         is_default: false
     })
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
     useEffect(() => {
         fetchTemplates()
     }, [])
 
-    const fetchTemplates = async () => {
-        setLoading(true)
-        const { data, error } = await supabase
-            .from('label_templates')
-            .select('*')
-            .order('is_default', { ascending: false })
-            .order('created_at', { ascending: false }) as any
 
-        if (!error) setTemplates(data || [])
-        setLoading(false)
-    }
 
     const resetForm = () => {
         setFormData({
@@ -60,10 +42,9 @@ export default function LabelTemplatesPage() {
     }
 
     const handleSave = async () => {
-        if (!formData.name) return alert('Name is required')
+        if (!formData.name) return toast.error('Name is required')
 
-        const user = await supabase.auth.getUser()
-        const templateData: any = {
+        const templateData = {
             name: formData.name,
             width: formData.width,
             height: formData.height,
@@ -72,61 +53,52 @@ export default function LabelTemplatesPage() {
             is_default: formData.is_default
         }
 
-        if (editingTemplate) {
-            const { error } = await supabase
-                .from('label_templates')
-                .update(templateData)
-                .eq('id', editingTemplate.id)
+        const success = editingTemplate
+            ? await updateTemplate(editingTemplate.id, templateData)
+            : await createTemplate(templateData)
 
-            if (error) return alert('Failed to update template')
+        if (success) {
+            toast.success(editingTemplate ? 'Template updated successfully' : 'Template created successfully')
+            setShowModal(false)
+            resetForm()
         } else {
-            const { error } = await supabase
-                .from('label_templates')
-                .insert([{ ...templateData, author: user.data.user?.id }])
-
-            if (error) return alert('Failed to create template')
+            toast.error(editingTemplate ? 'Failed to update template' : 'Failed to create template')
         }
-
-        await fetchTemplates()
-        setShowModal(false)
-        resetForm()
     }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Delete this template?')) return
-
-        const { error } = await supabase
-            .from('label_templates')
-            .delete()
-            .eq('id', id)
-
-        if (!error) fetchTemplates()
+    const handleDelete = (id: string) => {
+        setDeleteConfirm(id)
     }
 
-    const setAsDefault = async (id: string) => {
-        // First, unset all defaults
-        await (supabase
-            .from('label_templates') as any)
-            .update({ is_default: false })
-            .neq('id', '00000000-0000-0000-0000-000000000000')
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return
 
-        // Then set the selected one as default
-        const { error } = await (supabase
-            .from('label_templates') as any)
-            .update({ is_default: true })
-            .eq('id', id)
+        const success = await deleteTemplate(deleteConfirm)
+        if (success) {
+            toast.success('Template deleted successfully')
+        } else {
+            toast.error('Failed to delete template')
+        }
+        setDeleteConfirm(null)
+    }
 
-        if (!error) fetchTemplates()
+    const handleSetAsDefault = async (id: string) => {
+        const success = await setAsDefault(id)
+        if (success) {
+            toast.success('Default template updated')
+        } else {
+            toast.error('Failed to set default template')
+        }
     }
 
     const openEdit = (template: LabelTemplate) => {
         setFormData({
             name: template.name,
-            width: template.width,
-            height: template.height,
-            paper_size: template.paper_size,
-            template: template.template,
-            is_default: template.is_default
+            width: template.width ?? 50,
+            height: template.height ?? 30,
+            paper_size: template.paper_size ?? '80mm',
+            template: template.template ?? '',
+            is_default: template.is_default ?? false
         })
         setEditingTemplate(template)
         setShowModal(true)
@@ -179,10 +151,10 @@ export default function LabelTemplatesPage() {
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between"><span className="text-[hsl(var(--muted-foreground))]">Size:</span><span className="font-mono">{template.width} x {template.height} mm</span></div>
                                         <div className="flex justify-between"><span className="text-[hsl(var(--muted-foreground))]">Paper:</span><span>{template.paper_size}</span></div>
-                                        <div className="flex justify-between"><span className="text-[hsl(var(--muted-foreground))]">Created:</span><span>{new Date(template.created_at).toLocaleDateString()}</span></div>
+                                        <div className="flex justify-between"><span className="text-[hsl(var(--muted-foreground))]">Created:</span><span>{template.created_at ? new Date(template.created_at).toLocaleDateString() : '-'}</span></div>
                                     </div>
                                     <div className="flex gap-2 pt-4 border-t mt-4">
-                                        {!template.is_default && <Button size="sm" variant="outline" onClick={() => setAsDefault(template.id)} className="flex-1"><Check className="h-3 w-3 mr-1" />Set Default</Button>}
+                                        {!template.is_default && <Button size="sm" variant="outline" onClick={() => handleSetAsDefault(template.id)} className="flex-1"><Check className="h-3 w-3 mr-1" />Set Default</Button>}
                                         <Button size="sm" variant="outline" onClick={() => openEdit(template)}><Edit2 className="h-3 w-3" /></Button>
                                         <Button size="sm" variant="destructive" onClick={() => handleDelete(template.id)}><Trash2 className="h-3 w-3" /></Button>
                                     </div>
@@ -216,6 +188,17 @@ export default function LabelTemplatesPage() {
                     </CardContent></Card>
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={!!deleteConfirm}
+                onOpenChange={(open) => !open && setDeleteConfirm(null)}
+                title="Delete Label Template?"
+                description="This will permanently delete this label template. This action cannot be undone."
+                confirmText="Delete"
+                variant="destructive"
+                onConfirm={confirmDelete}
+            />
         </div>
     )
 }

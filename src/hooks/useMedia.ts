@@ -11,6 +11,7 @@ interface Media {
     user_id?: string | null
     created_at: string | null
     updated_at: string | null
+    products?: { id: string; name: string }[] // Products using this media
 }
 
 export function useMedia() {
@@ -28,10 +29,25 @@ export function useMedia() {
 
             if (err) throw err
 
+            // Fetch products for each media
+            const mediaIds = (data || []).map((m: any) => m.id)
+            const { data: productsData } = await supabase
+                .from('products')
+                .select('id, name, thumbnail_id')
+                .in('thumbnail_id', mediaIds)
+
+            // Map products to their media
+            const productsByMedia = (productsData || []).reduce((acc: any, product: any) => {
+                if (!acc[product.thumbnail_id]) acc[product.thumbnail_id] = []
+                acc[product.thumbnail_id].push({ id: product.id, name: product.name })
+                return acc
+            }, {})
+
             // Generate URL from slug for each media item using utility function
             const mediaWithUrls = (data || []).map((item: any) => ({
                 ...item,
-                url: getStorageUrl(item.slug)
+                url: getStorageUrl(item.slug),
+                products: productsByMedia[item.id] || []
             } as Media))
 
             setMedia(mediaWithUrls)
@@ -51,7 +67,7 @@ export function useMedia() {
 
             // Use product-images bucket (the existing public bucket)
             const bucketName = 'product-images'
-            const path = `uploads/${fileName}`
+            const path = `product-images/${fileName}`
 
             const { error: uploadErr } = await supabase.storage
                 .from(bucketName)
@@ -59,9 +75,9 @@ export function useMedia() {
 
             if (uploadErr) throw uploadErr
 
-            // Save path WITHOUT bucket name (to match POSPage pattern)
-            // POSPage builds URL as: product-images/${slug}
-            // So slug should be just the path: "uploads/filename.jpg"
+            // Save the full storage path as slug
+            // Storage structure: files at "product-images/filename.jpg" inside bucket "product-images"
+            // So slug is: "product-images/filename.jpg"
             const slug = path
 
             const { error: dbErr } = await supabase

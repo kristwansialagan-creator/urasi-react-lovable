@@ -4,15 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Search, Filter, Eye, Printer, RotateCcw, Receipt, DollarSign, Loader2, Calendar as CalendarIcon, X, RefreshCw, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Filter, Eye, Printer, RotateCcw, Receipt, DollarSign, Loader2, Calendar as CalendarIcon, X, RefreshCw, Minus, Plus, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
 import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
 import { useOrders, useReceiptPrinter } from '@/hooks'
 import { useInstallments } from '@/hooks/useInstallments'
+import { useOrderBatches, OrderProductBatch } from '@/hooks/useOrderBatches'
 import { useToast } from '@/hooks/useToast'
 import { format } from 'date-fns'
 
@@ -32,7 +34,7 @@ export default function OrdersPage() {
         unpaid_orders: 0,
         partial_orders: 0
     })
-    
+
     // Filter State
     const [isFilterOpen, setIsFilterOpen] = useState(false)
     const [appliedFilters, setAppliedFilters] = useState({
@@ -43,7 +45,7 @@ export default function OrdersPage() {
         date: undefined as { from: Date; to: Date | undefined } | undefined
     })
     const [tempFilters, setTempFilters] = useState(appliedFilters)
-    
+
     // Table Font Size State
     const fontSizes = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl']
     const [fontSizeIndex, setFontSizeIndex] = useState(1) // Default to text-sm
@@ -112,7 +114,7 @@ export default function OrdersPage() {
         }
         const unpaidCount = installments.filter(i => !i.paid).length
         const paidCount = installments.filter(i => i.paid).length
-        
+
         return (
             <div className="flex items-center gap-1">
                 <span className="inline-flex items-center px-2 py-1 rounded-full font-medium text-xs bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400">
@@ -131,6 +133,8 @@ export default function OrdersPage() {
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
     const [selectedOrder, setSelectedOrder] = useState<any>(null)
     const [orderInstallments, setOrderInstallments] = useState<any[]>([])
+    const [productBatches, setProductBatches] = useState<Record<string, OrderProductBatch[]>>({})
+    const { fetchBatchesByOrderProduct } = useOrderBatches()
 
     // Installment Dialog State
     const [isInstallmentDialogOpen, setIsInstallmentDialogOpen] = useState(false)
@@ -148,6 +152,18 @@ export default function OrdersPage() {
         setSelectedOrder(order)
         const installments = await getInstallmentsByOrder(order.id)
         setOrderInstallments(installments)
+
+        // Fetch batch deductions for each product
+        const batchMap: Record<string, OrderProductBatch[]> = {}
+        if (order.products && order.products.length > 0) {
+            for (const product of order.products) {
+                const batches = await fetchBatchesByOrderProduct(product.id)
+                if (batches.length > 0) {
+                    batchMap[product.id] = batches
+                }
+            }
+        }
+        setProductBatches(batchMap)
         setIsViewDialogOpen(true)
     }
 
@@ -287,11 +303,11 @@ export default function OrdersPage() {
     const unpaidOrders = orderStats.unpaid_orders
 
     // Check if any filter is active
-    const isFilterActive = appliedFilters.payment_status !== 'all' || 
-                          appliedFilters.process_status !== 'all' || 
-                          appliedFilters.payment_method_id !== 'all' || 
-                          appliedFilters.has_installments !== 'all' ||
-                          appliedFilters.date !== undefined
+    const isFilterActive = appliedFilters.payment_status !== 'all' ||
+        appliedFilters.process_status !== 'all' ||
+        appliedFilters.payment_method_id !== 'all' ||
+        appliedFilters.has_installments !== 'all' ||
+        appliedFilters.date !== undefined
 
     return (
         <div className="space-y-6">
@@ -333,7 +349,7 @@ export default function OrdersPage() {
                 <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                         <div className="flex-1"><Input placeholder="Search orders by code..." value={search} onChange={(e) => setSearch(e.target.value)} icon={<Search className="h-4 w-4" />} /></div>
-                        
+
                         {/* Items Per Page Dropdown */}
                         <Select value={String(itemsPerPage)} onValueChange={(v) => {
                             setItemsPerPage(Number(v))
@@ -356,22 +372,22 @@ export default function OrdersPage() {
 
                         {/* Font Size Control */}
                         <div className="flex items-center gap-1 border rounded-md p-1 bg-background">
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8" 
-                                onClick={() => setFontSizeIndex(Math.max(0, fontSizeIndex - 1))} 
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setFontSizeIndex(Math.max(0, fontSizeIndex - 1))}
                                 disabled={fontSizeIndex === 0}
                                 title="Decrease Font Size"
                             >
                                 <Minus className="h-3 w-3" />
                             </Button>
                             <span className="text-xs font-medium w-6 text-center text-muted-foreground">Aa</span>
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8" 
-                                onClick={() => setFontSizeIndex(Math.min(fontSizes.length - 1, fontSizeIndex + 1))} 
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setFontSizeIndex(Math.min(fontSizes.length - 1, fontSizeIndex + 1))}
                                 disabled={fontSizeIndex === fontSizes.length - 1}
                                 title="Increase Font Size"
                             >
@@ -396,17 +412,17 @@ export default function OrdersPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <h4 className="font-medium leading-none">Filter Orders</h4>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="h-6 w-6 p-0" 
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 w-6 p-0"
                                             onClick={() => setIsFilterOpen(false)}
                                             title="Close filter"
                                         >
                                             <X className="h-3 w-3" />
                                         </Button>
                                     </div>
-                                    
+
                                     {/* Date Range */}
                                     <div className="space-y-2">
                                         <Label>Date Range</Label>
@@ -446,8 +462,8 @@ export default function OrdersPage() {
                                                     />
                                                 </div>
                                                 <div className="p-3 border-t border-[hsl(var(--border))]">
-                                                    <Button 
-                                                        className="w-full" 
+                                                    <Button
+                                                        className="w-full"
                                                         onClick={() => {
                                                             // Close calendar by removing focus from calendar
                                                             const calendarElement = document.querySelector('[role="grid"]')
@@ -455,10 +471,10 @@ export default function OrdersPage() {
                                                                 (calendarElement as HTMLElement).blur()
                                                             }
                                                             // Alternative: trigger escape key
-                                                            const escapeEvent = new KeyboardEvent('keydown', { 
-                                                                key: 'Escape', 
+                                                            const escapeEvent = new KeyboardEvent('keydown', {
+                                                                key: 'Escape',
                                                                 code: 'Escape',
-                                                                bubbles: true 
+                                                                bubbles: true
                                                             })
                                                             document.dispatchEvent(escapeEvent)
                                                         }}
@@ -627,9 +643,23 @@ export default function OrdersPage() {
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-[hsl(var(--primary))/10]" title="View Details" onClick={() => handleViewDetail(order)}>
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-[hsl(var(--primary))/10]" title="Print" onClick={() => handlePrint(order.id)}>
-                                                        <Printer className="h-4 w-4" />
-                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-[hsl(var(--primary))/10]" title="Print Options">
+                                                                <Printer className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="bg-[hsl(var(--popover))] border border-[hsl(var(--border))] shadow-lg z-[60]">
+                                                            <DropdownMenuItem onClick={() => handlePrint(order.id)} className="cursor-pointer">
+                                                                <Receipt className="h-4 w-4 mr-2" />
+                                                                Print Receipt
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => navigate(`/orders/${order.id}/invoice`)} className="cursor-pointer">
+                                                                <FileText className="h-4 w-4 mr-2" />
+                                                                View Invoice
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-purple-100 dark:hover:bg-purple-900/30" title="Manage Installments" onClick={() => handleOpenInstallmentDialog(order)}>
                                                         <CalendarIcon className="h-4 w-4 text-purple-500" />
                                                     </Button>
@@ -652,7 +682,7 @@ export default function OrdersPage() {
                             </table>
                         </div>
                     )}
-                    
+
                     {/* Pagination Controls */}
                     <div className="flex items-center justify-between mt-4">
                         <div className="text-sm text-muted-foreground">
@@ -746,19 +776,44 @@ export default function OrdersPage() {
                                 <Label className="text-sm font-medium text-[hsl(var(--muted-foreground))]">Order Items</Label>
                                 <div className="space-y-2 mt-2">
                                     {selectedOrder.products?.map((p: any, i: number) => (
-                                        <div key={i} className="flex justify-between items-center gap-4 p-3 bg-[hsl(var(--muted))/20] rounded-lg">
-                                            <div className="flex-1">
-                                                <div className="font-medium">{p.name}</div>
-                                                <div className="text-sm text-[hsl(var(--muted-foreground))]">
-                                                    Quantity: {p.quantity} × {formatCurrency(p.unit_price || 0)}
+                                        <div key={i} className="p-3 bg-[hsl(var(--muted))/20] rounded-lg">
+                                            <div className="flex justify-between items-center gap-4">
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{p.name}</div>
+                                                    <div className="text-sm text-[hsl(var(--muted-foreground))]">
+                                                        Quantity: {p.quantity} × {formatCurrency(p.unit_price || 0)}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-semibold text-lg">{formatCurrency(p.total_price || 0)}</div>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="font-semibold text-lg">{formatCurrency(p.total_price || 0)}</div>
-                                            </div>
+                                            {/* Batch Deductions */}
+                                            {productBatches[p.id] && productBatches[p.id].length > 0 && (
+                                                <div className="mt-2 pt-2 border-t border-[hsl(var(--border))]">
+                                                    <div className="text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1">Batch Deductions (FEFO):</div>
+                                                    <div className="space-y-1">
+                                                        {productBatches[p.id].map((batch, idx) => (
+                                                            <div key={idx} className="flex justify-between items-center text-xs bg-[hsl(var(--muted))/30] px-2 py-1 rounded">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-mono bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                                                                        {batch.batch_number}
+                                                                    </span>
+                                                                    {batch.expiry_date && (
+                                                                        <span className="text-orange-600 dark:text-orange-400">
+                                                                            Exp: {format(new Date(batch.expiry_date), 'dd/MM/yyyy')}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-medium">Qty: {batch.quantity_deducted}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
-                                    {(!selectedOrder.products || selectedOrder.products.length === 0) && 
+                                    {(!selectedOrder.products || selectedOrder.products.length === 0) &&
                                         <div className="text-center text-[hsl(var(--muted-foreground))] py-4">No items in this order</div>
                                     }
                                 </div>
@@ -772,7 +827,7 @@ export default function OrdersPage() {
                                         ? [...new Set(selectedOrder.payments.map((p: any) => {
                                             const type = paymentTypes.find((pt: any) => pt.id === p.payment_type_id)
                                             return type ? type.label : p.payment_type_id?.slice(0, 8)
-                                          }))].map((method: any, i: number) => (
+                                        }))].map((method: any, i: number) => (
                                             <span key={i} className="bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] px-3 py-1 rounded-full text-sm">
                                                 {method as string}
                                             </span>
@@ -787,8 +842,8 @@ export default function OrdersPage() {
                                 <div>
                                     <Label className="text-sm font-medium text-[hsl(var(--muted-foreground))]">Coupon/Discount</Label>
                                     <div className="text-yellow-600 dark:text-yellow-400 font-semibold mt-1">
-                                        {((selectedOrder.total_coupons || 0) + (selectedOrder.discount || 0)) > 0 ? 
-                                            formatCurrency((selectedOrder.total_coupons || 0) + (selectedOrder.discount || 0)) : 
+                                        {((selectedOrder.total_coupons || 0) + (selectedOrder.discount || 0)) > 0 ?
+                                            formatCurrency((selectedOrder.total_coupons || 0) + (selectedOrder.discount || 0)) :
                                             'No discount'
                                         }
                                     </div>
@@ -835,9 +890,9 @@ export default function OrdersPage() {
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <Label className="text-sm font-medium text-[hsl(var(--muted-foreground))]">Installments</Label>
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         onClick={() => handleOpenInstallmentDialog(selectedOrder)}
                                         className="h-8 text-xs"
                                     >
@@ -873,7 +928,7 @@ export default function OrdersPage() {
                                             )}
                                         </div>
                                     ))}
-                                    {orderInstallments.length === 0 && 
+                                    {orderInstallments.length === 0 &&
                                         <div className="text-center text-[hsl(var(--muted-foreground))] py-4 text-sm">No installments for this order</div>
                                     }
                                 </div>

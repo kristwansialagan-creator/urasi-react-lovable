@@ -57,9 +57,20 @@ export default function ProductCreatePage() {
     const [brand, setBrand] = useState('')
     const [shelfLife, setShelfLife] = useState('')
     const [bpomNumber, setBpomNumber] = useState('')
-    const [registrationNumber, setRegistrationNumber] = useState('')
     const [halalNumber, setHalalNumber] = useState('')
     const [composition, setComposition] = useState('')
+
+    // New fields for product refactoring
+    const [countryOfOrigin, setCountryOfOrigin] = useState('')
+    const [manufacturerName, setManufacturerName] = useState('')
+
+    // Initial batch fields
+    const [initialBatch, setInitialBatch] = useState({
+        batch_number: '',
+        expiry_date: '',
+        quantity: 0,
+        purchase_price: 0
+    })
 
     // Category creation dialog state
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
@@ -100,15 +111,14 @@ export default function ProductCreatePage() {
             if (extractedData.brand) setBrand(extractedData.brand)
             if (extractedData.shelf_life) setShelfLife(extractedData.shelf_life)
             if (extractedData.bpom_number) setBpomNumber(extractedData.bpom_number)
-            if (extractedData.registration_number) setRegistrationNumber(extractedData.registration_number)
             if (extractedData.halal_number) setHalalNumber(extractedData.halal_number)
             if (extractedData.composition) setComposition(extractedData.composition)
-            
+
             toast({
                 title: "Data Auto-Filled",
                 description: `Product data extracted from ${metadata?.sourceUrl || 'URL'}`,
             })
-            
+
             clearExtractedData()
         }
     }, [extractedData, isEditMode, metadata, clearExtractedData, toast])
@@ -156,9 +166,10 @@ export default function ProductCreatePage() {
                     setBrand(product.brand || '')
                     setShelfLife(product.shelf_life || '')
                     setBpomNumber(product.bpom_number || '')
-                    setRegistrationNumber(product.registration_number || '')
                     setHalalNumber(product.halal_number || '')
                     setComposition(product.composition || '')
+                    setCountryOfOrigin(product.country_of_origin || '')
+                    setManufacturerName(product.manufacturer_name || '')
 
                     // Set image URL if thumbnail exists
                     if (product.thumbnail?.slug) {
@@ -248,9 +259,10 @@ export default function ProductCreatePage() {
                 brand: brand || null,
                 shelf_life: shelfLife || null,
                 bpom_number: bpomNumber || null,
-                registration_number: registrationNumber || null,
                 halal_number: halalNumber || null,
                 composition: composition || null,
+                country_of_origin: countryOfOrigin || null,
+                manufacturer_name: manufacturerName || null,
             }
 
             if (isEditMode && id) {
@@ -258,9 +270,48 @@ export default function ProductCreatePage() {
                 toast({ title: "Success", description: "Product updated successfully" })
             } else {
                 const newProduct = await createProduct(productData)
-                
-                // Create product_unit_quantities entry if unit and stock are provided
-                if (newProduct && unitId !== 'none' && stock) {
+
+                // Create initial batch if batch info provided
+                const batchQuantity = initialBatch.quantity || parseFloat(stock) || 0
+                if (newProduct && initialBatch.batch_number && batchQuantity > 0 && unitId !== 'none') {
+                    const batchPurchasePrice = initialBatch.purchase_price || parseFloat(purchasePrice) || 0
+
+                    const { error: batchError } = await supabase
+                        .from('stock_batches')
+                        .insert({
+                            product_id: newProduct.id,
+                            unit_id: unitId,
+                            batch_number: initialBatch.batch_number,
+                            expiry_date: initialBatch.expiry_date || null,
+                            quantity: batchQuantity,
+                            purchase_price: batchPurchasePrice
+                        })
+
+                    if (batchError) {
+                        console.error('Error creating initial batch:', batchError)
+                        toast({
+                            variant: "destructive",
+                            title: "Warning",
+                            description: "Product created but initial batch failed"
+                        })
+                    }
+
+                    // Sync to product_unit_quantities
+                    const { error: stockError } = await supabase
+                        .from('product_unit_quantities')
+                        .upsert({
+                            product_id: newProduct.id,
+                            unit_id: unitId,
+                            quantity: batchQuantity,
+                            low_quantity: parseFloat(lowStock) || 10,
+                            stock_alert_enabled: true
+                        })
+
+                    if (stockError) {
+                        console.error('Error syncing stock:', stockError)
+                    }
+                } else if (newProduct && unitId !== 'none' && stock) {
+                    // Legacy: Create product_unit_quantities without batch
                     const { error: stockError } = await supabase
                         .from('product_unit_quantities')
                         .insert({
@@ -270,12 +321,12 @@ export default function ProductCreatePage() {
                             low_quantity: parseFloat(lowStock) || 10,
                             stock_alert_enabled: true
                         })
-                    
+
                     if (stockError) {
                         console.error('Error creating stock entry:', stockError)
                     }
                 }
-                
+
                 toast({ title: "Success", description: "Product created successfully" })
             }
             navigate('/products')
@@ -419,7 +470,7 @@ export default function ProductCreatePage() {
                                             Scan barcode to auto-fill field
                                         </p>
                                     </div>
-                                    
+
                                     {/* SKU Parent Selector */}
                                     <div className="space-y-2">
                                         <Label htmlFor="sku-parent">SKU Parent (Induk)</Label>
@@ -628,7 +679,7 @@ export default function ProductCreatePage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="bpom-number">No BPOM</Label>
                                         <Input
@@ -639,21 +690,32 @@ export default function ProductCreatePage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="registration-number">No Registrasi</Label>
-                                        <Input
-                                            id="registration-number"
-                                            placeholder="Product registration number"
-                                            value={registrationNumber}
-                                            onChange={(e) => setRegistrationNumber(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
                                         <Label htmlFor="halal-number">No Halal</Label>
                                         <Input
                                             id="halal-number"
                                             placeholder="Halal certification number"
                                             value={halalNumber}
                                             onChange={(e) => setHalalNumber(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="manufacturer">Nama Produsen (Manufacturer)</Label>
+                                        <Input
+                                            id="manufacturer"
+                                            placeholder="e.g., PT Kimia Farma"
+                                            value={manufacturerName}
+                                            onChange={(e) => setManufacturerName(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="country">Asal Negara (Country of Origin)</Label>
+                                        <Input
+                                            id="country"
+                                            placeholder="e.g., Indonesia, USA, Japan"
+                                            value={countryOfOrigin}
+                                            onChange={(e) => setCountryOfOrigin(e.target.value)}
                                         />
                                     </div>
                                 </div>
@@ -678,7 +740,7 @@ export default function ProductCreatePage() {
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="purchase_price">Purchase Price</Label>
+                                        <Label htmlFor="purchase_price">Initial Purchase Price</Label>
                                         <Input
                                             id="purchase_price"
                                             type="number"
@@ -686,6 +748,7 @@ export default function ProductCreatePage() {
                                             value={purchasePrice}
                                             onChange={(e) => setPurchasePrice(e.target.value)}
                                         />
+                                        <p className="text-xs text-muted-foreground">Default price for new batches</p>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="selling_price">Selling Price *</Label>
@@ -716,10 +779,17 @@ export default function ProductCreatePage() {
                                             type="number"
                                             placeholder="0"
                                             value={stock}
-                                            onChange={(e) => setStock(e.target.value)}
+                                            onChange={(e) => {
+                                                setStock(e.target.value)
+                                                // Also update initialBatch quantity if batch is being used
+                                                if (!isEditMode && initialBatch.batch_number) {
+                                                    setInitialBatch({ ...initialBatch, quantity: Number(e.target.value) || 0 })
+                                                }
+                                            }}
                                             disabled={isEditMode}
                                             title={isEditMode ? "Use Stock Adjustment to change stock" : ""}
                                         />
+                                        {!isEditMode && <p className="text-xs text-muted-foreground">Will be used for Initial Batch quantity</p>}
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="low_stock">Low Stock Alert</Label>
@@ -742,6 +812,67 @@ export default function ProductCreatePage() {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* Initial Batch - only for new products */}
+                        {!isEditMode && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Initial Stock Batch</CardTitle>
+                                    <p className="text-sm text-muted-foreground">Optional: Create first batch with FEFO tracking</p>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="batch_number">Batch Number *</Label>
+                                            <Input
+                                                id="batch_number"
+                                                placeholder="e.g., B001, LOT-2026-01"
+                                                value={initialBatch.batch_number}
+                                                onChange={(e) => setInitialBatch({ ...initialBatch, batch_number: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="batch_expiry">Expiry Date</Label>
+                                            <Input
+                                                id="batch_expiry"
+                                                type="date"
+                                                value={initialBatch.expiry_date}
+                                                onChange={(e) => setInitialBatch({ ...initialBatch, expiry_date: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="batch_quantity">Quantity *</Label>
+                                            <Input
+                                                id="batch_quantity"
+                                                type="number"
+                                                placeholder={stock || '0'}
+                                                value={initialBatch.quantity || ''}
+                                                onChange={(e) => {
+                                                    const qty = Number(e.target.value) || 0
+                                                    setInitialBatch({ ...initialBatch, quantity: qty })
+                                                    // Also update stock field
+                                                    setStock(e.target.value || '')
+                                                }}
+                                            />
+                                            <p className="text-xs text-muted-foreground">Uses Initial Stock if empty</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="batch_purchase_price">Batch Purchase Price</Label>
+                                            <Input
+                                                id="batch_purchase_price"
+                                                type="number"
+                                                placeholder={purchasePrice || '0'}
+                                                value={initialBatch.purchase_price || ''}
+                                                onChange={(e) => setInitialBatch({ ...initialBatch, purchase_price: Number(e.target.value) || 0 })}
+                                            />
+                                            <p className="text-xs text-muted-foreground">Uses Initial Purchase Price if empty</p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
 
                     {/* Sidebar */}
@@ -912,14 +1043,14 @@ export default function ProductCreatePage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete SKU Parent?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete this SKU Parent. Products using this parent will not be affected, 
+                            This will permanently delete this SKU Parent. Products using this parent will not be affected,
                             but you won't be able to use this parent for new products.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                            onClick={handleDeleteSkuParent} 
+                        <AlertDialogAction
+                            onClick={handleDeleteSkuParent}
                             disabled={isDeletingSkuParent}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >

@@ -57,7 +57,7 @@ export default function DataManagementPage() {
             }
 
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
-            downloadFile(blob, `nexopos-backup-${Date.now()}.json`)
+            downloadFile(blob, `urasi-backup-${Date.now()}.json`)
         } catch (error) {
             alert('Full export failed!')
         } finally {

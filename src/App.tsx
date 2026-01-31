@@ -17,6 +17,7 @@ const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'))
 const ProductCreatePage = lazy(() => import('@/pages/products/ProductCreatePage'))
 const CategoriesPage = lazy(() => import('@/pages/products/CategoriesPage'))
 const StockAdjustmentPage = lazy(() => import('@/pages/products/StockAdjustmentPage'))
+const InventoryPage = lazy(() => import('@/pages/products/InventoryPage'))
 const PrintLabelsPage = lazy(() => import('@/pages/products/PrintLabelsPage'))
 const OrdersPage = lazy(() => import('@/pages/orders/OrdersPage'))
 const OrderDetailsPage = lazy(() => import('@/pages/orders/OrderDetailsPage'))
@@ -76,7 +77,7 @@ function App() {
                             >
                                 {/* Dashboard - accessible to all authenticated users */}
                                 <Route path="/dashboard" element={<DashboardPage />} />
-                                
+
                                 {/* POS - requires pos permission or admin */}
                                 <Route path="/pos" element={
                                     <ProtectedRoute requiredPermission="pos.access">
@@ -108,6 +109,11 @@ function App() {
                                 <Route path="/products/stock-adjustment" element={
                                     <ProtectedRoute requiredPermission="products.update">
                                         <StockAdjustmentPage />
+                                    </ProtectedRoute>
+                                } />
+                                <Route path="/products/inventory" element={
+                                    <ProtectedRoute requiredPermission="products.read">
+                                        <InventoryPage />
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/products/print-labels" element={
@@ -142,7 +148,7 @@ function App() {
                                         <InstallmentsPage />
                                     </ProtectedRoute>
                                 } />
-                                <Route path="/orders/invoice/:id" element={
+                                <Route path="/orders/:id/invoice" element={
                                     <ProtectedRoute requiredPermission="orders.read">
                                         <InvoicePage />
                                     </ProtectedRoute>

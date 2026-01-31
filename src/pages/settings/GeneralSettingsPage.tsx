@@ -3,11 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Settings, Save } from 'lucide-react'
 import { useSettings } from '@/hooks'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { CURRENCIES } from '@/lib/currencies'
+import { toast } from 'sonner'
 
 export default function GeneralSettingsPage() {
     const { settings, bulkUpdate, loading } = useSettings()
+    const { setLanguage: setUILanguage } = useLanguage()
     const [formData, setFormData] = useState({
         store_name: '', store_address: '', store_phone: '', store_email: '',
         currency_symbol: '$', currency_position: 'before', currency_decimal_places: 2,
@@ -34,7 +39,13 @@ export default function GeneralSettingsPage() {
 
     const handleSave = async () => {
         const success = await bulkUpdate(formData, 'general')
-        if (success) alert('Settings saved successfully!')
+        if (success) {
+            toast.success('Settings saved successfully!')
+            // Update UI language if changed
+            if (formData.language === 'en' || formData.language === 'id') {
+                setUILanguage(formData.language)
+            }
+        }
     }
 
     return (
@@ -57,7 +68,21 @@ export default function GeneralSettingsPage() {
             {/* Currency Settings */}
             <Card><CardHeader><CardTitle>Currency Settings</CardTitle></CardHeader><CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><Label>Currency Symbol</Label><Input value={formData.currency_symbol} onChange={e => setFormData({ ...formData, currency_symbol: e.target.value })} placeholder="$" /></div>
+                    <div>
+                        <Label>Currency</Label>
+                        <Select value={formData.currency_symbol} onValueChange={(value) => setFormData({ ...formData, currency_symbol: value })}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px]">
+                                {CURRENCIES.map(currency => (
+                                    <SelectItem key={currency.code} value={currency.symbol}>
+                                        {currency.symbol} - {currency.name} ({currency.code})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <div><Label>Symbol Position</Label><select value={formData.currency_position} onChange={e => setFormData({ ...formData, currency_position: e.target.value })} className="w-full px-3 py-2 border rounded"><option value="before">Before ($100)</option><option value="after">After (100$)</option></select></div>
                     <div><Label>Decimal Places</Label><Input type="number" min="0" max="4" value={formData.currency_decimal_places} onChange={e => setFormData({ ...formData, currency_decimal_places: Number(e.target.value) })} /></div>
                 </div>

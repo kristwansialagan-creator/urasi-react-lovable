@@ -5,6 +5,7 @@ import { AlertCircle, Trash2, RefreshCw } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 
 export default function SystemResetPage() {
     const [confirmText, setConfirmText] = useState('')
@@ -12,7 +13,7 @@ export default function SystemResetPage() {
 
     const handleSoftReset = () => {
         // Logic to clear transaction data but keep settings
-        alert('Soft reset functionality would go here (clear orders, payments, keep products/users)')
+        toast.warning('Soft reset functionality would go here (clear orders, payments, keep products/users)')
     }
 
     const handleHardReset = () => {
@@ -21,7 +22,7 @@ export default function SystemResetPage() {
         // Logic to clear EVERYTHING
         setTimeout(() => {
             setIsResetting(false)
-            alert('System reset simulation complete. In production, this would wipe the database.')
+            toast.warning('System reset simulation complete. In production, this would wipe the database.')
         }, 2000)
     }
 

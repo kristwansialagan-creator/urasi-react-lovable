@@ -134,7 +134,7 @@ CREATE INDEX idx_label_templates_author ON label_templates(author);
 
 INSERT INTO settings (key, value, category) VALUES
     -- General Settings
-    ('store_name', '"NexoPOS Store"', 'general'),
+    ('store_name', '"Urasi Store"', 'general'),
     ('store_address', '""', 'general'),
     ('store_phone', '""', 'general'),
     ('store_email', '""', 'general'),

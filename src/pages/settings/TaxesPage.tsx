@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calculator, Plus, Edit2, Trash2, Percent } from 'lucide-react'
 import { useTaxes } from '@/hooks'
 import { formatCurrency } from '@/lib/utils'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function TaxesPage() {
     const { taxes, groups: taxGroups, loading, createTax, updateTax, deleteTax, createGroup, updateGroup, deleteGroup } = useTaxes()
@@ -17,6 +19,7 @@ export default function TaxesPage() {
     const [editingGroup, setEditingGroup] = useState<any>(null)
     const [formData, setFormData] = useState({ name: '', rate: 0, tax_type: 'percentage' as 'percentage' | 'flat', description: '' })
     const [groupData, setGroupData] = useState({ name: '', description: '' })
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'tax' | 'group', id: string } | null>(null)
 
     useEffect(() => { resetForm() }, [])
 
@@ -28,13 +31,23 @@ export default function TaxesPage() {
     }
 
     const handleSaveTax = async () => {
-        if (!formData.name) return alert('Name required')
+        if (!formData.name) return toast.error('Name required')
         const success = editingTax ? await updateTax(editingTax.id, formData) : await createTax(formData)
         if (success) { resetForm(); setShowModal(false) }
     }
 
-    const handleDeleteTax = async (id: string) => {
-        if (confirm('Delete this tax?')) await deleteTax(id)
+    const handleDeleteTax = (id: string) => {
+        setDeleteConfirm({ type: 'tax', id })
+    }
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return
+        if (deleteConfirm.type === 'tax') {
+            await deleteTax(deleteConfirm.id)
+        } else {
+            await deleteGroup(deleteConfirm.id)
+        }
+        setDeleteConfirm(null)
     }
 
     const openEdit = (tax: any) => {
@@ -44,13 +57,13 @@ export default function TaxesPage() {
     }
 
     const handleSaveGroup = async () => {
-        if (!groupData.name) return alert('Name required')
+        if (!groupData.name) return toast.error('Name required')
         const success = editingGroup ? await updateGroup(editingGroup.id, groupData) : await createGroup(groupData)
         if (success) { resetForm(); setShowGroupModal(false) }
     }
 
-    const handleDeleteGroup = async (id: string) => {
-        if (confirm('Delete this tax group?')) await deleteGroup(id)
+    const handleDeleteGroup = (id: string) => {
+        setDeleteConfirm({ type: 'group', id })
     }
 
     const openGroupEdit = (group: any) => {
@@ -119,7 +132,7 @@ export default function TaxesPage() {
 
             {/* Tax Modal - Using Dialog Component */}
             <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) resetForm() }}>
-                <DialogContent className="bg-background">
+                <DialogContent className="bg-background/100 backdrop-blur-sm border border-border shadow-lg">
                     <DialogHeader>
                         <DialogTitle>{editingTax ? 'Edit' : 'New'} Tax</DialogTitle>
                     </DialogHeader>
@@ -134,7 +147,7 @@ export default function TaxesPage() {
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-popover z-[150]">
+                                <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-[150]">
                                     <SelectItem value="percentage">Percentage</SelectItem>
                                     <SelectItem value="flat">Flat Amount</SelectItem>
                                 </SelectContent>
@@ -161,7 +174,7 @@ export default function TaxesPage() {
 
             {/* Group Modal - Using Dialog Component */}
             <Dialog open={showGroupModal} onOpenChange={(open) => { setShowGroupModal(open); if (!open) resetForm() }}>
-                <DialogContent className="bg-background">
+                <DialogContent className="bg-background/100 backdrop-blur-sm border border-border shadow-lg">
                     <DialogHeader>
                         <DialogTitle>{editingGroup ? 'Edit' : 'New'} Tax Group</DialogTitle>
                     </DialogHeader>
@@ -181,6 +194,20 @@ export default function TaxesPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={!!deleteConfirm}
+                onOpenChange={(open) => !open && setDeleteConfirm(null)}
+                title={`Delete ${deleteConfirm?.type === 'tax' ? 'Tax' : 'Tax Group'}?`}
+                description={deleteConfirm?.type === 'tax'
+                    ? 'This will permanently delete this tax configuration.'
+                    : 'This will permanently delete this tax group.'
+                }
+                confirmText="Delete"
+                variant="destructive"
+                onConfirm={confirmDelete}
+            />
         </div>
     )
 }

@@ -34,7 +34,7 @@ export default function BulkEditorPage() {
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-50">
                                     <SelectItem value="products">Products</SelectItem>
                                     <SelectItem value="customers">Customers</SelectItem>
                                     <SelectItem value="orders">Orders</SelectItem>
@@ -48,7 +48,7 @@ export default function BulkEditorPage() {
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-50">
                                     <SelectItem value="price_increase">Increase Price (%)</SelectItem>
                                     <SelectItem value="price_decrease">Decrease Price (%)</SelectItem>
                                     <SelectItem value="stock_set">Set Stock Level</SelectItem>

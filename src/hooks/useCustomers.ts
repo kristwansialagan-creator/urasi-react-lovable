@@ -68,7 +68,7 @@ export function useCustomers(): UseCustomersReturn {
         try {
             let query = supabase
                 .from('customers')
-                .select(`*, group:customers_groups(*)`)
+                .select(`*, group:customers_groups(*), addresses:customers_addresses(*)`)
                 .order('created_at', { ascending: false })
 
             if (search) {
@@ -119,8 +119,10 @@ export function useCustomers(): UseCustomersReturn {
         }
     }, [])
 
-    const createCustomer = useCallback(async (customer: Partial<Customer>): Promise<Customer | null> => {
+    const createCustomer = useCallback(async (customerData: any): Promise<Customer | null> => {
         try {
+            const { address, ...customer } = customerData
+
             const { data, error: createError } = await supabase
                 .from('customers')
                 .insert(customer)
@@ -128,6 +130,16 @@ export function useCustomers(): UseCustomersReturn {
                 .single()
 
             if (createError) throw createError
+
+            // Create address if provided
+            if (address && (address.address_1 || address.city)) {
+                await supabase.from('customers_addresses').insert({
+                    customer_id: data.id,
+                    type: 'billing',
+                    ...address
+                })
+            }
+
             await fetchCustomers()
             return data as Customer
         } catch (err) {
@@ -136,8 +148,10 @@ export function useCustomers(): UseCustomersReturn {
         }
     }, [fetchCustomers])
 
-    const updateCustomer = useCallback(async (id: string, customer: Partial<Customer>): Promise<Customer | null> => {
+    const updateCustomer = useCallback(async (id: string, customerData: any): Promise<Customer | null> => {
         try {
+            const { address, ...customer } = customerData
+
             const { data, error: updateError } = await supabase
                 .from('customers')
                 .update(customer)
@@ -146,6 +160,32 @@ export function useCustomers(): UseCustomersReturn {
                 .single()
 
             if (updateError) throw updateError
+
+            // Upsert address
+            if (address) {
+                const { data: existingAddress } = await supabase
+                    .from('customers_addresses')
+                    .select('id')
+                    .eq('customer_id', id)
+                    .eq('type', 'billing')
+                    .single()
+
+                if (existingAddress) {
+                    // Update existing
+                    await supabase
+                        .from('customers_addresses')
+                        .update(address)
+                        .eq('id', existingAddress.id)
+                } else if (address.address_1 || address.city) {
+                    // Create new
+                    await supabase.from('customers_addresses').insert({
+                        customer_id: id,
+                        type: 'billing',
+                        ...address
+                    })
+                }
+            }
+
             await fetchCustomers()
             return data as Customer
         } catch (err) {

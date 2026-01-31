@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Users, Save } from 'lucide-react'
 import { useSettings } from '@/hooks'
+import { toast } from 'sonner'
 
 export default function CustomersSettingsPage() {
     const { settings, bulkUpdate, loading } = useSettings()
@@ -33,7 +34,7 @@ export default function CustomersSettingsPage() {
 
     const handleSave = async () => {
         const success = await bulkUpdate(formData, 'customers')
-        if (success) alert('Customer settings saved successfully!')
+        if (success) toast.success('Customer settings saved successfully!')
     }
 
     return (

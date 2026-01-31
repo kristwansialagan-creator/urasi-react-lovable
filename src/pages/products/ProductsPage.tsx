@@ -55,9 +55,20 @@ export default function ProductsPage() {
         return 'Available'
     }
 
-    const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to delete this product?')) {
-            await deleteProduct(id)
+    // Delete dialog state
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [deletingProduct, setDeletingProduct] = useState<{ id: string, name: string } | null>(null)
+
+    const handleDeleteClick = (product: typeof products[0]) => {
+        setDeletingProduct({ id: product.id, name: product.name })
+        setIsDeleteDialogOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (deletingProduct) {
+            await deleteProduct(deletingProduct.id)
+            setIsDeleteDialogOpen(false)
+            setDeletingProduct(null)
         }
     }
 
@@ -328,7 +339,7 @@ export default function ProductsPage() {
                                                             variant="ghost"
                                                             size="icon"
                                                             className="text-[hsl(var(--destructive))]"
-                                                            onClick={() => handleDelete(product.id)}
+                                                            onClick={() => handleDeleteClick(product)}
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
@@ -395,8 +406,18 @@ export default function ProductsPage() {
                                 <p className="text-sm font-bold text-green-600">{formatCurrency(selectedProduct.selling_price)}</p>
                             </div>
                             <div className="space-y-1">
-                                <span className="text-xs font-medium text-muted-foreground uppercase">Purchase Price</span>
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Initial Purchase Price</span>
                                 <p className="text-sm font-medium">{formatCurrency(selectedProduct.purchase_price)}</p>
+                            </div>
+
+                            {/* New Fields */}
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Manufacturer</span>
+                                <p className="text-sm">{selectedProduct.manufacturer_name || '-'}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">Country of Origin</span>
+                                <p className="text-sm">{selectedProduct.country_of_origin || '-'}</p>
                             </div>
 
                             <div className="space-y-1">
@@ -418,6 +439,22 @@ export default function ProductsPage() {
                             )}
                         </div>
                     )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent className="sm:max-w-[400px] bg-white">
+                    <DialogHeader>
+                        <DialogTitle>Hapus Produk</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin menghapus "{deletingProduct?.name}"? Tindakan ini tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Batal</Button>
+                        <Button variant="destructive" onClick={handleConfirmDelete}>Hapus</Button>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

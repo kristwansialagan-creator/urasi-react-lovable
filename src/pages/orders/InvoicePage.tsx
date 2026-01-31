@@ -30,6 +30,7 @@ export default function InvoicePage() {
     const [order, setOrder] = useState<Order | null>(null)
     const [loading, setLoading] = useState(true)
     const [settings, setSettings] = useState<any>({})
+    const [cashierName, setCashierName] = useState<string>('')
     const invoiceRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -40,11 +41,35 @@ export default function InvoicePage() {
     const fetchOrder = async () => {
         if (!id) return
         setLoading(true)
-        const { data } = await (supabase
+        const { data, error } = await (supabase
             .from('orders')
-            .select('*, customer:customers(*), user:profiles(*), products:order_products(*, unit:units(*)), taxes:orders_taxes(*)')
+            .select(`
+                *, 
+                customer:customers(*), 
+                products:orders_products(*), 
+                taxes:orders_taxes(*)
+            `)
             .eq('id', id)
             .single() as any)
+
+        if (error) {
+            console.error('Error fetching order:', error)
+        }
+
+        // Fetch cashier/user separately using created_by UUID
+        if (data?.created_by) {
+            const { data: userData, error: userError } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', data.created_by)
+                .single()
+
+            if (!userError && userData) {
+                setCashierName(userData.username || 'N/A')
+            }
+        }
+
+        console.log('Invoice Order Data:', data)
         setOrder(data)
         setLoading(false)
     }
@@ -128,7 +153,10 @@ export default function InvoicePage() {
                             {settings.invoice_company_logo && (
                                 <img src={settings.invoice_company_logo} alt="Logo" className="h-16 mx-auto mb-4" />
                             )}
-                            <h1 className="text-3xl font-bold text-[hsl(var(--primary))]">{settings.store_name || 'NexoPOS Store'}</h1>
+                            <h1 className="text-3xl font-bold text-[hsl(var(--primary))]">{settings.store_name || 'Urasi Store'}</h1>
+                            <div className="text-sm font-mono text-[hsl(var(--muted-foreground))] mt-2">
+                                {settings.invoice_number_prefix || 'INV-'}{order.code}
+                            </div>
                             {settings.store_address && <p className="text-[hsl(var(--muted-foreground))]">{settings.store_address}</p>}
                             <p className="text-[hsl(var(--muted-foreground))]">
                                 {settings.store_phone && `Phone: ${settings.store_phone}`}
@@ -143,7 +171,7 @@ export default function InvoicePage() {
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between"><span className="font-medium">Order Code:</span><span className="font-mono">{order.code}</span></div>
                                     <div className="flex justify-between"><span className="font-medium">Date:</span><span>{new Date(order.created_at || '').toLocaleDateString()}</span></div>
-                                    <div className="flex justify-between"><span className="font-medium">Cashier:</span><span>{order.user?.username}</span></div>
+                                    <div className="flex justify-between"><span className="font-medium">Cashier:</span><span>{cashierName || 'N/A'}</span></div>
                                     <div className="flex justify-between"><span className="font-medium">Type:</span><span className="capitalize">{order.type}</span></div>
                                     <div className="flex justify-between"><span className="font-medium">Status:</span><span className={`px-2 py-0.5 rounded text-xs ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{order.payment_status}</span></div>
                                 </div>

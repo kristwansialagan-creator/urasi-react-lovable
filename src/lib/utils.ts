@@ -48,13 +48,13 @@ export function generateId(): string {
 }
 
 // Generate order code
-export function generateOrderCode(): string {
+export function generateOrderCode(prefix: string = 'ORD-'): string {
     const date = new Date()
     const year = date.getFullYear().toString().slice(-2)
     const month = (date.getMonth() + 1).toString().padStart(2, '0')
     const day = date.getDate().toString().padStart(2, '0')
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
-    return `ORD-${year}${month}${day}-${random}`
+    return `${prefix}${year}${month}${day}-${random}`
 }
 
 // Calculate discount
@@ -130,16 +130,20 @@ const KNOWN_BUCKETS = ['product-images', 'media', 'uploads']
 // Build storage URL from slug
 export function getStorageUrl(slug: string | null | undefined): string | null {
     if (!slug) return null
-    
+
     const parts = slug.split('/')
     const firstPart = parts[0]
-    
+
     if (KNOWN_BUCKETS.includes(firstPart)) {
-        // Slug already contains bucket name
-        return `${STORAGE_BASE_URL}/${slug}`
-    } else {
-        // Slug is just the file path (e.g., "filename.jpg" or "uploads/filename.jpg"), prepend default bucket
+        // Slug already contains the full storage path (e.g., "product-images/123.jpg")
+        // Storage structure: bucket "product-images" contains files at path "product-images/filename"
+        // So URL is: base_url/product-images/product-images/filename
         return `${STORAGE_BASE_URL}/${DEFAULT_BUCKET}/${slug}`
+    } else {
+        // Slug is just a filename (e.g., "123.jpg") - old format
+        // Files are stored at path "product-images/filename" in bucket "product-images"
+        // So URL is: base_url/product-images/product-images/filename
+        return `${STORAGE_BASE_URL}/${DEFAULT_BUCKET}/product-images/${slug}`
     }
 }
 
@@ -147,7 +151,7 @@ export function getStorageUrl(slug: string | null | undefined): string | null {
 export function parseStorageSlug(slug: string): { bucket: string; filePath: string } {
     const parts = slug.split('/')
     const firstPart = parts[0]
-    
+
     if (KNOWN_BUCKETS.includes(firstPart)) {
         return {
             bucket: firstPart,

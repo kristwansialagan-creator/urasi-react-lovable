@@ -40,6 +40,7 @@ export default function POSPage() {
     const [couponCode, setCouponCode] = useState('')
     const [discount, setDiscount] = useState(0)
     const [payments, setPayments] = useState<{ payment_type_id: string; value: number }[]>([])
+    const [productBatches, setProductBatches] = useState<Record<string, { batch_number: string; expiry_date: string | null } | null>>({})
 
     // Remote Scanner State
     const [remoteSessionId, setRemoteSessionId] = useState<string>('')
@@ -47,8 +48,23 @@ export default function POSPage() {
 
     const addToCart = useCallback((product: any) => {
         const productId = product.id
+        const currentStock = product.stock?.[0]?.quantity ?? 0
+
         setCart(prevCart => {
             const existing = prevCart.find(item => item.product_id === productId)
+            const currentQtyInCart = existing?.quantity ?? 0
+
+            // Check if adding one more would exceed available stock
+            if (currentStock <= currentQtyInCart) {
+                toast({
+                    variant: "destructive",
+                    title: "Stok Tidak Cukup",
+                    description: `${product.name} hanya tersedia ${currentStock} unit`,
+                    duration: 3000
+                })
+                return prevCart
+            }
+
             if (existing) {
                 return prevCart.map(item =>
                     item.product_id === productId
@@ -70,7 +86,7 @@ export default function POSPage() {
                 }]
             }
         })
-    }, [])
+    }, [toast])
 
     const handleBarcodeSearch = useCallback((barcode: string) => {
         const product = products.find(p => p.barcode === barcode || p.sku === barcode)
@@ -119,6 +135,40 @@ export default function POSPage() {
             supabase.removeChannel(channel)
         }
     }, [handleBarcodeSearch, toast])
+
+    // Fetch next FEFO batch for all products
+    useEffect(() => {
+        const fetchBatches = async () => {
+            const batchMap: Record<string, { batch_number: string; expiry_date: string | null } | null> = {}
+
+            for (const product of products) {
+                if (product.stock && product.stock.length > 0) {
+                    const unitId = product.stock[0]?.unit_id
+                    if (!unitId) continue
+
+                    // Get next batch to be sold (FEFO)
+                    const { data: batches } = await supabase
+                        .from('stock_batches')
+                        .select('batch_number, expiry_date')
+                        .eq('product_id', product.id)
+                        .eq('unit_id', unitId)
+                        .gt('quantity', 0)
+                        .order('expiry_date', { ascending: true, nullsFirst: false })
+                        .limit(1)
+
+                    if (batches && batches.length > 0) {
+                        batchMap[product.id] = batches[0]
+                    }
+                }
+            }
+
+            setProductBatches(batchMap)
+        }
+
+        if (products.length > 0) {
+            fetchBatches()
+        }
+    }, [products])
 
     // Hook for External/Keyboard Scanners
     useBarcodeScanner({
@@ -440,6 +490,16 @@ export default function POSPage() {
                                                 <div className="text-right shrink-0">
                                                     <div className="font-bold text-sm text-primary">{formatCurrency(product.selling_price)}</div>
                                                     <div className="text-[10px] text-muted-foreground">Stock: {product.stock?.[0]?.quantity ?? 0}</div>
+                                                    {productBatches[product.id] && (
+                                                        <div className="text-[9px] text-blue-600 dark:text-blue-400 font-mono mt-0.5">
+                                                            {productBatches[product.id]!.batch_number}
+                                                            {productBatches[product.id]!.expiry_date && (
+                                                                <span className="text-orange-600 dark:text-orange-400 ml-1">
+                                                                    • {new Date(productBatches[product.id]!.expiry_date!).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )
@@ -520,7 +580,7 @@ export default function POSPage() {
                                 <SelectTrigger className="h-8 text-xs">
                                     <SelectValue placeholder="Walk-in Customer" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-popover z-[150]">
+                                <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-[150]">
                                     <SelectItem value="walk-in">Walk-in Customer</SelectItem>
                                     {customers.map(c => (
                                         <SelectItem key={c.id} value={c.id}>

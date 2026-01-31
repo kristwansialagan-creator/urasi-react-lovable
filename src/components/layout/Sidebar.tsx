@@ -111,124 +111,125 @@ export function Sidebar() {
             permission?: string
             children?: { to: string; label: string; permission?: string }[]
         }[] = [
-            { 
-                to: '/dashboard', 
-                icon: <LayoutDashboard className="h-5 w-5" />, 
-                label: t('nav.dashboard'),
-            },
-            { 
-                to: '/pos', 
-                icon: <ShoppingCart className="h-5 w-5" />, 
-                label: t('nav.pos'),
-                permission: 'pos.access'
-            },
-            {
-                to: '/products',
-                icon: <Package className="h-5 w-5" />,
-                label: t('nav.products'),
-                permission: 'products.read',
-                children: [
-                    { to: '/products', label: t('nav.allProducts'), permission: 'products.read' },
-                    { to: '/products/create', label: t('nav.addProduct'), permission: 'products.create' },
-                    { to: '/products/categories', label: t('nav.categories'), permission: 'categories.read' },
-                    { to: '/products/stock-adjustment', label: t('nav.stockAdjustment'), permission: 'products.update' },
-                ],
-            },
-            {
-                to: '/orders',
-                icon: <Receipt className="h-5 w-5" />,
-                label: t('nav.orders'),
-                permission: 'orders.read',
-                children: [
-                    { to: '/orders', label: t('nav.allOrders'), permission: 'orders.read' },
-                    { to: '/installments', label: t('nav.instalments'), permission: 'orders.read' },
-                ],
-            },
-            {
-                to: '/customers',
-                icon: <Users className="h-5 w-5" />,
-                label: t('nav.customers'),
-                permission: 'customers.read',
-                children: [
-                    { to: '/customers', label: t('nav.allCustomers'), permission: 'customers.read' },
-                    { to: '/customers/groups', label: t('nav.customerGroups'), permission: 'customers.read' },
-                ],
-            },
-            {
-                to: '/procurements',
-                icon: <Truck className="h-5 w-5" />,
-                label: t('nav.procurements'),
-                permission: 'procurements.read',
-                children: [
-                    { to: '/procurements', label: t('nav.allProcurements'), permission: 'procurements.read' },
-                    { to: '/procurements/providers', label: t('nav.providers'), permission: 'procurements.read' },
-                ],
-            },
-            {
-                to: '/registers',
-                icon: <Calculator className="h-5 w-5" />,
-                label: t('nav.registers'),
-                permission: 'registers.read',
-            },
-            {
-                to: '/transactions',
-                icon: <Wallet className="h-5 w-5" />,
-                label: t('nav.transactions'),
-                permission: 'transactions.read',
-            },
-            {
-                to: '/reports',
-                icon: <BarChart3 className="h-5 w-5" />,
-                label: t('nav.reports'),
-                permission: 'reports.read',
-                children: [
-                    { to: '/reports/sales', label: t('nav.sales'), permission: 'reports.read' },
-                    { to: '/reports/inventory', label: t('nav.inventory'), permission: 'reports.read' },
-                    { to: '/reports/customers', label: t('nav.customers'), permission: 'reports.read' },
-                    { to: '/reports/cashflow', label: t('nav.cashFlow'), permission: 'reports.read' },
-                    { to: '/reports/profit', label: t('nav.profit'), permission: 'reports.read' },
-                    { to: '/reports/payment-types', label: t('nav.paymentTypes'), permission: 'reports.read' },
-                    { to: '/reports/low-stock', label: t('nav.lowStock'), permission: 'reports.read' },
-                    { to: '/reports/best-products', label: t('nav.bestProducts'), permission: 'reports.read' },
-                    { to: '/reports/yearly', label: t('nav.yearly'), permission: 'reports.read' },
-                ],
-            },
-            { 
-                to: '/coupons', 
-                icon: <Tag className="h-5 w-5" />, 
-                label: t('nav.coupons'),
-                permission: 'coupons.read'
-            },
-            { 
-                to: '/rewards', 
-                icon: <Gift className="h-5 w-5" />, 
-                label: t('nav.rewards'),
-                permission: 'rewards.read'
-            },
-            { 
-                to: '/media', 
-                icon: <FileText className="h-5 w-5" />, 
-                label: t('nav.mediaLibrary'),
-                permission: 'media.read'
-            },
-            { 
-                to: '/settings', 
-                icon: <Settings className="h-5 w-5" />, 
-                label: t('nav.settings'),
-                permission: 'admin'
-            },
-        ]
+                {
+                    to: '/dashboard',
+                    icon: <LayoutDashboard className="h-5 w-5" />,
+                    label: t('nav.dashboard'),
+                },
+                {
+                    to: '/pos',
+                    icon: <ShoppingCart className="h-5 w-5" />,
+                    label: t('nav.pos'),
+                    permission: 'pos.access'
+                },
+                {
+                    to: '/products',
+                    icon: <Package className="h-5 w-5" />,
+                    label: t('nav.products'),
+                    permission: 'products.read',
+                    children: [
+                        { to: '/products', label: t('nav.allProducts'), permission: 'products.read' },
+                        { to: '/products/inventory', label: 'Inventory', permission: 'products.read' },
+                        { to: '/products/create', label: t('nav.addProduct'), permission: 'products.create' },
+                        { to: '/products/categories', label: t('nav.categories'), permission: 'categories.read' },
+                        { to: '/products/stock-adjustment', label: t('nav.stockAdjustment'), permission: 'products.update' },
+                    ],
+                },
+                {
+                    to: '/orders',
+                    icon: <Receipt className="h-5 w-5" />,
+                    label: t('nav.orders'),
+                    permission: 'orders.read',
+                    children: [
+                        { to: '/orders', label: t('nav.allOrders'), permission: 'orders.read' },
+                        { to: '/installments', label: t('nav.instalments'), permission: 'orders.read' },
+                    ],
+                },
+                {
+                    to: '/customers',
+                    icon: <Users className="h-5 w-5" />,
+                    label: t('nav.customers'),
+                    permission: 'customers.read',
+                    children: [
+                        { to: '/customers', label: t('nav.allCustomers'), permission: 'customers.read' },
+                        { to: '/customers/groups', label: t('nav.customerGroups'), permission: 'customers.read' },
+                    ],
+                },
+                {
+                    to: '/procurements',
+                    icon: <Truck className="h-5 w-5" />,
+                    label: t('nav.procurements'),
+                    permission: 'procurements.read',
+                    children: [
+                        { to: '/procurements', label: t('nav.allProcurements'), permission: 'procurements.read' },
+                        { to: '/procurements/providers', label: t('nav.providers'), permission: 'procurements.read' },
+                    ],
+                },
+                {
+                    to: '/registers',
+                    icon: <Calculator className="h-5 w-5" />,
+                    label: t('nav.registers'),
+                    permission: 'registers.read',
+                },
+                {
+                    to: '/transactions',
+                    icon: <Wallet className="h-5 w-5" />,
+                    label: t('nav.transactions'),
+                    permission: 'transactions.read',
+                },
+                {
+                    to: '/reports',
+                    icon: <BarChart3 className="h-5 w-5" />,
+                    label: t('nav.reports'),
+                    permission: 'reports.read',
+                    children: [
+                        { to: '/reports/sales', label: t('nav.sales'), permission: 'reports.read' },
+                        { to: '/reports/inventory', label: t('nav.inventory'), permission: 'reports.read' },
+                        { to: '/reports/customers', label: t('nav.customers'), permission: 'reports.read' },
+                        { to: '/reports/cashflow', label: t('nav.cashFlow'), permission: 'reports.read' },
+                        { to: '/reports/profit', label: t('nav.profit'), permission: 'reports.read' },
+                        { to: '/reports/payment-types', label: t('nav.paymentTypes'), permission: 'reports.read' },
+                        { to: '/reports/low-stock', label: t('nav.lowStock'), permission: 'reports.read' },
+                        { to: '/reports/best-products', label: t('nav.bestProducts'), permission: 'reports.read' },
+                        { to: '/reports/yearly', label: t('nav.yearly'), permission: 'reports.read' },
+                    ],
+                },
+                {
+                    to: '/coupons',
+                    icon: <Tag className="h-5 w-5" />,
+                    label: t('nav.coupons'),
+                    permission: 'coupons.read'
+                },
+                {
+                    to: '/rewards',
+                    icon: <Gift className="h-5 w-5" />,
+                    label: t('nav.rewards'),
+                    permission: 'rewards.read'
+                },
+                {
+                    to: '/media',
+                    icon: <FileText className="h-5 w-5" />,
+                    label: t('nav.mediaLibrary'),
+                    permission: 'media.read'
+                },
+                {
+                    to: '/settings',
+                    icon: <Settings className="h-5 w-5" />,
+                    label: t('nav.settings'),
+                    permission: 'admin'
+                },
+            ]
 
         return fullNavigation.filter(item => {
             // If no permission required, show to everyone
             if (!item.permission) return true
-            
+
             // Admin has access to everything
             if (isAdmin) return true
-            
+
             // Special case for admin-only items
             if (item.permission === 'admin') return isAdmin
-            
+
             // Check specific permission
             return hasPermission(item.permission)
         }).map(item => {

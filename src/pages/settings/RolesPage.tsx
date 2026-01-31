@@ -14,6 +14,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2, Plus, Shield, Trash2, Edit } from 'lucide-react'
 import { useRoles } from '@/hooks'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function RolesPage() {
     const {
@@ -25,8 +27,8 @@ export default function RolesPage() {
     const [editingRole, setEditingRole] = useState<any>(null)
     const [formData, setFormData] = useState({ name: '', namespace: '', description: '' })
 
-    // Permission Matrix State
     const [selectedRoleForPerms, setSelectedRoleForPerms] = useState<string | null>(null)
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
     useEffect(() => {
         fetchRoles()
@@ -44,7 +46,7 @@ export default function RolesPage() {
 
     const handleSaveRole = async () => {
         if (!formData.name || !formData.namespace) {
-            alert('Name and Namespace are required')
+            toast.error('Name and Namespace are required')
             return
         }
 
@@ -70,11 +72,15 @@ export default function RolesPage() {
         setModalOpen(true)
     }
 
-    const handleDelete = async (id: string) => {
-        if (confirm('Are you sure? This will remove all permissions for this role.')) {
-            await deleteRole(id)
-            if (selectedRoleForPerms === id) setSelectedRoleForPerms(null)
-        }
+    const handleDelete = (id: string) => {
+        setDeleteConfirm(id)
+    }
+
+    const confirmDeleteRole = async () => {
+        if (!deleteConfirm) return
+        await deleteRole(deleteConfirm)
+        if (selectedRoleForPerms === deleteConfirm) setSelectedRoleForPerms(null)
+        setDeleteConfirm(null)
     }
 
     return (
@@ -224,6 +230,17 @@ export default function RolesPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={!!deleteConfirm}
+                onOpenChange={(open) => !open && setDeleteConfirm(null)}
+                title="Delete Role?"
+                description="This will permanently delete this role and remove all associated permissions. This action cannot be undone."
+                confirmText="Delete"
+                variant="destructive"
+                onConfirm={confirmDeleteRole}
+            />
         </div>
     )
 }

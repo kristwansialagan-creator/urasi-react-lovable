@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Monitor, Save } from 'lucide-react'
 import { useSettings } from '@/hooks'
+import { toast } from 'sonner'
 
 export default function PosSettingsPage() {
     const { settings, bulkUpdate, loading } = useSettings()
@@ -37,7 +38,7 @@ export default function PosSettingsPage() {
 
     const handleSave = async () => {
         const success = await bulkUpdate(formData, 'pos')
-        if (success) alert('POS settings saved successfully!')
+        if (success) toast.success('POS settings saved successfully!')
     }
 
     const toggleSetting = (key: keyof typeof formData) => {

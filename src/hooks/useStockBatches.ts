@@ -160,7 +160,7 @@ export function useStockBatches(productId?: string) {
   const deleteBatch = async (id: string): Promise<boolean> => {
     try {
       const batch = batches.find(b => b.id === id)
-      
+
       const { error } = await supabase
         .from('stock_batches')
         .delete()
@@ -196,7 +196,7 @@ export function useStockBatches(productId?: string) {
     targetProductId: string,
     targetUnitId: string,
     quantity: number
-  ): Promise<{ success: boolean; deductions: Array<{ batch_id: string; batch_number: string; expiry_date: string | null; quantity: number }> }> => {
+  ): Promise<{ success: boolean; deductions: Array<{ batch_id: string; batch_number: string; expiry_date: string | null; quantity: number; purchase_price: number | null }> }> => {
     try {
       // Get batches sorted by expiry date (FEFO)
       const { data: availableBatches, error: fetchError } = await supabase
@@ -219,7 +219,7 @@ export function useStockBatches(productId?: string) {
       }
 
       let remaining = quantity
-      const deductions: Array<{ batch_id: string; batch_number: string; expiry_date: string | null; quantity: number }> = []
+      const deductions: Array<{ batch_id: string; batch_number: string; expiry_date: string | null; quantity: number; purchase_price: number | null }> = []
 
       for (const batch of availableBatches) {
         if (remaining <= 0) break
@@ -238,7 +238,8 @@ export function useStockBatches(productId?: string) {
           batch_id: batch.id,
           batch_number: batch.batch_number,
           expiry_date: batch.expiry_date,
-          quantity: toDeduct
+          quantity: toDeduct,
+          purchase_price: batch.purchase_price ?? null
         })
 
         remaining -= toDeduct

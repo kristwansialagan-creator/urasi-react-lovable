@@ -14,6 +14,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { format, differenceInDays, parseISO } from 'date-fns'
 import { UnitSelector } from '@/components/ui/UnitSelector'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 export default function StockAdjustmentPage() {
     const { adjustments, loading, adjustStock, fetchAdjustments } = useStockAdjustment()
@@ -41,6 +51,7 @@ export default function StockAdjustmentPage() {
     const [batchProductSearch, setBatchProductSearch] = useState('')
     const [batchProductPopoverOpen, setBatchProductPopoverOpen] = useState(false)
     const [batchSaving, setBatchSaving] = useState(false)
+    const [batchToDelete, setBatchToDelete] = useState<string | null>(null)
 
     useEffect(() => {
         fetchAdjustments()
@@ -74,7 +85,7 @@ export default function StockAdjustmentPage() {
         if (!batchFormData.product_id || !batchFormData.unit_id || !batchFormData.batch_number) {
             return alert('Please fill in product, unit, and batch number')
         }
-        
+
         setBatchSaving(true)
         try {
             const result = await createBatch({
@@ -86,7 +97,7 @@ export default function StockAdjustmentPage() {
                 purchase_price: batchFormData.purchase_price || null,
                 notes: batchFormData.notes || null
             })
-            
+
             if (result) {
                 setBatchFormData({
                     product_id: '',
@@ -107,7 +118,15 @@ export default function StockAdjustmentPage() {
 
     const selectedProduct = products.find(p => p.id === formData.product_id)
     const selectedBatchProduct = products.find(p => p.id === batchFormData.product_id)
-    
+
+    // Debug: Log selected batch product to verify stock data
+    useEffect(() => {
+        if (selectedBatchProduct) {
+            console.log('Selected Batch Product:', selectedBatchProduct)
+            console.log('Stock for filter:', selectedBatchProduct.stock)
+        }
+    }, [selectedBatchProduct])
+
     // Get current stock for the selected product and unit
     const currentQty = useMemo(() => {
         if (!selectedProduct?.stock || !formData.unit_id) return 0
@@ -120,8 +139,8 @@ export default function StockAdjustmentPage() {
     const filteredProducts = useMemo(() => {
         if (!productSearch) return products
         const searchLower = productSearch.toLowerCase()
-        return products.filter(p => 
-            p.name?.toLowerCase().includes(searchLower) || 
+        return products.filter(p =>
+            p.name?.toLowerCase().includes(searchLower) ||
             p.sku?.toLowerCase().includes(searchLower) ||
             p.barcode?.toLowerCase().includes(searchLower)
         )
@@ -130,8 +149,8 @@ export default function StockAdjustmentPage() {
     const filteredBatchProducts = useMemo(() => {
         if (!batchProductSearch) return products
         const searchLower = batchProductSearch.toLowerCase()
-        return products.filter(p => 
-            p.name?.toLowerCase().includes(searchLower) || 
+        return products.filter(p =>
+            p.name?.toLowerCase().includes(searchLower) ||
             p.sku?.toLowerCase().includes(searchLower) ||
             p.barcode?.toLowerCase().includes(searchLower)
         )
@@ -223,7 +242,7 @@ export default function StockAdjustmentPage() {
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[300px] p-0 bg-popover z-50" align="start">
+                                        <PopoverContent className="w-[300px] p-0 bg-background border shadow-lg z-50" align="start">
                                             <div className="flex items-center border-b px-3">
                                                 <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                                                 <input
@@ -274,6 +293,7 @@ export default function StockAdjustmentPage() {
                                         value={batchFormData.unit_id}
                                         onChange={(val) => setBatchFormData({ ...batchFormData, unit_id: val })}
                                         placeholder="Select unit..."
+                                        filterByProductStock={selectedBatchProduct?.stock as { unit_id: string }[] | undefined}
                                     />
                                 </div>
 
@@ -364,6 +384,7 @@ export default function StockAdjustmentPage() {
                                             <tr className="border-b">
                                                 <th className="text-left p-3">Product</th>
                                                 <th className="text-left p-3">Batch</th>
+                                                <th className="text-left p-3">Date Added</th>
                                                 <th className="text-left p-3">Expiry</th>
                                                 <th className="text-right p-3">Qty</th>
                                                 <th className="text-left p-3">Unit</th>
@@ -383,8 +404,14 @@ export default function StockAdjustmentPage() {
                                                             </div>
                                                         </td>
                                                         <td className="p-3 font-mono text-sm">{batch.batch_number}</td>
+                                                        <td className="p-3 text-sm text-muted-foreground">
+                                                            {batch.created_at
+                                                                ? format(parseISO(batch.created_at), 'dd/MM/yyyy HH:mm')
+                                                                : '-'
+                                                            }
+                                                        </td>
                                                         <td className="p-3 text-sm">
-                                                            {batch.expiry_date 
+                                                            {batch.expiry_date
                                                                 ? format(parseISO(batch.expiry_date), 'dd/MM/yyyy')
                                                                 : '-'
                                                             }
@@ -400,7 +427,7 @@ export default function StockAdjustmentPage() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={() => deleteBatch(batch.id)}
+                                                                onClick={() => setBatchToDelete(batch.id)}
                                                                 className="text-destructive hover:text-destructive"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -439,7 +466,7 @@ export default function StockAdjustmentPage() {
                                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[300px] p-0 bg-popover z-50" align="start">
+                                    <PopoverContent className="w-[300px] p-0 bg-background border shadow-lg z-50" align="start">
                                         <div className="flex items-center border-b px-3">
                                             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                                             <input
@@ -509,7 +536,7 @@ export default function StockAdjustmentPage() {
                                         <SelectTrigger className="w-[180px]">
                                             <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-popover z-50">
+                                        <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-50">
                                             {reasons.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
@@ -548,6 +575,32 @@ export default function StockAdjustmentPage() {
                         </CardContent></Card>
                 </TabsContent>
             </Tabs>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={!!batchToDelete} onOpenChange={() => setBatchToDelete(null)}>
+                <AlertDialogContent className="bg-background border">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Batch?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete this batch and reduce the total stock.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                if (batchToDelete) {
+                                    deleteBatch(batchToDelete)
+                                    setBatchToDelete(null)
+                                }
+                            }}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

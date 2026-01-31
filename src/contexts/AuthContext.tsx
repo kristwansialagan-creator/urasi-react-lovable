@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // Still allow navigation even if profile fetch fails
                 return
             }
-            
+
             if (data) {
                 console.log('Profile loaded:', data)
                 // Map database response to Profile interface with proper defaults
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
                 setProfile(mappedProfile)
                 // Fetch permissions after profile is loaded (non-blocking)
-                fetchUserPermissions(userId).catch(err => 
+                fetchUserPermissions(userId).catch(err =>
                     console.error('Error fetching permissions:', err)
                 )
             }
@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     return
                 }
             }
-            
+
             setSession(session)
             setUser(session?.user ?? null)
             if (session?.user) {
@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {
                 console.log('Auth state changed:', _event, session?.user?.id)
-                
+
                 // Handle token refresh failure
                 if ((_event as string) === 'TOKEN_REFRESH_FAILED') {
                     console.error('Token refresh failed, signing out...')
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email,
             password,
         })
-        
+
         // If successful, update state directly
         if (!error && data.session) {
             console.log('Sign in successful, setting state directly')
@@ -173,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false)
             // Fetch profile non-blocking
             fetchProfile(data.user.id)
-            
+
             // Create login notification (non-blocking)
             setTimeout(async () => {
                 try {
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
             }, 0)
         }
-        
+
         return { error }
     }
 
@@ -214,22 +214,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         console.log('SignUp success, user created:', data.user?.id)
 
-        // Profile will be created by trigger, just wait a moment
+        // Profile will be created by trigger, poll to verify
         if (data.user) {
-            console.log('Waiting for trigger to create profile...')
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            console.log('Polling for profile creation...')
+            let attempts = 0
+            const maxAttempts = 5
 
-            // Verify profile was created
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', data.user.id)
-                .single()
+            while (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 500))
+                attempts++
 
-            if (profileError) {
-                console.error('Profile fetch error:', profileError)
-            } else {
-                console.log('Profile created successfully:', profile)
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', data.user.id)
+                    .single()
+
+                if (profile && !profileError) {
+                    console.log('Profile created successfully:', profile)
+                    break
+                }
+
+                if (attempts === maxAttempts) {
+                    console.warn('Profile not found after max attempts, continuing anyway')
+                }
             }
         }
 

@@ -42,10 +42,10 @@ export function UnitSelector({
     filterByProductStock
 }: UnitSelectorProps) {
     const { units, groups, fetchUnits, createUnit, updateUnit, deleteUnit } = useUnits()
-    
+
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState('')
-    
+
     // Create/Edit dialog state
     const [showUnitDialog, setShowUnitDialog] = useState(false)
     const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
@@ -58,11 +58,11 @@ export function UnitSelector({
         description: ''
     })
     const [isSaving, setIsSaving] = useState(false)
-    
+
     // Delete confirmation state
     const [unitToDelete, setUnitToDelete] = useState<Unit | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
-    
+
     // Manage popover state
     const [showManagePopover, setShowManagePopover] = useState(false)
 
@@ -75,17 +75,19 @@ export function UnitSelector({
     // Filter units based on search and optional product stock filter
     const filteredUnits = useMemo(() => {
         let result = units
-        
-        // If filtering by product stock, only show units that the product has
-        if (filterByProductStock && filterByProductStock.length > 0) {
-            const stockUnitIds = new Set(filterByProductStock.map(s => s.unit_id))
-            const filtered = result.filter(u => stockUnitIds.has(u.id))
-            // If no units match, show all units
-            if (filtered.length > 0) {
-                result = filtered
+
+        // If filtering by product stock, STRICTLY only show units that the product has
+        // Do NOT fallback to all units - this prevents selecting wrong units
+        if (filterByProductStock) {
+            if (filterByProductStock.length > 0) {
+                const stockUnitIds = new Set(filterByProductStock.map(s => s.unit_id))
+                result = result.filter(u => stockUnitIds.has(u.id))
+            } else {
+                // Product has no units registered - return empty array
+                result = []
             }
         }
-        
+
         if (search) {
             const searchLower = search.toLowerCase()
             result = result.filter(u =>
@@ -93,7 +95,7 @@ export function UnitSelector({
                 u.identifier?.toLowerCase().includes(searchLower)
             )
         }
-        
+
         return result
     }, [units, search, filterByProductStock])
 
@@ -149,8 +151,8 @@ export function UnitSelector({
                 if (!editingUnit) {
                     // Fetch updated units and select the new one
                     await fetchUnits()
-                    const newUnit = units.find(u => 
-                        u.identifier === unitFormData.identifier && 
+                    const newUnit = units.find(u =>
+                        u.identifier === unitFormData.identifier &&
                         u.name === unitFormData.name
                     )
                     if (newUnit) {
@@ -209,7 +211,7 @@ export function UnitSelector({
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[280px] p-0 bg-popover z-[100]" align="start">
+                <PopoverContent className="w-[280px] p-0 bg-background border shadow-lg z-[100]" align="start">
                     {/* Search */}
                     <div className="flex items-center border-b px-3">
                         <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -220,12 +222,15 @@ export function UnitSelector({
                             className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
                         />
                     </div>
-                    
+
                     {/* Units List */}
                     <div className="max-h-[200px] overflow-y-auto p-1">
                         {filteredUnits.length === 0 ? (
-                            <div className="py-6 text-center text-sm text-muted-foreground">
-                                No units found.
+                            <div className="py-6 text-center text-sm text-muted-foreground px-3">
+                                {filterByProductStock
+                                    ? "No units registered for this product. Please add units in Edit Product first."
+                                    : "No units found."
+                                }
                             </div>
                         ) : (
                             filteredUnits.map((unit) => (
@@ -255,7 +260,7 @@ export function UnitSelector({
                             ))
                         )}
                     </div>
-                    
+
                     {/* Create New Unit Button */}
                     <div className="border-t p-2">
                         <Button
@@ -428,7 +433,7 @@ export function UnitSelector({
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Unit</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete "{unitToDelete?.name}"? 
+                            Are you sure you want to delete "{unitToDelete?.name}"?
                             This may affect products using this unit.
                         </AlertDialogDescription>
                     </AlertDialogHeader>

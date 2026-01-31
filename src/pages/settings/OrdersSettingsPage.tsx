@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Receipt, Save } from 'lucide-react'
 import { useSettings } from '@/hooks'
+import { toast } from 'sonner'
 
 export default function OrdersSettingsPage() {
     const { settings, bulkUpdate, loading } = useSettings()
@@ -34,7 +35,7 @@ export default function OrdersSettingsPage() {
 
     const handleSave = async () => {
         const success = await bulkUpdate(formData, 'orders')
-        if (success) alert('Orders settings saved successfully!')
+        if (success) toast.success('Orders settings saved successfully!')
     }
 
     return (

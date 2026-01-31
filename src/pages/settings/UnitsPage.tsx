@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Ruler, Plus, Edit2, Trash2 } from 'lucide-react'
 import { useUnits } from '@/hooks'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function UnitsPage() {
     const { units, groups, loading, createUnit, updateUnit, deleteUnit, createGroup, updateGroup, deleteGroup } = useUnits()
@@ -17,6 +19,7 @@ export default function UnitsPage() {
     const [editingGroup, setEditingGroup] = useState<any>(null)
     const [formData, setFormData] = useState({ name: '', identifier: '', value: 1, base_unit: false, group_id: '', description: '' })
     const [groupData, setGroupData] = useState({ name: '', description: '' })
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'unit' | 'group', id: string } | null>(null)
 
     useEffect(() => { resetForm() }, [])
 
@@ -28,13 +31,23 @@ export default function UnitsPage() {
     }
 
     const handleSaveUnit = async () => {
-        if (!formData.name || !formData.identifier) return alert('Name and identifier required')
+        if (!formData.name || !formData.identifier) return toast.error('Name and identifier required')
         const success = editingUnit ? await updateUnit(editingUnit.id, formData) : await createUnit(formData)
         if (success) { resetForm(); setShowModal(false) }
     }
 
-    const handleDeleteUnit = async (id: string) => {
-        if (confirm('Delete this unit?')) await deleteUnit(id)
+    const handleDeleteUnit = (id: string) => {
+        setDeleteConfirm({ type: 'unit', id })
+    }
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return
+        if (deleteConfirm.type === 'unit') {
+            await deleteUnit(deleteConfirm.id)
+        } else {
+            await deleteGroup(deleteConfirm.id)
+        }
+        setDeleteConfirm(null)
     }
 
     const openEdit = (unit: any) => {
@@ -44,13 +57,13 @@ export default function UnitsPage() {
     }
 
     const handleSaveGroup = async () => {
-        if (!groupData.name) return alert('Name required')
+        if (!groupData.name) return toast.error('Name required')
         const success = editingGroup ? await updateGroup(editingGroup.id, groupData) : await createGroup(groupData)
         if (success) { resetForm(); setShowGroupModal(false) }
     }
 
-    const handleDeleteGroup = async (id: string) => {
-        if (confirm('Delete this unit group?')) await deleteGroup(id)
+    const handleDeleteGroup = (id: string) => {
+        setDeleteConfirm({ type: 'group', id })
     }
 
     const openGroupEdit = (group: any) => {
@@ -121,7 +134,7 @@ export default function UnitsPage() {
 
             {/* Unit Modal - Using Dialog Component */}
             <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) resetForm() }}>
-                <DialogContent className="bg-background">
+                <DialogContent className="bg-background/100 backdrop-blur-sm border border-border shadow-lg">
                     <DialogHeader>
                         <DialogTitle>{editingUnit ? 'Edit' : 'New'} Unit</DialogTitle>
                     </DialogHeader>
@@ -140,12 +153,12 @@ export default function UnitsPage() {
                         </div>
                         <div>
                             <Label>Group</Label>
-                            <Select value={formData.group_id} onValueChange={(value) => setFormData({ ...formData, group_id: value })}>
+                            <Select value={formData.group_id || 'none'} onValueChange={(value) => setFormData({ ...formData, group_id: value === 'none' ? '' : value })}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select group..." />
                                 </SelectTrigger>
-                                <SelectContent className="bg-popover z-[150]">
-                                    <SelectItem value="">No group</SelectItem>
+                                <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-[150]">
+                                    <SelectItem value="none">No group</SelectItem>
                                     {groups.map((g: any) => (
                                         <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                                     ))}
@@ -174,7 +187,7 @@ export default function UnitsPage() {
 
             {/* Group Modal - Using Dialog Component */}
             <Dialog open={showGroupModal} onOpenChange={(open) => { setShowGroupModal(open); if (!open) resetForm() }}>
-                <DialogContent className="bg-background">
+                <DialogContent className="bg-background/100 backdrop-blur-sm border border-border shadow-lg">
                     <DialogHeader>
                         <DialogTitle>{editingGroup ? 'Edit' : 'New'} Unit Group</DialogTitle>
                     </DialogHeader>
@@ -194,6 +207,20 @@ export default function UnitsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={!!deleteConfirm}
+                onOpenChange={(open) => !open && setDeleteConfirm(null)}
+                title={`Delete ${deleteConfirm?.type === 'unit' ? 'Unit' : 'Unit Group'}?`}
+                description={deleteConfirm?.type === 'unit'
+                    ? 'This will permanently delete this unit. This action cannot be undone.'
+                    : 'This will permanently delete this unit group. Units in this group will be unassigned.'
+                }
+                confirmText="Delete"
+                variant="destructive"
+                onConfirm={confirmDelete}
+            />
         </div>
     )
 }

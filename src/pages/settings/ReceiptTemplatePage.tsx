@@ -6,14 +6,15 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Receipt, Save, Printer } from 'lucide-react'
+import { Receipt, Save, Printer, Upload, X } from 'lucide-react'
 import { useSettings } from '@/hooks'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
 export default function ReceiptTemplatePage() {
     const { settings, bulkUpdate, loading } = useSettings()
     const iframeRef = useRef<HTMLIFrameElement>(null)
-    
+
     const [formData, setFormData] = useState({
         receipt_header: '',
         receipt_footer: 'Terima kasih atas kunjungan Anda!',
@@ -27,6 +28,8 @@ export default function ReceiptTemplatePage() {
         receipt_font_size: '12',
         receipt_logo_url: ''
     })
+    const [uploading, setUploading] = useState(false)
+    const [logoPreview, setLogoPreview] = useState<string>('')
 
     useEffect(() => {
         if (Object.keys(settings).length > 0) {
@@ -43,6 +46,9 @@ export default function ReceiptTemplatePage() {
                 receipt_font_size: settings.receipt_font_size || '12',
                 receipt_logo_url: settings.receipt_logo_url || ''
             })
+            if (settings.receipt_logo_url) {
+                setLogoPreview(settings.receipt_logo_url)
+            }
         }
     }, [settings])
 
@@ -65,6 +71,58 @@ export default function ReceiptTemplatePage() {
         } else {
             toast.error('Gagal menyimpan template struk')
         }
+    }
+
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please upload an image file')
+            return
+        }
+
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('Image size must be less than 2MB')
+            return
+        }
+
+        setUploading(true)
+        try {
+            // Upload to Supabase Storage
+            const fileExt = file.name.split('.').pop()
+            const fileName = `logo-${Date.now()}.${fileExt}`
+            const filePath = `logos/${fileName}`
+
+            const { error: uploadError } = await supabase.storage
+                .from('medias')
+                .upload(filePath, file)
+
+            if (uploadError) throw uploadError
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('medias')
+                .getPublicUrl(filePath)
+
+            // Update form data and preview
+            setFormData({ ...formData, receipt_logo_url: publicUrl })
+            setLogoPreview(publicUrl)
+            toast.success('Logo uploaded successfully!')
+        } catch (error: any) {
+            console.error('Upload error:', error)
+            toast.error('Failed to upload logo: ' + error.message)
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const handleRemoveLogo = () => {
+        setFormData({ ...formData, receipt_logo_url: '' })
+        setLogoPreview('')
+        toast.success('Logo removed')
     }
 
     const handleTestPrint = () => {
@@ -125,7 +183,7 @@ export default function ReceiptTemplatePage() {
     
     <table>
         <tr><td>Tanggal:</td><td class="right">${new Date().toLocaleString('id-ID')}</td></tr>
-        <tr><td>Order:</td><td class="right">ORD-${Date.now().toString().slice(-6)}</td></tr>
+        <tr><td>Order:</td><td class="right">${settings.order_code_prefix || 'ORD-'}${Date.now().toString().slice(-6)}</td></tr>
         ${formData.receipt_show_cashier ? `<tr><td>Kasir:</td><td class="right">Staff</td></tr>` : ''}
         ${formData.receipt_show_customer ? `<tr><td>Pelanggan:</td><td class="right">Walk-in</td></tr>` : ''}
     </table>
@@ -207,14 +265,14 @@ export default function ReceiptTemplatePage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Ukuran Kertas</Label>
-                                <Select 
-                                    value={formData.receipt_paper_size} 
+                                <Select
+                                    value={formData.receipt_paper_size}
                                     onValueChange={(value) => setFormData({ ...formData, receipt_paper_size: value })}
                                 >
                                     <SelectTrigger className="bg-background">
                                         <SelectValue placeholder="Pilih ukuran" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-popover">
+                                    <SelectContent className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-50">
                                         <SelectItem value="58mm">58mm (Thermal Printer)</SelectItem>
                                         <SelectItem value="80mm">80mm (Standard POS)</SelectItem>
                                         <SelectItem value="A4">A4 (Letter Size)</SelectItem>
@@ -223,12 +281,12 @@ export default function ReceiptTemplatePage() {
                             </div>
                             <div className="space-y-2">
                                 <Label>Ukuran Font (px)</Label>
-                                <Input 
-                                    type="number" 
-                                    min="8" 
-                                    max="24" 
-                                    value={formData.receipt_font_size} 
-                                    onChange={(e) => setFormData({ ...formData, receipt_font_size: e.target.value })} 
+                                <Input
+                                    type="number"
+                                    min="8"
+                                    max="24"
+                                    value={formData.receipt_font_size}
+                                    onChange={(e) => setFormData({ ...formData, receipt_font_size: e.target.value })}
                                     className="bg-background"
                                 />
                             </div>
@@ -243,28 +301,28 @@ export default function ReceiptTemplatePage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label>URL Logo</Label>
-                                <Input 
-                                    value={formData.receipt_logo_url} 
-                                    onChange={(e) => setFormData({ ...formData, receipt_logo_url: e.target.value })} 
-                                    placeholder="https://example.com/logo.png" 
+                                <Input
+                                    value={formData.receipt_logo_url}
+                                    onChange={(e) => setFormData({ ...formData, receipt_logo_url: e.target.value })}
+                                    placeholder="https://example.com/logo.png"
                                     className="bg-background"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label>Teks Header (Opsional)</Label>
-                                <Textarea 
-                                    value={formData.receipt_header} 
-                                    onChange={(e) => setFormData({ ...formData, receipt_header: e.target.value })} 
-                                    placeholder="Selamat datang di toko kami..." 
+                                <Textarea
+                                    value={formData.receipt_header}
+                                    onChange={(e) => setFormData({ ...formData, receipt_header: e.target.value })}
+                                    placeholder="Selamat datang di toko kami..."
                                     className="min-h-[60px] bg-background"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label>Teks Footer</Label>
-                                <Textarea 
-                                    value={formData.receipt_footer} 
-                                    onChange={(e) => setFormData({ ...formData, receipt_footer: e.target.value })} 
-                                    placeholder="Terima kasih atas kunjungan Anda!" 
+                                <Textarea
+                                    value={formData.receipt_footer}
+                                    onChange={(e) => setFormData({ ...formData, receipt_footer: e.target.value })}
+                                    placeholder="Terima kasih atas kunjungan Anda!"
                                     className="min-h-[60px] bg-background"
                                 />
                             </div>
@@ -295,6 +353,42 @@ export default function ReceiptTemplatePage() {
                             ))}
                         </CardContent>
                     </Card>
+
+                    {/* Logo Upload */}
+                    <Card><CardHeader><CardTitle>Store Logo</CardTitle></CardHeader><CardContent className="space-y-4">
+                        <div>
+                            <Label>Logo Image</Label>
+                            <div className="mt-2 space-y-4">
+                                {logoPreview && (
+                                    <div className="relative inline-block">
+                                        <img src={logoPreview} alt="Store logo" className="w-32 h-32 object-contain border rounded p-2" />
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="icon"
+                                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                                            onClick={handleRemoveLogo}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+                                <div>
+                                    <Input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleLogoUpload}
+                                        disabled={uploading}
+                                        className="cursor-pointer"
+                                    />
+                                    <p className="text-sm text-[hsl(var(--muted-foreground))] mt-2">
+                                        Upload your store logo (Max 2MB, JPG/PNG/SVG)
+                                    </p>
+                                    {uploading && <p className="text-sm text-blue-600 mt-2">Uploading...</p>}
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent></Card>
                 </div>
 
                 {/* Preview Column */}

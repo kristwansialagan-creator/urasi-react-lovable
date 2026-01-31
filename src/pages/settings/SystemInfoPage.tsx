@@ -9,7 +9,7 @@ export default function SystemInfoPage() {
     const [loading, setLoading] = useState(false)
 
     const appInfo = {
-        name: 'NexoPOS React',
+        name: 'Urasi React',
         version: '1.0.0',
         buildDate: '2026-01-15',
         environment: import.meta.env.MODE,

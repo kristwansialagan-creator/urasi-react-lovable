@@ -1,6 +1,6 @@
 # Urasi-React
 
-NexoPOS migration to modern React + TailwindCSS + Supabase stack.
+Urasi (formerly based on NexoPOS) migration to modern React + TailwindCSS + Supabase stack.
 
 ## 🚀 Tech Stack
 
@@ -117,7 +117,37 @@ npm run build
 
 ## 📄 License
 
-Private project - All rights reserved
+This project is licensed under the **GNU General Public License v3.0** (GPL-3.0).
+
+**Key Points:**
+- ✅ Commercial use allowed
+- ✅ Modification allowed  
+- ✅ Distribution allowed
+- ⚠️ Source code must be disclosed when distributing
+- ⚠️ License and copyright notice must be preserved
+- ⚠️ Same license must apply to derivative works
+
+See the [LICENSE](LICENSE) file for the full license text.
+
+## 🙏 Attribution
+
+**This is a derivative work based on [NexoPOS](https://github.com/Blair2004/NexoPOS-4x).**
+
+Urasi is a heavily modified version that migrates the original Laravel/Vue architecture to a modern React + TypeScript + Supabase stack. While the core business logic and concepts are inspired by NexoPOS, the implementation has been completely rewritten.
+
+**Original Work:**
+- **Project:** NexoPOS 4.x
+- **Author:** Blair Njikam
+- **License:** GNU GPL v3.0
+- **Repository:** https://github.com/Blair2004/NexoPOS-4x
+
+**Modifications by Urasi:**
+- Complete technology migration (Laravel → Next.js/React)
+- Database migration (MySQL → PostgreSQL/Supabase)
+- UI/UX redesign with modern components
+- Additional features and customizations
+
+We are grateful to the NexoPOS team and community for creating the foundation upon which this project is built.
 
 ## 👥 Contributors
 

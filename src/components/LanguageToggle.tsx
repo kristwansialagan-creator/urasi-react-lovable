@@ -22,15 +22,15 @@ export function LanguageToggle() {
                     <span className="sr-only">Toggle language</span>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover border border-border z-50">
-                <DropdownMenuItem 
+            <DropdownMenuContent align="end" className="bg-popover/100 backdrop-blur-sm border border-border shadow-lg z-50">
+                <DropdownMenuItem
                     onClick={() => setLanguage('en')}
                     className={language === 'en' ? 'bg-accent' : ''}
                 >
                     <span className="mr-2">🇺🇸</span>
                     English
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                     onClick={() => setLanguage('id')}
                     className={language === 'id' ? 'bg-accent' : ''}
                 >

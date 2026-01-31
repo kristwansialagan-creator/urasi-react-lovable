@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { generateOrderCode } from '@/lib/utils'
+import { useSettings } from './useSettings'
 
 interface Customer {
     id: string
@@ -147,6 +149,7 @@ export function useOrders(): UseOrdersReturn {
     const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const { settings } = useSettings()
 
     const fetchOrders = useCallback(async (filters?: OrderFilters) => {
         setLoading(true)
@@ -245,11 +248,41 @@ export function useOrders(): UseOrdersReturn {
             const change = Math.max(0, tendered - total)
             const paymentStatus = tendered >= total ? 'paid' : tendered > 0 ? 'partially_paid' : 'unpaid'
 
+            // Generate order code using settings prefix
+            const orderCodePrefix = settings.order_code_prefix || 'ORD-'
+            const orderCode = generateOrderCode(orderCodePrefix)
+
+            console.log('Creating order with settings:', settings)
+            console.log('Generated order code:', orderCode)
+
+            // Get customer billing address if customer selected
+            let billingAddress = null
+            if (input.customer_id) {
+                const { data: addressData } = await supabase
+                    .from('customers_addresses')
+                    .select('*')
+                    .eq('customer_id', input.customer_id)
+                    .eq('type', 'billing')
+                    .single()
+
+                if (addressData) {
+                    billingAddress = {
+                        address_1: addressData.address_1,
+                        address_2: addressData.address_2,
+                        city: addressData.city,
+                        country: addressData.country,
+                        pobox: addressData.pobox
+                    }
+                }
+            }
+
             const { data: order, error: orderError } = await supabase
                 .from('orders')
                 .insert({
+                    code: orderCode,
                     type: input.type || 'in-store',
                     customer_id: input.customer_id,
+                    billing_address: billingAddress,
                     register_id: input.register_id,
                     subtotal,
                     products_total: subtotal,
@@ -284,7 +317,94 @@ export function useOrders(): UseOrdersReturn {
                     total_price: p.total_price
                 }))
 
-                await supabase.from('orders_products').insert(orderProducts as never)
+                // Insert order products and get their IDs
+                const { data: insertedProducts, error: productsError } = await supabase
+                    .from('orders_products')
+                    .insert(orderProducts as never)
+                    .select('id, product_id, unit_id, quantity')
+
+                if (productsError) throw productsError
+
+                // Deduct stock using FEFO for each product
+                for (const orderedProduct of (insertedProducts || [])) {
+                    if (!orderedProduct.unit_id || !orderedProduct.product_id) continue
+
+                    const unitId = orderedProduct.unit_id as string // Guaranteed non-null after check above
+                    const productId = orderedProduct.product_id as string // Guaranteed non-null after check above
+
+                    // Get batches sorted by expiry date (FEFO)
+                    const { data: availableBatches, error: fetchError } = await supabase
+                        .from('stock_batches')
+                        .select('*')
+                        .eq('product_id', productId)
+                        .eq('unit_id', unitId)
+                        .gt('quantity', 0)
+                        .order('expiry_date', { ascending: true, nullsFirst: false })
+
+                    if (fetchError) throw fetchError
+
+                    if (!availableBatches || availableBatches.length === 0) {
+                        console.warn(`No stock batches for product ${orderedProduct.product_id}`)
+                        continue
+                    }
+
+                    let remaining = Number(orderedProduct.quantity)
+                    const batchDeductions: Array<{
+                        order_product_id: string
+                        batch_id: string
+                        batch_number: string
+                        expiry_date: string | null
+                        quantity_deducted: number
+                        purchase_price: number | null
+                    }> = []
+
+                    for (const batch of availableBatches) {
+                        if (remaining <= 0) break
+
+                        const toDeduct = Math.min(Number(batch.quantity), remaining)
+
+                        // Update batch quantity
+                        await supabase
+                            .from('stock_batches')
+                            .update({ quantity: Number(batch.quantity) - toDeduct } as never)
+                            .eq('id', batch.id)
+
+                        batchDeductions.push({
+                            order_product_id: orderedProduct.id,
+                            batch_id: batch.id,
+                            batch_number: batch.batch_number,
+                            expiry_date: batch.expiry_date,
+                            quantity_deducted: toDeduct,
+                            purchase_price: batch.purchase_price ?? null
+                        })
+
+                        remaining -= toDeduct
+                    }
+
+                    // Insert batch deductions record
+                    if (batchDeductions.length > 0) {
+                        await supabase
+                            .from('orders_products_batches')
+                            .insert(batchDeductions as never)
+                    }
+
+                    // Sync total quantity in product_unit_quantities
+                    const { data: totalData } = await supabase
+                        .from('stock_batches')
+                        .select('quantity')
+                        .eq('product_id', productId)
+                        .eq('unit_id', unitId)
+
+                    const totalStock = (totalData || []).reduce((sum, b) => sum + Number(b.quantity), 0)
+
+                    await supabase
+                        .from('product_unit_quantities')
+                        .upsert({
+                            product_id: productId,
+                            unit_id: unitId,
+                            quantity: totalStock
+                        } as never, { onConflict: 'product_id,unit_id' })
+                }
             }
 
             if (input.payments && input.payments.length > 0) {
@@ -303,7 +423,7 @@ export function useOrders(): UseOrdersReturn {
             setError(err instanceof Error ? err.message : 'Failed to create order')
             return null
         }
-    }, [fetchOrders])
+    }, [fetchOrders, settings])
 
     const updateOrderStatus = useCallback(async (
         id: string,

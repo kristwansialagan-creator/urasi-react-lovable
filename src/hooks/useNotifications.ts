@@ -148,12 +148,14 @@ export function useNotifications() {
     useEffect(() => {
         fetchNotifications()
 
-        const user = supabase.auth.getUser()
-        user.then(({ data }) => {
+        let channel: any = null
+
+        const setupSubscription = async () => {
+            const { data } = await supabase.auth.getUser()
             if (!data.user) return
 
-            const channel = supabase
-                .channel('notifications')
+            channel = supabase
+                .channel(`notifications-${data.user.id}`)
                 .on('postgres_changes',
                     {
                         event: '*',
@@ -161,16 +163,22 @@ export function useNotifications() {
                         table: 'notifications',
                         filter: `user_id=eq.${data.user.id}`
                     },
-                    () => {
+                    (payload) => {
+                        console.log('Notification change detected:', payload)
+                        // Force refetch to update all state
                         fetchNotifications()
                     }
                 )
                 .subscribe()
+        }
 
-            return () => {
-                channel.unsubscribe()
+        setupSubscription()
+
+        return () => {
+            if (channel) {
+                supabase.removeChannel(channel)
             }
-        })
+        }
     }, [fetchNotifications])
 
     return {
